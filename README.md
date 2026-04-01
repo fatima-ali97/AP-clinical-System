@@ -10,9 +10,12 @@ i tried installing -- following the instructions in lab 2.4 :
 
 - Microsoft.EntityFrameworkCore.Tools
 - Microsoft.EntityFrameworkCore.SqlServer
-- Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation (for hot reload)
 
 but idk why it wasn't successful T-T
+
+successful imports:
+
+- Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation (for hot reload)
 
 ## using hot reload in vs code:
 
