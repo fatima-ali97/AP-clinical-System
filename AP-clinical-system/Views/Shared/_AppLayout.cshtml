@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BriefA App</title>
+    <link rel="stylesheet" href="~/css/app.css" />
+</head>
+<body>
+    <!-- App navbar -->
+    <nav>
+        <span>Welcome, @User.Identity?.Name</span>
+        <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/" method="post">
+            <button type="submit" class="btn btn-link">Logout</button>
+        </form>
+    </nav>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <a asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+        <a asp-controller="Patients" asp-action="Index">Patients</a>
+        <a asp-controller="Appointments" asp-action="Index">Appointments</a>
+    </div>
+
+    <main>
+        @RenderBody()
+    </main>
+</body>
+</html>

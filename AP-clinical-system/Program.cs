@@ -27,6 +27,15 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
-
+// builder.Services.ConfigureApplicationCookie(options =>
+// {
+//     options.LoginPath = "/Identity/Account/Login";
+//     options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+//     options.Events.OnRedirectToLogin = context =>
+//     {
+//         context.Response.Redirect(context.RedirectUri);
+//         return Task.CompletedTask;
+//     };
+// });
 
 app.Run();
