@@ -209,5 +209,19 @@ body {
 
 .nav-item {
   font-family: "Palanquin", sans-serif;
-  font-weight: bold;
+  font-size: 16px;
+}
+.btn {
+  background-color: var(--color-brand-primary);
+  border: none;
+}
+.btn:hover,
+.btn:active,
+.btn:focus,
+.btn:active:focus {
+  background-color: var(--color-steel-500);
+}
+.hero-section-title {
+  font-family: var(--font-display);
+  font-size: 60px;
 }
