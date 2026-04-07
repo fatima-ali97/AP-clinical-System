@@ -1,30 +1,46 @@
-﻿<!DOCTYPE html>
+﻿<!-- FOR UNREGISTERED USERS-->
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - AP_clinical_system</title>
+    <title>@ViewData["Title"] - Advanced Health</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/AP_clinical_system.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Font.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site-index.css" asp-append-version="true" />
+
 </head>
+
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">AP_clinical_system</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm  my-3">
+           
+            <div class="container">
+                <a class="navbar-brand" href="/">AdvancedHealth</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
+                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav ms-auto align-items-center">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link text-dark mx-2" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link text-dark mx-2" asp-controller="Home" asp-action="About">About</a>
+        
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark mx-2" asp-controller="Home" asp-action="Contact">Contact us</a>
+        
+                        </li>
+                        <li class="nav-item ms-3 ">
+                            <a class="btn btn-primary btn-rounded px-4" asp-area="Identity"
+                               asp-page="/Account/Login">Login</a>
                         </li>
                     </ul>
                 </div>
@@ -37,14 +53,101 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - AP_clinical_system - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+
+
+    <!-- Footer -->
+    <footer class="text-center text-white pt-1">
+        <!-- Section: Links  -->
+        <section class="">
+            <div class="container text-center text-md-start mt-5">
+                <!-- Grid row -->
+                <div class="row mt-3">
+                    <!-- Grid column -->
+                    <div class="col-md-3 col-lg-4 col-xl-3 mx-auto mb-4">
+                        <!-- Content -->
+                        <h6>Advanced Health</h6>
+                        <hr class="mb-4 mt-0 d-inline-block mx-auto"
+                            style="width: 60px; background-color: #fff; height: 2px" />
+                        <p>
+                            Here you can use rows and columns to organize your footer
+                            content. Lorem ipsum dolor sit amet, consectetur adipisicing
+                            elit.
+                        </p>
+                    </div>
+                    <!-- Grid column -->
+
+                    <!-- Grid column -->
+                    <div class="col-md-2 col-lg-2 col-xl-2 mx-auto mb-4">
+                        <!-- Links -->
+                        <h6>Explore</h6>
+                        <hr class="mb-4 mt-0 d-inline-block mx-auto"
+                            style="width: 60px; background-color: #fff; height: 2px" />
+                        <p>
+                            <a href="#!" class="text-white">Mission & Vision</a>
+                        </p>
+                        <p>
+                            <a href="#!" class="text-white">Our Specialists</a>
+                        </p>
+                        <p>
+                            <a href="#!" class="text-white">Reviews</a>
+                        </p>
+
+                        
+                    </div>
+                    <!-- Grid column -->
+
+                    <!-- Grid column -->
+                    <div class="col-md-3 col-lg-2 col-xl-2 mx-auto mb-4">
+                        <!-- Links -->
+                        <h6>Useful links</h6>
+                        <hr class="mb-4 mt-0 d-inline-block mx-auto"
+                            style="width: 60px; background-color: #fff; height: 2px" />
+                        <p>
+                            <a href="#!" class="text-white">Your Account</a>
+                        </p>
+                        <p>
+                            <a href="#!" class="text-white">Book an appointment</a>
+                        </p>
+                        
+                        <p>
+                            <a href="#!" class="text-white">Track Your appointment</a>
+                        </p>
+                    </div>
+                    <!-- Grid column -->
+
+                    <!-- Grid column -->
+                    <div class="col-md-4 col-lg-3 col-xl-3 mx-auto mb-md-0 mb-4">
+                        <!-- Links -->
+                        <h6>Contact</h6>
+                        <hr class="mb-4 mt-0 d-inline-block mx-auto"
+                            style="width: 60px; background-color: #fff; height: 2px" />
+                        <p><i class="fas fa-home mr-3"></i> Isa Town, Bahrain</p>
+                        <p><i class="fas fa-envelope mr-3"></i> contact@AdvancedHealth.com</p>
+                        <p><i class="fas fa-phone mr-3"></i> +973 39988333</p>
+                        <p><i class="fas fa-phone mr-3"></i> +973 17000000</p>
+                    </div>
+                    <!-- Grid column -->
+                </div>
+                <!-- Grid row -->
+            </div>
+        </section>
+        <!-- Section: Links  -->
+
+        <!-- Copyright -->
+        <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2)">
+            © 2026 Copyright
+            <a class="text-white" href="https://mdbootstrap.com/">Hexeri Team</a>
         </div>
+        <!-- Copyright -->
     </footer>
+    <!-- Footer -->
+
+ 
+    <!-- End of .container -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
+
 </html>

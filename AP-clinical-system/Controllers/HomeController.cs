@@ -5,28 +5,16 @@ using Microsoft.AspNetCore.Mvc;
 namespace AP_clinical_system.Controllers
 {
     public class HomeController : Controller
-    {
-        private readonly ILogger<HomeController> _logger;
+{
+   public IActionResult Index()
+{
+    if (User.Identity?.IsAuthenticated == true)
+        return RedirectToAction("Index", "Dashboard");
 
-        public HomeController(ILogger<HomeController> logger)
-        {
-            _logger = logger;
-        }
+    return View();
+}
 
-        public IActionResult Index()
-        {
-            return View();
-        }
-
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
-    }
+    public IActionResult About() => View();
+    public IActionResult Contact() => View();
+}
 }
