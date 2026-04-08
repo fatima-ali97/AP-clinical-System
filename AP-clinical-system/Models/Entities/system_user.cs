@@ -8,6 +8,7 @@
         public Guid? createdby { get; set; }
         public DateTime? modifiedon { get; set; }
         public Guid? modifiedby { get; set; }
+        
         public string user_no { get; set; }
         public string cpr { get; set; }
         public string firt_name { get; set; }
