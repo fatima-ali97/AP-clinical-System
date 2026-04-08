@@ -1,9 +1,17 @@
 using Microsoft.AspNetCore.Mvc.Razor;
+using Microsoft.EntityFrameworkCore;
+using AP_clinical_system.Models.sql_Context;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews()
     .AddRazorRuntimeCompilation();
+
+// Register the DbContext with SQL Server
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<AP_Context>(options =>
+    options.UseSqlServer(connectionString));
 
 var app = builder.Build();
 
