@@ -17,6 +17,10 @@ namespace AP_clinical_system.Models.sql_Context
         public DbSet<doctor_schedule> doctor_schedules { get; set; }
         public DbSet<notification> notifications { get; set; }
         public DbSet<autonumber> autonumbers { get; set; }
+        public DbSet<clinic_manager_information> clinic_manager_informations { get; set; }
+        public DbSet<patient_information> patient_informations { get; set; }
+        public DbSet<receptionist_information> receptionist_informations { get; set; }
+
 
 
 
