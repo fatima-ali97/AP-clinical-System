@@ -42,4 +42,14 @@ namespace AP_clinical_system.Models.Enums
         receptionist = 1003,
         patient = 1004
     }
+
+    public enum leave_type
+    {
+        annual_leave = 1000,
+        sick_leave = 1001,
+        unpaid_leave = 1002,
+        maternity_paternity_leave = 1003,
+        study_leave = 1004,
+        other = 1005
+    }
 }

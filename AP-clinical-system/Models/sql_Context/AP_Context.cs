@@ -13,6 +13,12 @@ namespace AP_clinical_system.Models.sql_Context
         public DbSet<prescription> prescriptions { get; set; }
         public DbSet<system_user> system_users { get; set; }
         public DbSet<visit_record> visit_records { get; set; }
+        public DbSet<doctor_leave> doctor_leaves { get; set; }
+        public DbSet<doctor_schedule> doctor_schedules { get; set; }
+        public DbSet<notification> notifications { get; set; }
+        public DbSet<autonumber> autonumbers { get; set; }
+
+
 
         
     }
