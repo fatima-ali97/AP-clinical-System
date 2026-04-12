@@ -6,16 +6,11 @@ i selected `ASP.NET Core Web App (Model-View-Controller)` **Same as lab 2.4** wh
 
 ## installed packages:
 
-i tried installing -- following the instructions in lab 2.4 :
+command to see all successful imports:
 
-- Microsoft.EntityFrameworkCore.Tools
-- Microsoft.EntityFrameworkCore.SqlServer
-
-but idk why it wasn't successful T-T
-
-successful imports:
-
-- Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation (for hot reload)
+```
+dotnet list package
+```
 
 ## using hot reload in vs code:
 
