@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AP_clinical_system.Controllers
 {
-    [Authorize]
+    // [Authorize]
     public class DashboardController : Controller
 {
     
