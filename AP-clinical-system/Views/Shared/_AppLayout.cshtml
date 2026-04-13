@@ -3,6 +3,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.5.1/moment.min.js"></script>
+    <link rel="stylesheet" href="~/css/app/app.css">
     <title>@ViewData["Title"] - AdvancedHealth</title>
 
     <style>
@@ -25,7 +27,7 @@
             --body-color: #495057;
             --muted: #6c757d;
             --border: #dee2e6;
-            --primary: #3b7ddd;
+            --primary: var(--color-brand-primary);
             --success: #1cbb8c;
             --danger: #dc3545;
             --warning: #fcb92c;
@@ -248,7 +250,7 @@
         }
         .card-body { padding: 1.25rem; }
         .card-header {
-            padding: 1rem 1.25rem;
+            padding: 0.8rem 1.25rem;
             background: #fff;
             border-bottom: 1px solid var(--border);
             display: flex; align-items: center; justify-content: space-between;
@@ -258,18 +260,18 @@
             font-weight: 600;
             color: #939ba2;
             margin: 0;
-            text-transform: uppercase;
+            
             letter-spacing: 0.04em;
         }
 
         .stat-card-inner { display: flex; justify-content: space-between; align-items: flex-start; }
-        .stat-label { font-size: 0.8rem; font-weight: 600; color: #939ba2; text-transform: uppercase; letter-spacing: 0.04em; }
-        .stat-value { font-size: 1.6rem; font-weight: 700; color: #212529; margin: 0.35rem 0 0.5rem; line-height: 1; }
-        .stat-footer { font-size: 0.78rem; }
+        .stat-label { font-size: 1rem; font-weight: 600; color: #939ba2;  letter-spacing: 0.04em; }
+        .stat-value { font-size: 1.6rem; font-weight: 700; color: #212529; margin: 0.25rem 0 ; line-height: 1; }
+       
         .stat-icon {
             width: 44px; height: 44px;
             border-radius: 50%;
-            background: #d3e4f7;
+            background: var(--color-steel-200);
             display: flex; align-items: center; justify-content: center;
             color: var(--primary);
             flex-shrink: 0;
