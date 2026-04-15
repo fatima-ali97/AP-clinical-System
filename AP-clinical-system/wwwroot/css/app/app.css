@@ -288,7 +288,6 @@
 div #calendar {
   overflow: hidden;
 
-  font-weight: 100;
   color: var(--bs-black);
   margin: 0;
   padding: 0;
@@ -304,7 +303,8 @@ div #calendar {
   -webkit-transform: translate3d(0, 0, 0);
   -moz-transform: translate3d(0, 0, 0);
   transform: translate3d(0, 0, 0);
-  width: 420px;
+  /* width: 420px; */
+  width: 100%;
   margin: 0 auto;
   height: 570px;
   overflow: hidden;
@@ -312,7 +312,7 @@ div #calendar {
 
 .header {
   height: 50px;
-  width: 420px;
+  /* width: 420px; */
 
   text-align: center;
   position: relative;
@@ -321,11 +321,11 @@ div #calendar {
 
 .header h1 {
   margin: 0;
+  font-family: "Urbanist", "Palanquin", sans-serif;
   padding: 0;
   font-size: 20px;
   line-height: 50px;
-  font-weight: 100;
-  letter-spacing: 1px;
+  font-weight: 600;
 }
 
 .left,
@@ -359,7 +359,8 @@ div #calendar {
 }
 
 .month.new {
-  -webkit-animation: fadeIn 1s ease-out;
+  /* TODO: CHANGE THIS PLS */
+  -webkit-animation: transition 1s ease-out;
   opacity: 1;
 }
 
@@ -414,12 +415,13 @@ div #calendar {
 .day.today {
   background-color: var(--color-indigo-700);
   border-radius: 10px;
-  color: rgba(156, 202, 235, 1);
+  color: #fff;
 }
 
 .day-name {
   font-size: 9px;
   text-transform: uppercase;
+  font-weight: 500;
   margin-bottom: 5px;
   color: var(--bs-black);
   letter-spacing: 0.7px;
@@ -449,18 +451,18 @@ div #calendar {
   line-height: 5px;
   margin: 0 1px;
 }
-
+/* TODO: change these if u want */
 .blue {
-  background: rgba(156, 202, 235, 1);
+  background: var(--color-blue-400);
 }
 .orange {
-  background: rgba(247, 167, 0, 1);
+  background: var(--color-green-400);
 }
 .green {
-  background: rgba(153, 198, 109, 1);
+  background: var(--color-yellow-400);
 }
 .yellow {
-  background: rgba(249, 233, 0, 1);
+  background: var(--color-cyan-400);
 }
 
 .details {
