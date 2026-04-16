@@ -117,10 +117,25 @@
             white-space: nowrap;
         }
         .sidebar-link:hover { color: var(--primary);  }
+
+        
         .sidebar-item.active > .sidebar-link {
             color: var(--sidebar-text-active);
             background: var(--sidebar-active-bg);
             border-left-color: var(--sidebar-active-border);
+        }
+        .logout-btn{
+            margin: 40px 10px;
+            background-color: var(--color-brand-primary);
+            text-align: center;
+            border-radius: var(--radius);
+            display: flex;
+               justify-content: center;
+    align-items: center;
+        }
+        .logout-btn a, .logout-btn .sidebar-link:hover{
+            text-align: center;
+            color: #f1f3f7;
         }
 
         /* ── MAIN AREA ── */
@@ -411,6 +426,14 @@
                 </a>
             </li> *@
             
+
+
+            <li class=" logout-btn" >
+                <a class="sidebar-link" href="#">
+                   <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    Log Out
+                </a>
+            </li>
         </ul>
     </nav>
 
