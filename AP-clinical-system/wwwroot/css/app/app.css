@@ -164,6 +164,72 @@
   --bs-border-color: #dee2e6;
   --bs-border-color-translucent: rgba(0, 0, 0, 0.175);
 }
+
+/* =================Patient Banner ================== */
+
+.hpd {
+  display: block;
+  margin: 0 auto;
+
+  /* height: 180px; */
+  padding: 24px;
+  box-sizing: border-box;
+  border-radius: 2px;
+
+  background-image: url("../../assets/patient-dashboard-banner-3.jpg");
+
+  font-size: 20px;
+  text-align: center;
+  text-decoration: none;
+  color: var(--color-slate-950);
+  border: solid 0.1px rgba(33, 37, 41, 0.01);
+  box-shadow: 0 0 20px 0 rgba(33, 37, 41, 0.8);
+}
+
+.hpd .hpd-title {
+  font-family: var(--font-display);
+  margin: 0;
+  font-size: 24px;
+}
+
+.hpd .hpd-desc {
+  margin: 10px 0;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.hpd-btn {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 5px;
+  background: #255571;
+  font-size: 14px;
+  font-weight: 700;
+
+  color: white;
+  transition: background 0.5s ease;
+}
+.hpd:hover .hpd-btn {
+  background: var(--color-brand-secondary);
+}
+
+.hpd-basic {
+  /* max-width: 540px; */
+  background-repeat: no-repeat;
+  background-position: right;
+}
+
+@media (min-width: 600px) {
+  .hpd-basic {
+    text-align: left;
+    padding-right: 150px;
+  }
+  .hpd-basic hpd-btn {
+    background: transparent;
+  }
+}
+/* =================end of -- Patient Banner ================== */
 .cal-wrap {
   max-width: 420px;
   margin: 0 auto;
