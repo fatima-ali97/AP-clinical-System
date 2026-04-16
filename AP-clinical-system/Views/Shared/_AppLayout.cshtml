@@ -16,7 +16,6 @@
             --topbar-h: 60px;
             --sidebar-bg: #fff;
             --sidebar-text: #121212;
-            @* --sidebar-text-active: #e9ecef; *@
             --sidebar-text-active:#38789E;
             --sidebar-active-bg: rgba(186, 212, 213,0.4);
             --sidebar-active-border: #BAD4D5;
@@ -30,9 +29,9 @@
             --muted: #6c757d;
             --border: #dee2e6;
             --primary: var(--color-brand-primary);
-            --success: #1cbb8c;
-            --danger: #dc3545;
-            --warning: #fcb92c;
+            --success: var(--color-green-400);
+            --danger: var(--color-red-400);
+            --warning: var(--color-yellow-400);
             --radius: 4px;
             --transition: 0.3s ease;
         }
@@ -295,7 +294,7 @@
 
         .bottom-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 0.6fr 1fr;
             gap: 1.25rem;
             margin-bottom: 1.25rem;
         }
