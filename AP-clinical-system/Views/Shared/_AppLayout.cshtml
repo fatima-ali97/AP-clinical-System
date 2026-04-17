@@ -401,10 +401,9 @@
 
         <a class="sidebar-brand" href="/">AdvancedHealth</a>
 
-        @* All role-based nav items live in _Navigation.cshtml *@
+        
         @await Html.PartialAsync("_Navigation")
 
-        @* Logout sits outside the nav list, always visible *@
         <div class="logout-btn">
             <a class="sidebar-link" asp-controller="Account" asp-action="Logout">
                 <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
@@ -423,7 +422,7 @@
             </button>
 
             <div class="topbar-right">
-                @* Notification bell — uncomment when ready
+                @* Notification bell TODO: to be decided later
                 <a class="nav-icon-btn" href="#" title="Notifications">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
@@ -435,7 +434,7 @@
 
                 <a class="user-pill" href="#">
                     <div class="user-pill-avatar">
-                        @* First letters of user's name — swap with real claim later *@
+                        @* TODO: first letters of user's name — swap with real claim later *@
                         @(User.Identity?.Name?
                             .Split(' ')
                             .Take(2)
