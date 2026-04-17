@@ -85,7 +85,7 @@
         }
 
         .sidebar-brand {
-            padding: 1.25rem 1.5rem;
+            padding: 1.1rem 1.5rem;
             color: var(--sidebar-text);
             font-size: 1.1rem;
             font-weight: 700;
@@ -93,16 +93,8 @@
             display: block;
             text-decoration: none;
             white-space: nowrap;
-        }
-
-        .sidebar-section {
-            padding: 1.5rem 1.5rem 0.375rem;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            font-family: 'Urbanist','Palanquin',  sans-serif;
-            letter-spacing: 0.05em;
-            color: var(--sidebar-header-color);
-            opacity: 0.7;
+            margin-bottom: 2rem;
+            border-bottom:     solid 0.9px rgba(186, 212, 213, 0.4)
         }
 
         .sidebar-nav { list-style: none; padding: 0; flex: 1; }
@@ -111,7 +103,7 @@
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            padding: 0.8rem 1.625rem;
+            padding: 0.9rem 1.625rem;
             color: var(--sidebar-text);
             text-decoration: none;
             font-size: 0.875rem;
@@ -308,9 +300,7 @@
             gap: 1.25rem;
             margin-bottom: 1.5rem;
         }
-        .stat-grid.admin .card{
-            background: linear-gradient(15deg,rgba(42, 123, 155, 0.3) 0%, rgba(237, 221, 83, 0) 60%);
-        }
+        
         .stat-grid.patient{
 
         }
@@ -385,6 +375,56 @@
         @@media (max-width: 991px) { .d-none-sm { display: none !important; } }
         .d-none-xs { display: table-cell; }
         @@media (max-width: 767px) { .d-none-xs { display: none !important; } }
+.stat-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+   
+}
+
+  .stat-card::before,
+  .stat-card::after,
+  .stat-card .tri-bl {
+    content: "";
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
+  }
+  .stat-card::before {
+    top: 0; left: 0;
+    border-width: 110px 110px 0 0;
+    border-color: rgba(255,255,255,0.18) transparent transparent transparent;
+    transform-origin: top left;
+    transform: rotate(0deg);
+  }
+  .stat-card::after {
+    bottom: 0; right: 0;
+    border-width: 0 0 110px 110px;
+    border-color: transparent transparent rgba(255,255,255,0.18) transparent;
+    transform-origin: bottom right;
+    transform: rotate(0deg);
+  }
+  .stat-card .tri-bl {
+    bottom: 0; left: 0;
+    border-width: 0 110px 110px 0;
+    border-color: transparent rgba(255,255,255,0.13) transparent transparent;
+    transform-origin: bottom left;
+    transform: rotate(0deg);
+  }
+  .stat-card:hover::before {
+   transform:  translateX(-50px) ;
+    opacity: 0.6;
+  }
+  .stat-card:hover::after {
+    transform:  translateX(30px) ;
+    opacity: 0.6;
+  }
+  .stat-card:hover .tri-bl {
+    transform: rotate(90deg);
+    opacity: 0;
+  }
     </style>
 </head>
 <body>
