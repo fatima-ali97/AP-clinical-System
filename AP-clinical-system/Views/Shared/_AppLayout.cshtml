@@ -132,8 +132,13 @@
         .logout-btn a, .logout-btn .sidebar-link:hover{
             text-align: center;
             color: #f1f3f7;
-        }
+            transition: background var(--transition), color var(--transition);
 
+        }
+        .logout-btn:hover{
+            transition: background var(--transition), color var(--transition);
+            background-color: var(--color-brand-hover);
+        }
         /* ── MAIN AREA ── */
         .main-area {
             flex: 1;

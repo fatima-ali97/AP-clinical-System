@@ -10,6 +10,7 @@
   --color-brand-secondary: #399b9e;
   --color-brand-light: #bad4d5;
   --color-brand-dark: #030303;
+  --color-brand-hover: #255571;
 
   /* --- Teal Scale --- */
   --color-teal-50: #f0fbfc;
@@ -203,7 +204,7 @@
   display: inline-block;
   padding: 6px 14px;
   border-radius: 5px;
-  background: #255571;
+  background: var(--color-brand-primary);
   font-size: 14px;
   font-weight: 700;
 
@@ -211,7 +212,7 @@
   transition: background 0.5s ease;
 }
 .hpd:hover .hpd-btn {
-  background: var(--color-brand-secondary);
+  background: var(--color-brand-hover);
 }
 
 .hpd-basic {
