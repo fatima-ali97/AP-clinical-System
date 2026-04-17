@@ -32,7 +32,7 @@ app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Doctor}/{action=Index}/{id?}")
+    pattern: "{controller=Receptionist}/{action=Index}/{id?}")
     .WithStaticAssets();
 
 // builder.Services.ConfigureApplicationCookie(options =>
