@@ -7,11 +7,16 @@ namespace AP_clinical_system.Controllers
 {
     // [Authorize]
     public class DashboardController : Controller
-{
-    
-   public IActionResult Index()
     {
-        return View();
+
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+        public IActionResult ManageAccounts()
+        {
+            return View();
+        }
     }
-}
 }

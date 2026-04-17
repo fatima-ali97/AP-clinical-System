@@ -1,0 +1,303 @@
+@{
+    Layout = "_AppLayout";
+    ViewData["Title"] = "ManageAccounts";
+    ViewData["ActivePage"] = "Accounts";
+}
+
+<h1 class="page-heading">Clinical Manager's Dashboard</h1>
+
+<!-- ── STAT CARDS ── -->
+<div class="stat-grid admin">
+
+    <div class="card">
+        <div class="card-body">
+            <div class="stat-card-inner">
+                <div>
+                    <div class="stat-label">Doctors</div>
+                    <div class="stat-value">67</div>
+                </div>
+                <div class="stat-icon">
+                    <i class="fa-solid fa-stethoscope"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="stat-card-inner">
+                <div>
+                    <div class="stat-label">Patients</div>
+                    <div class="stat-value">1600</div>
+                    
+                </div>
+                <div class="stat-icon">
+                    <i class="fa-solid fa-hospital-user"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="stat-card-inner">
+                <div>
+                    <div class="stat-label">Completed Appointments</div>
+                    <div class="stat-value">1200</div>
+                </div>
+                <div class="stat-icon">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="stat-card-inner">
+                <div>
+                    <div class="stat-label">Appointments Today</div>
+                    <div class="stat-value">10</div>
+                </div>
+                <div class="stat-icon">
+                    <i class="fa-solid fa-calendar"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ── CALENDAR + REAL-TIME GRAPH── -->
+<div class="bottom-grid">
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title">Appointments</h5>
+        </div>
+        <div class="card-body">
+            <div class="cal-wrap">
+                <div class="cal-header">
+                    <button class="nav-btn" onclick="changeMonth(-1)"><i class="fa-solid fa-angle-left"></i></button>
+                    <h1 id="month-title"></h1>
+                    <button class="nav-btn" onclick="changeMonth(1)"><i class="fa-solid fa-angle-right"></i></button>
+                </div>
+                <div class="dow-row">
+                    <div class="dow-cell">Sun</div>
+                    <div class="dow-cell">Mon</div>
+                    <div class="dow-cell">Tue</div>
+                    <div class="dow-cell">Wed</div>
+                    <div class="dow-cell">Thu</div>
+                    <div class="dow-cell">Fri</div>
+                    <div class="dow-cell">Sat</div>
+                </div>
+                <div class="days-grid" id="days-grid"></div>
+                <div class="divider"></div>
+                <div class="section-title" id="events-label">Appointments</div>
+                <div class="events-list" id="events-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title">Real-Time</h5>
+        </div>
+        <div class="card-body" style="min-height:220px;">
+            <div id="world_map" style="height:100%; min-height:180px;"></div>
+        </div>
+    </div>
+
+</div>
+
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title">Today's Appointments</h5>
+    </div>
+    <div style="overflow-x: auto;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Doctor</th>
+                    <th class="d-none-xs">Start Date</th>
+                    <th class="d-none-xs">End Date</th>
+                    <th>Status</th>
+                    <th class="d-none-sm">Assignee</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Project Apollo</td>
+                    <td class="d-none-xs">01/01/2023</td>
+                    <td class="d-none-xs">31/06/2023</td>
+                    <td><span class="badge badge-success">Done</span></td>
+                    <td class="d-none-sm">Vanessa Tucker</td>
+                </tr>
+                <tr>
+                    <td>Project Fireball</td>
+                    <td class="d-none-xs">01/01/2023</td>
+                    <td class="d-none-xs">31/06/2023</td>
+                    <td><span class="badge badge-danger">Cancelled</span></td>
+                    <td class="d-none-sm">William Harris</td>
+                </tr>
+                <tr>
+                    <td>Project Hades</td>
+                    <td class="d-none-xs">01/01/2023</td>
+                    <td class="d-none-xs">31/06/2023</td>
+                    <td><span class="badge badge-success">Done</span></td>
+                    <td class="d-none-sm">Sharon Lessman</td>
+                </tr>
+                <tr>
+                    <td>Project Nitro</td>
+                    <td class="d-none-xs">01/01/2023</td>
+                    <td class="d-none-xs">31/06/2023</td>
+                    <td><span class="badge badge-warning">In progress</span></td>
+                    <td class="d-none-sm">Vanessa Tucker</td>
+                </tr>
+                <tr>
+                    <td>Project Phoenix</td>
+                    <td class="d-none-xs">01/01/2023</td>
+                    <td class="d-none-xs">31/06/2023</td>
+                    <td><span class="badge badge-success">Done</span></td>
+                    <td class="d-none-sm">William Harris</td>
+                </tr>
+                <tr>
+                    <td>Project X</td>
+                    <td class="d-none-xs">01/01/2023</td>
+                    <td class="d-none-xs">31/06/2023</td>
+                    <td><span class="badge badge-success">Done</span></td>
+                    <td class="d-none-sm">Sharon Lessman</td>
+                </tr>
+                <tr>
+                    <td>Project Romeo</td>
+                    <td class="d-none-xs">01/01/2023</td>
+                    <td class="d-none-xs">31/06/2023</td>
+                    <td><span class="badge badge-success">Done</span></td>
+                    <td class="d-none-sm">Christina Mason</td>
+                </tr>
+                <tr>
+                    <td>Project Wombat</td>
+                    <td class="d-none-xs">01/01/2023</td>
+                    <td class="d-none-xs">31/06/2023</td>
+                    <td><span class="badge badge-warning">In progress</span></td>
+                    <td class="d-none-sm">William Harris</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<script>
+    // TODO: change this to fetch data or recieve them from C# handler or whatever
+    const events = [
+        { date: '2026-04-05', name: 'General Visit', time: '10:00 AM' },
+        { date: '2026-04-05', name: 'General Visit', time: '04:10 PM' },
+        { date: '2026-04-05', name: 'General Visit', time: '06:30 PM' },
+        { date: '2026-04-12', name: 'Follow-up Visit', time: '09:00 AM' },
+        { date: '2026-04-18', name: 'Lab Results Review', time: '02:30 PM' },
+        { date: '2026-04-24', name: 'Specialist Consult', time: '11:00 AM' },
+    ];
+
+    let current = new Date(2026, 3, 1);
+    let selectedDate = '2026-04-16';
+
+    function formatKey(d) {
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function changeMonth(dir) {
+        current = new Date(current.getFullYear(), current.getMonth() + dir, 1);
+        render();
+    }
+
+    function selectDay(key) {
+        selectedDate = key;
+        render();
+    }
+
+    function render() {
+        const year = current.getFullYear();
+        const month = current.getMonth();
+        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        document.getElementById('month-title').textContent = months[month] + ' ' + year;
+
+        const grid = document.getElementById('days-grid');
+        grid.innerHTML = '';
+
+        const today = formatKey(new Date());
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const prevDays = new Date(year, month, 0).getDate();
+
+        const eventMap = {};
+        events.forEach(ev => {
+            if (!eventMap[ev.date]) eventMap[ev.date] = [];
+            eventMap[ev.date].push(ev);
+        });
+
+        for (let i = 0; i < firstDay; i++) {
+            const d = prevDays - firstDay + 1 + i;
+            const cell = document.createElement('div');
+            cell.className = 'day-cell other';
+            cell.innerHTML = `<span class="day-num">${d}</span>`;
+            grid.appendChild(cell);
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const key = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+            const cell = document.createElement('div');
+            let cls = 'day-cell';
+            if (key === today) cls += ' today';
+            else if (key === selectedDate) cls += ' selected';
+            cell.className = cls;
+            const dots = eventMap[key] ? `<div class="dot-row">${eventMap[key].slice(0, 3).map((_, i) => `<div class="dot ${['blue', 'green', 'purple'][i % 3]}"></div>`).join('')}</div>` : '';
+            cell.innerHTML = `<span class="day-num">${d}</span>${dots}`;
+            cell.onclick = () => selectDay(key);
+            grid.appendChild(cell);
+        }
+
+        const totalCells = firstDay + daysInMonth;
+        const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+        for (let i = 1; i <= remaining; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'day-cell other';
+            cell.innerHTML = `<span class="day-num">${i}</span>`;
+            grid.appendChild(cell);
+        }
+
+        const dayEvents = events.filter(ev => ev.date === selectedDate);
+        const list = document.getElementById('events-list');
+        const label = document.getElementById('events-label');
+
+        if (selectedDate) {
+            const [y, m, dd] = selectedDate.split('-');
+            const dateObj = new Date(+y, +m - 1, +dd);
+            const opts = { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' };
+            label.textContent = dayEvents.length ? `Appointments — ${dateObj.toLocaleDateString('en-GB', opts)}` : 'No appointments';
+        }
+
+        list.innerHTML = '';
+        if (!dayEvents.length) {
+            list.innerHTML = '<div style="color: var(--color-text-tertiary); font-size: 14px; text-align:center; padding: 16px;">No appointments on this day</div>';
+            return;
+        }
+
+        dayEvents.sort((a, b) => a.time.localeCompare(b.time));
+        dayEvents.forEach((ev, idx) => {
+            const card = document.createElement('div');
+            card.className = 'event-card' + (idx === 0 ? ' highlighted' : '');
+            card.innerHTML = `
+      <div class="event-name">${ev.name}</div>
+      <div class="event-time">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date(...selectedDate.split('-').map((v, i) => i === 1 ? +v - 1 : +v)).getDay()]}, ${selectedDate.split('-')[2]} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][+selectedDate.split('-')[1] - 1]} ${selectedDate.split('-')[0]}, ${ev.time}
+      </div>
+    `;
+            list.appendChild(card);
+        });
+    }
+
+    render();
+</script>
