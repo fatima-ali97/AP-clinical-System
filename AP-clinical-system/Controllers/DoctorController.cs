@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AP_clinical_system.Models.sql_Context;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using AP_clinical_system.Models.sql_Context;
 
 namespace AP_clinical_system.Controllers
 {
+    // private readonly AP_Context _context;
     public class DoctorController : Controller
     {
 
@@ -11,6 +14,12 @@ namespace AP_clinical_system.Controllers
         {
             return View();
         }
+
+        public DoctorController(AP_Context context)
+        {
+            //  _context = context;
+        }
+
 
         // GET
         public ActionResult Schedule()

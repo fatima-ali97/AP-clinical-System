@@ -1,7 +1,7 @@
 @using AP_clinical_system.Services
 
 @{
-    var role = "Manager";
+    var role = "Patient";
     var items = NavigationService.GetNavForRole(role);
     var activePage = ViewData["ActivePage"]?.ToString();
 }

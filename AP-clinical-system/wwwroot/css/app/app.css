@@ -385,3 +385,8 @@
 .event-time svg {
   opacity: 0.5;
 }
+.entry {
+  padding: 5%;
+  background-color: var(--color-blue-400);
+  color: #020617;
+}

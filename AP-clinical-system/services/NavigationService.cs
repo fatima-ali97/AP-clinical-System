@@ -8,8 +8,9 @@
             "Manager" => new List<NavItem>
         {
             new() { Label = "Dashboard",    Controller = "Manager",      Action = "Index",         Icon = "fa-solid fa-table-cells-large" },
+            // TODO:  rename to doctor availability
             new() { Label = "Doctors",      Controller = "Manager",      Action = "Doctors",       Icon = "fa-solid fa-user-doctor" },
-            new() { Label = "Appointments", Controller = "Manager",      Action = "Appointments",  Icon ="fa-solid fa-calendar" },
+
             new() { Label = "Reports",      Controller = "Manager",      Action = "Reports",       Icon = "fa-solid fa-chart-line" },
             new() { Label = "Users",        Controller = "Manager",      Action = "Users",         Icon = "fa-solid fa-user-gear" },
         },
@@ -18,6 +19,7 @@
         {
             new() { Label = "Dashboard",    Controller = "Doctor",       Action = "Index",         Icon = "fa-solid fa-table-cells-large" },
             new() { Label = "My Schedule",  Controller = "Doctor",       Action = "Schedule",      Icon = "fa-solid fa-calendar"},
+            new() { Label = "My Appointments",  Controller = "Doctor",       Action = "Schedule",      Icon = "fa-solid fa-calendar"},
             new() { Label = "My Patients",  Controller = "Doctor",       Action = "Patients",      Icon = "fa-solid fa-bed-pulse" },
             new() { Label = "Prescriptions",Controller = "Doctor",       Action = "Prescriptions", Icon = "fa-solid fa-capsules" },
         },
