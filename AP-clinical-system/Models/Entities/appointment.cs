@@ -20,7 +20,7 @@ namespace AP_clinical_system.Models.Entities
         public Guid specialization_ref { get; set; }
         public string specialization_lookup_to { get; set; } = "doctor_specialization";
         public DateOnly date { get; set; }
-        public int time_slot { get; set; }
-        public int status { get; set; }
+        public int appointment_time_slot { get; set; }
+        public int appointment_status { get; set; }
     }
 }

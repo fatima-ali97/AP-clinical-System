@@ -9,6 +9,7 @@ namespace AP_clinical_system.Models.Entities
         public DateTime? modifiedon { get; set; }
         public Guid? modifiedby { get; set; }
 
+        public string record_no { get; set; }
         public Guid doctor_information_ref { get; set; }
         public string doctor_information_lookup_to { get; set; } = "doctor_information";
         public DateOnly start_date { get; set; }

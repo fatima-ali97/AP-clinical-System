@@ -9,6 +9,7 @@ namespace AP_clinical_system.Models.Entities
         public DateTime? modifiedon { get; set; }
         public Guid? modifiedby { get; set; }
 
+        public string notification_no { get; set; }
         public Guid system_user_ref { get; set; }
         public string system_user_lookup_to { get; set; } = "system_user";
         public string title { get; set; }
