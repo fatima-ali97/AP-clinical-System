@@ -161,23 +161,43 @@
 
         function buildForm(data) {
             const form = document.getElementById('entity-form');
-            form.style.display = 'grid';
-            let html = '';
+            form.style.display = 'block'; 
+            
+            let normalHtml = '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:24px;">';
+            let systemHtml = '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:24px; opacity:0.8;">';
 
             for (const col of schema) {
                 if (col.name.endsWith('_lookup_to')) continue;
 
                 const val = data ? data[col.name] : null;
-                const isSystemField = ['id', 'createdon', 'createdby', 'modifiedon', 'modifiedby'].includes(col.name);
+                const isSystemField = ['id', 'inactive', 'createdon', 'createdby', 'modifiedon', 'modifiedby'].includes(col.name);
                 const readOnly = (col.name === 'id' && !IS_NEW) || isSystemField || col.isAutoNumber;
 
-                html += `<div class="admin-field-group ${isSystemField ? 'system-field' : ''}">`;
-                html += `<label for="field-${col.name}">${col.name.replace(/_/g, ' ')}</label>`;
-                html += getInputHtml(col, val, readOnly);
-                html += '</div>';
+                let fieldHtml = `<div class="admin-field-group ${isSystemField ? 'system-field' : ''}">`;
+                fieldHtml += `<label for="field-${col.name}">${col.name.replace(/_/g, ' ')}</label>`;
+                fieldHtml += getInputHtml(col, val, readOnly);
+                fieldHtml += '</div>';
+                
+                if (isSystemField) {
+                    systemHtml += fieldHtml;
+                } else {
+                    normalHtml += fieldHtml;
+                }
             }
 
-            form.innerHTML = html;
+            normalHtml += '</div>';
+            systemHtml += '</div>';
+
+            form.innerHTML = `
+                <div class="admin-form-section">
+                    <h3 style="margin-bottom:16px; font-weight:600; border-bottom:1px solid var(--admin-border); padding-bottom:8px;">General Information</h3>
+                    ${normalHtml}
+                </div>
+                <div class="admin-form-section" style="margin-top:32px;">
+                    <h3 style="margin-bottom:16px; font-weight:600; border-bottom:1px solid var(--admin-border); padding-bottom:8px; color:#8b949e;">System Parameters</h3>
+                    ${systemHtml}
+                </div>
+            `;
         }
 
         function getInputHtml(col, val, readOnly) {
