@@ -12,6 +12,6 @@ namespace AP_clinical_system.Models.Entities
         public string record_no { get; set; }
         public string job_title { get; set; }
         public Guid system_user_ref { get; set; }
-        public string system_user_lookup_to { get; set; }
+        public string system_user_lookup_to { get; set; } = "system_user";
     }
 }

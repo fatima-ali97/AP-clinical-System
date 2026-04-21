@@ -14,10 +14,10 @@ namespace AP_clinical_system.Models.Entities
         public string medicine_dosage { get; set; }
         public string medicine_frequency_duration { get; set; }
         public Guid appointment_ref { get; set; }
-        public string appointment_lookup_to { get; set; }
+        public string appointment_lookup_to { get; set; } = "appointment";
         public Guid patient_ref { get; set; }
-        public string patient_lookup_to { get; set; }
+        public string patient_lookup_to { get; set; } = "patient_information";
         public Guid doctor_ref { get; set; }
-        public string doctor_lookup_to { get; set; }
+        public string doctor_lookup_to { get; set; } = "doctor_information";
     }
 }

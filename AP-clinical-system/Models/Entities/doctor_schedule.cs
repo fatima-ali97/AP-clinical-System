@@ -10,7 +10,7 @@ namespace AP_clinical_system.Models.Entities
         public Guid? modifiedby { get; set; }
 
         public Guid doctor_information_ref { get; set; }
-        public string doctor_information_lookup_to { get; set; }
+        public string doctor_information_lookup_to { get; set; } = "doctor_information";
         public string? sunday_start { get; set; }
         public string? sunday_end { get; set; }
 
