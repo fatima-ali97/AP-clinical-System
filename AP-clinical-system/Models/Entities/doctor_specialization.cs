@@ -9,8 +9,8 @@ namespace AP_clinical_system.Models.Entities
         public DateTime? modifiedon { get; set; }
         public Guid? modifiedby { get; set; }
 
-        public string record_no { get; set; }
-        public string specialization_name { get; set; }
-        public string specialization_details { get; set; }
+        public string? record_no { get; set; }
+        public string? specialization_name { get; set; }
+        public string? specialization_details { get; set; }
     }
 }

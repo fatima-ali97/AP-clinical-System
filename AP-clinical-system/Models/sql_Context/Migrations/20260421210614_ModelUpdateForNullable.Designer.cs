@@ -4,6 +4,7 @@ using AP_clinical_system.Models.sql_Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AP_clinical_system.Models.sql_Context.Migrations
 {
     [DbContext(typeof(AP_Context))]
-    partial class AP_ContextModelSnapshot : ModelSnapshot
+    [Migration("20260421210614_ModelUpdateForNullable")]
+    partial class ModelUpdateForNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -123,6 +126,125 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                     b.HasKey("id");
 
                     b.ToTable("autonumbers");
+
+                    b.HasData(
+                        new
+                        {
+                            id = new Guid("c2ca50d2-5d07-44bd-b276-dbeaa3be35d2"),
+                            createdon = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            entity_name = "appointment",
+                            field_name = "appointment_no",
+                            last_number = 1,
+                            pattern = "APP-{0:D5}"
+                        },
+                        new
+                        {
+                            id = new Guid("4ea131a1-69a8-4b16-b378-f3f8ab68aab7"),
+                            createdon = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            entity_name = "clinic_manager_information",
+                            field_name = "record_no",
+                            last_number = 1,
+                            pattern = "CMI-{0:D5}"
+                        },
+                        new
+                        {
+                            id = new Guid("4f22e6eb-35b7-46c3-ba05-e5ad8c079142"),
+                            createdon = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            entity_name = "doctor_information",
+                            field_name = "record_no",
+                            last_number = 1,
+                            pattern = "DINF-{0:D5}"
+                        },
+                        new
+                        {
+                            id = new Guid("b91bf242-b386-4df3-8cdf-9843b5874699"),
+                            createdon = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            entity_name = "doctor_information_specialization_mtm",
+                            field_name = "record_no",
+                            last_number = 1,
+                            pattern = "DIS-{0:D5}"
+                        },
+                        new
+                        {
+                            id = new Guid("34186f8c-36bc-4846-8532-356d87d6ff5e"),
+                            createdon = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            entity_name = "doctor_leave",
+                            field_name = "record_no",
+                            last_number = 1,
+                            pattern = "DLV-{0:D5}"
+                        },
+                        new
+                        {
+                            id = new Guid("53ff12ad-3d2e-49c6-8043-ec5ba79940fd"),
+                            createdon = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            entity_name = "doctor_schedule",
+                            field_name = "record_no",
+                            last_number = 1,
+                            pattern = "DSC-{0:D5}"
+                        },
+                        new
+                        {
+                            id = new Guid("32bec5fd-5b47-4c55-a67f-dfe1abef7a3c"),
+                            createdon = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            entity_name = "doctor_specialization",
+                            field_name = "record_no",
+                            last_number = 1,
+                            pattern = "DSP-{0:D5}"
+                        },
+                        new
+                        {
+                            id = new Guid("c463e8b8-3d2d-4584-9807-a3bf41aa5678"),
+                            createdon = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            entity_name = "notification",
+                            field_name = "notification_no",
+                            last_number = 1,
+                            pattern = "NOTI-{0:D5}"
+                        },
+                        new
+                        {
+                            id = new Guid("286bb02d-a01c-4895-a77d-15aebccc7af2"),
+                            createdon = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            entity_name = "patient_information",
+                            field_name = "record_no",
+                            last_number = 1,
+                            pattern = "PINF-{0:D5}"
+                        },
+                        new
+                        {
+                            id = new Guid("8bc1ec1d-60e6-4b10-a083-1d7993ec2602"),
+                            createdon = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            entity_name = "prescription",
+                            field_name = "prescription_no",
+                            last_number = 1,
+                            pattern = "PRS-{0:D5}"
+                        },
+                        new
+                        {
+                            id = new Guid("746d4975-4013-4ff3-abde-dff8f4bbe554"),
+                            createdon = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            entity_name = "receptionist_information",
+                            field_name = "record_no",
+                            last_number = 1,
+                            pattern = "RINF-{0:D5}"
+                        },
+                        new
+                        {
+                            id = new Guid("a4fb3154-6358-444f-a8fe-3e4d9e829ec2"),
+                            createdon = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            entity_name = "system_user",
+                            field_name = "user_no",
+                            last_number = 1,
+                            pattern = "USR-{0:D5}"
+                        },
+                        new
+                        {
+                            id = new Guid("0635f853-0267-4160-bd20-058936353d4a"),
+                            createdon = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            entity_name = "visit_record",
+                            field_name = "record_no",
+                            last_number = 1,
+                            pattern = "VR-{0:D5}"
+                        });
                 });
 
             modelBuilder.Entity("AP_clinical_system.Models.Entities.clinic_manager_information", b =>
@@ -622,6 +744,25 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                     b.HasKey("id");
 
                     b.ToTable("system_users");
+
+                    b.HasData(
+                        new
+                        {
+                            id = new Guid("b9c9f28d-19df-4c31-92f7-5ebd7e5dc8d1"),
+                            cpr = "040400069",
+                            createdby = new Guid("b9c9f28d-19df-4c31-92f7-5ebd7e5dc8d1"),
+                            createdon = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            email = "abbasfadhel499@gmail.com",
+                            firt_name = "Abbas",
+                            hashed_password = "123",
+                            inactive = false,
+                            last_name = "Aljamri",
+                            modifiedby = new Guid("b9c9f28d-19df-4c31-92f7-5ebd7e5dc8d1"),
+                            modifiedon = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            phone_number = "34309097",
+                            user_no = "USR-00001",
+                            user_role = 1000
+                        });
                 });
 
             modelBuilder.Entity("AP_clinical_system.Models.Entities.visit_record", b =>

@@ -9,9 +9,9 @@ namespace AP_clinical_system.Models.Entities
         public DateTime? modifiedon { get; set; }
         public Guid? modifiedby { get; set; }
 
-        public string entity_name { get; set; }
-        public string field_name { get; set; }
-        public string pattern { get; set; }
-        public int last_number { get; set; }
+        public string? entity_name { get; set; }
+        public string? field_name { get; set; }
+        public string? pattern { get; set; }
+        public int? last_number { get; set; }
     }
 }

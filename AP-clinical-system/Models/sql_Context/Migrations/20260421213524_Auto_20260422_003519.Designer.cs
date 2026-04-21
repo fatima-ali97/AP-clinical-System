@@ -4,6 +4,7 @@ using AP_clinical_system.Models.sql_Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AP_clinical_system.Models.sql_Context.Migrations
 {
     [DbContext(typeof(AP_Context))]
-    partial class AP_ContextModelSnapshot : ModelSnapshot
+    [Migration("20260421213524_Auto_20260422_003519")]
+    partial class Auto_20260422_003519
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

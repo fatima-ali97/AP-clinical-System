@@ -4,6 +4,7 @@ using AP_clinical_system.Models.sql_Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AP_clinical_system.Models.sql_Context.Migrations
 {
     [DbContext(typeof(AP_Context))]
-    partial class AP_ContextModelSnapshot : ModelSnapshot
+    [Migration("20260421205443_Auto_20260421_235438")]
+    partial class Auto_20260421_235438
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -29,15 +32,17 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("appointment_no")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("appointment_reason")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("appointment_status")
+                    b.Property<int>("appointment_status")
                         .HasColumnType("int");
 
-                    b.Property<int?>("appointment_time_slot")
+                    b.Property<int>("appointment_time_slot")
                         .HasColumnType("int");
 
                     b.Property<Guid?>("createdby")
@@ -46,13 +51,14 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                     b.Property<DateTime>("createdon")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateOnly?>("date")
+                    b.Property<DateOnly>("date")
                         .HasColumnType("date");
 
                     b.Property<string>("doctor_lookup_to")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("doctor_ref")
+                    b.Property<Guid>("doctor_ref")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool?>("inactive")
@@ -65,21 +71,24 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("patient_lookup_to")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("patient_ref")
+                    b.Property<Guid>("patient_ref")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("receptionist_lookup_to")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("receptionist_ref")
+                    b.Property<Guid>("receptionist_ref")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("specialization_lookup_to")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("specialization_ref")
+                    b.Property<Guid>("specialization_ref")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("id");
@@ -100,15 +109,17 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("entity_name")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("field_name")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool?>("inactive")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("last_number")
+                    b.Property<int>("last_number")
                         .HasColumnType("int");
 
                     b.Property<Guid?>("modifiedby")
@@ -118,6 +129,7 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("pattern")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("id");
@@ -141,6 +153,7 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("job_title")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("modifiedby")
@@ -150,12 +163,14 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("record_no")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("system_user_lookup_to")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("system_user_ref")
+                    b.Property<Guid>("system_user_ref")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("id");
@@ -179,6 +194,7 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("job_title")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("modifiedby")
@@ -188,12 +204,14 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("record_no")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("system_user_lookup_to")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("system_user_ref")
+                    b.Property<Guid>("system_user_ref")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("id");
@@ -214,15 +232,17 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("doctor_information_lookup_to")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("doctor_information_ref")
+                    b.Property<Guid>("doctor_information_ref")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("doctor_specialization_lookup_to")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("doctor_specialization_ref")
+                    b.Property<Guid>("doctor_specialization_ref")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool?>("inactive")
@@ -235,6 +255,7 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("record_no")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("id");
@@ -255,18 +276,19 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("doctor_information_lookup_to")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("doctor_information_ref")
+                    b.Property<Guid>("doctor_information_ref")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateOnly?>("end_date")
+                    b.Property<DateOnly>("end_date")
                         .HasColumnType("date");
 
                     b.Property<bool?>("inactive")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("leave_type")
+                    b.Property<int>("leave_type")
                         .HasColumnType("int");
 
                     b.Property<Guid?>("modifiedby")
@@ -279,9 +301,10 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("record_no")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateOnly?>("start_date")
+                    b.Property<DateOnly>("start_date")
                         .HasColumnType("date");
 
                     b.HasKey("id");
@@ -302,9 +325,10 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("doctor_information_lookup_to")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("doctor_information_ref")
+                    b.Property<Guid>("doctor_information_ref")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("friday_end")
@@ -329,6 +353,7 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("record_no")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("saturday_end")
@@ -388,12 +413,15 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("record_no")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("specialization_details")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("specialization_name")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("id");
@@ -420,6 +448,7 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("message")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("modifiedby")
@@ -429,15 +458,18 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("notification_no")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("system_user_lookup_to")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("system_user_ref")
+                    b.Property<Guid>("system_user_ref")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("title")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("id");
@@ -467,12 +499,14 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("record_no")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("system_user_lookup_to")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("system_user_ref")
+                    b.Property<Guid>("system_user_ref")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("id");
@@ -487,9 +521,10 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("appointment_lookup_to")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("appointment_ref")
+                    b.Property<Guid>("appointment_ref")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("createdby")
@@ -499,21 +534,25 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("doctor_lookup_to")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("doctor_ref")
+                    b.Property<Guid>("doctor_ref")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool?>("inactive")
                         .HasColumnType("bit");
 
                     b.Property<string>("medicine_dosage")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("medicine_frequency_duration")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("medicine_name")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("modifiedby")
@@ -523,12 +562,14 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("patient_lookup_to")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("patient_ref")
+                    b.Property<Guid>("patient_ref")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("prescription_no")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("id");
@@ -552,6 +593,7 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("job_title")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("modifiedby")
@@ -561,12 +603,14 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("record_no")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("system_user_lookup_to")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("system_user_ref")
+                    b.Property<Guid>("system_user_ref")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("id");
@@ -581,6 +625,7 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("cpr")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("createdby")
@@ -590,18 +635,22 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("email")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("firt_name")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("hashed_password")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool?>("inactive")
                         .HasColumnType("bit");
 
                     b.Property<string>("last_name")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("modifiedby")
@@ -611,12 +660,14 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("phone_number")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("user_no")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("user_role")
+                    b.Property<int>("user_role")
                         .HasColumnType("int");
 
                     b.HasKey("id");
@@ -631,9 +682,10 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("appointment_lookup_to")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("appointment_ref")
+                    b.Property<Guid>("appointment_ref")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("createdby")
@@ -643,9 +695,11 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("diagnosis")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("doctor_notes")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool?>("inactive")
@@ -658,9 +712,11 @@ namespace AP_clinical_system.Models.sql_Context.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("prescribed_treatment")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("record_no")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("id");
