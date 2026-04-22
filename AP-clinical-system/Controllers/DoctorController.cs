@@ -5,11 +5,9 @@ using AP_clinical_system.Models.sql_Context;
 
 namespace AP_clinical_system.Controllers
 {
-    // private readonly AP_Context _context;
     public class DoctorController : Controller
     {
-
-
+        private readonly AP_Context _context;
         public ActionResult Index()
         {
             return View();
@@ -17,7 +15,7 @@ namespace AP_clinical_system.Controllers
 
         public DoctorController(AP_Context context)
         {
-            //  _context = context;
+            _context = context;
         }
 
 
