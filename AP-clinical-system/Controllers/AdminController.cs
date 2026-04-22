@@ -311,9 +311,11 @@ namespace AP_clinical_system.Controllers
             // Map fields from body
             foreach (var prop in props)
             {
-                if (prop.Name == "id" && existingId.HasValue) continue; // Don't overwrite PK on update
-                if (prop.Name == "createdon" && existingId.HasValue) continue; // Don't overwrite createdon on update
+                if (prop.Name == "id") continue; // Don't overwrite PK
+                if (prop.Name == "createdon") continue; // Already set above, or preserved on update
+                if (prop.Name == "createdby") continue; // Already set above, or preserved on update
                 if (prop.Name == "modifiedon") continue; // Already set above
+                if (prop.Name == "modifiedby") continue; // Already set above
 
                 if (body.TryGetProperty(prop.Name, out var jsonVal))
                 {
