@@ -12,7 +12,7 @@
             <a href="#" class="hpd hpd-basic">
                 <h4 class="hpd-title">Welcome, from patient controllerrrr</h4>
                 <p class="hpd-desc">Feel free to book an appointment with us!</p>
-                <span href="#" class="hpd-btn">Book Now</span>
+                <span class="hpd-btn" id="openModalBtn">Book Now</span>
             </a>
         </div>
 
@@ -176,7 +176,7 @@
         </table>
     </div>
 </div>
-
+@await Html.PartialAsync("_AppointmentBookingModal");
 
 <script>
     // TODO: change this to fetch data or recieve them from C# handler or whatever
@@ -289,4 +289,27 @@
     }
 
     render();
+
+
+
+    submitBtn.addEventListener('click', async () => {
+        const payload = {
+            appointment_reason: document.getElementById('reason').value,
+            specialization_ref: document.getElementById('specialization').value, // swap for actual GUID
+            doctor_ref: document.getElementById('doctor').value,                  // swap for actual GUID
+            date: document.getElementById('appointmentDate').value,
+            appointment_time_slot: selectedSlot,
+            appointment_status: 0  // e.g. 0 = Pending
+        };
+
+        const response = await fetch('/Appointments/Book', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            // show success state
+        }
+    });
 </script>

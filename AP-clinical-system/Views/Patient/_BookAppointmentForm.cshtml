@@ -1,13 +1,102 @@
-﻿@model AP_clinical_system.Models.Entities.appointment ; 
+﻿@* Views/Shared/_AppointmentBookingModal.cshtml *@
 
-@Html.AntiForgeryToken()
-<div class="form-group">
-    <label asp-for="doctor_ref" class="control-label"></label>
-    <input asp-for="doctor_ref" class="form-control" autocomplete="off" />
-    <span asp-validation-for="doctor_ref" class="text-danger"></span>
+<div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal" id="appointmentModal">
+        <form id="appointmentForm">
+            @Html.AntiForgeryToken()
+
+            <div class="modal-header"> ... </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="patientRef" name="patient_ref" value="@ViewBag.PatientId" />
+
+                <div class="field">
+                    <label>Specialization</label>
+                    <select name="specialization_ref" id="specialization">
+                        <option value="">Select specialization</option>
+                        @foreach (var s in ViewBag.Specializations)
+                        {
+                            <option value="@s.Id">@s.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Doctor</label>
+                    <select name="doctor_ref" id="doctor">
+                        <option value="">Select doctor</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Date</label>
+                    <input type="date" name="date" id="appointmentDate" />
+                </div>
+
+                <div class="field">
+                    <label>Time Slot</label>
+                    <input type="hidden" name="appointment_time_slot" id="slotInput" />
+                    <div id="slotGrid"> ... </div>
+                </div>
+
+                <div class="field">
+                    <label>Reason for visit</label>
+                    <textarea name="appointment_reason"></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" id="cancelBtn">Cancel</button>
+                <button type="submit">Confirm Booking</button>
+            </div>
+        </form>
+    </div>
 </div>
-<div class="form-group">
-    <label asp-for="specialization_ref" class="control-label"></label>
-    <input asp-for="specialization_ref" placeholder="Enter your Email Address" autocomplete="off" class="form-control" />
-    <span asp-validation-for="specialization_ref"></span>
-</div>
+
+
+
+
+
+
+<script>
+    // Dynamic doctor dropdown — fires when specialization changes
+    document.getElementById('specialization').addEventListener('change', async function () {
+        const specializationId = this.value;
+        const doctorSelect = document.getElementById('doctor');
+
+        doctorSelect.innerHTML = '<option value="">Loading...</option>';
+
+        const res = await fetch(`/Appointment/GetDoctorsBySpecialization?specializationId=${specializationId}`);
+        const doctors = await res.json();
+
+        doctorSelect.innerHTML = '<option value="">Select doctor</option>';
+        doctors.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d.id;
+            opt.textContent = d.name;
+            doctorSelect.appendChild(opt);
+        });
+    });
+
+    // Form submit via AJAX
+    document.getElementById('appointmentForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+
+        const res = await fetch('/Appointment/Book', {
+            method: 'POST',
+            body: formData   // FormData sends the antiforgery token automatically
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+            // show success state, display result.appointment_no
+        } else {
+            // show validation errors
+        }
+    });
+
+
+</script>
