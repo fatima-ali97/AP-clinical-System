@@ -1,0 +1,13 @@
+﻿@model AP_clinical_system.Models.Entities.appointment ; 
+
+@Html.AntiForgeryToken()
+<div class="form-group">
+    <label asp-for="doctor_ref" class="control-label"></label>
+    <input asp-for="doctor_ref" class="form-control" autocomplete="off" />
+    <span asp-validation-for="doctor_ref" class="text-danger"></span>
+</div>
+<div class="form-group">
+    <label asp-for="specialization_ref" class="control-label"></label>
+    <input asp-for="specialization_ref" placeholder="Enter your Email Address" autocomplete="off" class="form-control" />
+    <span asp-validation-for="specialization_ref"></span>
+</div>
