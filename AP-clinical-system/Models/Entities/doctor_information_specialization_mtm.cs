@@ -1,4 +1,4 @@
-namespace AP_clinical_system.Models.Entities
+ namespace AP_clinical_system.Models.Entities
 {
     public class doctor_information_specialization_mtm
     {
