@@ -22,14 +22,24 @@ namespace AP_clinical_system.Models
                 return new DoctorObject { Success = false, Message = "User is not a doctor" };
             }
            
-            var specializationIDs = context.doctor_information_specialization_mtms.Where(d => d.doctor_information_ref == doctorInformation.id).Select(d => d.doctor_specialization_ref).ToList();
+            var specializationIDs = context.doctor_information_specialization_mtms
+                .Where(d => d.doctor_information_ref == doctorInformation.id)
+                .Select(d => d.doctor_specialization_ref)
+                .ToList();
 
             if (specializationIDs == null || specializationIDs.Count == 0)
             {
                 return new DoctorObject { Success = false, Message = "Doctor has no specializations" };
             }
 
-            var specializationNames = context.doctor_specializations.Where(s => specializationIDs.Contains(s.id)).Select(s => s.specialization_name).ToList();
+            var specializations = context.doctor_specializations
+                .Where(s => specializationIDs.Contains(s.id))
+                .Select(s => new
+                {
+                  s.id,
+                  s.specialization_name
+                })
+                .ToList<dynamic>();
 
             DoctorObject doctor = new DoctorObject()
             {
@@ -40,7 +50,7 @@ namespace AP_clinical_system.Models
                 Email = doctorUser.email,
                 Phone = doctorUser.phone_number,
                 JobTitle = doctorInformation.job_title,
-                Specializations = specializationNames,
+                Specializations = specializations,
                 Success = true,
                 Message = "Doctor information retrieved successfully"
             };
@@ -152,7 +162,7 @@ namespace AP_clinical_system.Models
             public string Email { get; set; }
             public string Phone { get; set; }
             public string JobTitle { get; set; }
-            public List<string> Specializations { get; set; }
+            public List<dynamic> Specializations { get; set; }
 
             // For error handling
             public bool Success { get; set; } = true;
