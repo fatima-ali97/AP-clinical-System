@@ -1,9 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using AP_clinical_system.Models.Entities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+
 
 namespace AP_clinical_system.Models.sql_Context
 {
-    public class AP_Context : DbContext
+    public class AP_Context : IdentityDbContext
     {
         public AP_Context(DbContextOptions<AP_Context> options) : base(options) { }
         public DbSet<appointment> appointments { get; set; }
@@ -22,7 +25,10 @@ namespace AP_clinical_system.Models.sql_Context
         public DbSet<receptionist_information> receptionist_informations { get; set; }
 
 
-
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            base.OnConfiguring(optionsBuilder);
+        }
 
         
     }
