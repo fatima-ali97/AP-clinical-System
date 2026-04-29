@@ -1,0 +1,53 @@
+@using AP_clinical_system.Models.sql_Context
+@inject AP_Context _context
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+@{ //Get Uer Intials
+    var email = UserManager.GetUserName(User);
+
+    var sysUser = _context.system_users
+        .FirstOrDefault(u => u.email == email);
+
+    string initials = "?";
+
+    if (sysUser != null && !string.IsNullOrEmpty(sysUser.first_name))
+    {
+        var first = sysUser.first_name.Substring(0, 1).ToUpper();
+        var last = string.IsNullOrEmpty(sysUser.last_name)
+            ? ""
+            : sysUser.last_name.Substring(0, 1).ToUpper();
+
+        initials = first + last;
+    }
+}
+
+<ul class="navbar-nav ms-auto">
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <li class="nav-item">
+            <span class="nav-link">
+                Hello, @UserManager.GetUserName(User)!
+            </span>
+        </li>
+        <li class="nav-item">
+            <form asp-action="Logout" asp-controller="Account" method="post">
+                <button type="submit" class="nav-link btn btn-link">
+                    Logout
+                </button>
+            </form>
+        </li>
+    }
+    else
+    {
+        <li class="nav-item">
+            <a class="nav-link" asp-action="Register"
+               asp-controller="Account">Register</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" asp-action="Login"
+               asp-controller="Account">Login</a>
+        </li>
+    }
+</ul>
