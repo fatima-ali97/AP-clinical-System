@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using AP_clinical_system.Models.sql_Context;
 using Microsoft.AspNetCore.Identity;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -16,19 +17,28 @@ builder.Services.AddDbContext<AP_Context>(options =>
         sqlOptions.EnableRetryOnFailure()));
 
 //identity service
-builder.Services.AddDefaultIdentity<IdentityUser>(options =>
+builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 {
     options.Password.RequireDigit = true;
     options.Password.RequiredLength = 8;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = true;
     options.Password.RequireLowercase = true;
+
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
     options.Lockout.MaxFailedAccessAttempts = 5;
+
     options.User.RequireUniqueEmail = true;
     options.SignIn.RequireConfirmedAccount = false;
 })
-.AddEntityFrameworkStores<AP_Context>();
+.AddEntityFrameworkStores<AP_Context>()
+.AddDefaultTokenProviders();
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.AccessDeniedPath = "/Account/AccessDenied";
+});
+
 
 // Session support (for admin panel)
 builder.Services.AddDistributedMemoryCache();
@@ -40,6 +50,22 @@ builder.Services.AddSession(options =>
 });
 
 var app = builder.Build();
+
+//Role Creation
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    string[] roles = { "Patient", "Doctor", "Receptionist", "ClinicManager" };
+
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new IdentityRole(role));
+        }
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -74,5 +100,4 @@ app.MapControllerRoute(
 //     };
 // });
 
-app.MapRazorPages();
 app.Run();
