@@ -21,7 +21,7 @@ namespace AP_clinical_system.Controllers
         }
 
         [HttpGet]
-        public IActionResult getAllSpecializations()
+        public IActionResult GetAllSpecializations()
         {
             var specializations = context.doctor_specializations
             .Where(s => s.inactive != true)
@@ -36,7 +36,7 @@ namespace AP_clinical_system.Controllers
         }
 
         [HttpPost]
-        public IActionResult getDoctorsBySpecialization([FromBody] JsonElement body)
+        public IActionResult GetDoctorsBySpecialization([FromBody] JsonElement body)
         {
             var specializationID = body.GetProperty("specializationID").GetGuid();
 
@@ -178,6 +178,8 @@ namespace AP_clinical_system.Controllers
 
             return Ok(result);
         }
+
+
 
         private (string? start, string? end) GetScheduleForDay(doctor_schedule schedule, DayOfWeek day)
         {
