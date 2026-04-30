@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
 using AP_clinical_system.Models.sql_Context;
+using AP_clinical_system.Models.Entities;
 using Microsoft.AspNetCore.Identity;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,8 +16,8 @@ builder.Services.AddDbContext<AP_Context>(options =>
     options.UseSqlServer(connectionString, sqlOptions => 
         sqlOptions.EnableRetryOnFailure()));
 
-//identity service
-builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+// Identity services
+builder.Services.AddIdentity<system_user, IdentityRole<Guid>>(options =>
 {
     options.Password.RequireDigit = true;
     options.Password.RequiredLength = 8;
@@ -36,9 +36,9 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
+    options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/AccessDenied";
 });
-
 
 // Session support (for admin panel)
 builder.Services.AddDistributedMemoryCache();
@@ -51,10 +51,10 @@ builder.Services.AddSession(options =>
 
 var app = builder.Build();
 
-//Role Creation
+// Role seeding
 using (var scope = app.Services.CreateScope())
 {
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
 
     string[] roles = { "Patient", "Doctor", "Receptionist", "ClinicManager" };
 
@@ -62,7 +62,7 @@ using (var scope = app.Services.CreateScope())
     {
         if (!await roleManager.RoleExistsAsync(role))
         {
-            await roleManager.CreateAsync(new IdentityRole(role));
+            await roleManager.CreateAsync(new IdentityRole<Guid> { Name = role });
         }
     }
 }
@@ -88,16 +88,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Patient}/{action=Index}/{id?}")
     .WithStaticAssets();
-
-// builder.Services.ConfigureApplicationCookie(options =>
-// {
-//     options.LoginPath = "/Identity/Account/Login";
-//     options.AccessDeniedPath = "/Identity/Account/AccessDenied";
-//     options.Events.OnRedirectToLogin = context =>
-//     {
-//         context.Response.Redirect(context.RedirectUri);
-//         return Task.CompletedTask;
-//     };
-// });
 
 app.Run();
