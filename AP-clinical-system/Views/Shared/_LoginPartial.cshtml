@@ -1,43 +1,8 @@
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager
-
-@{
-    var firstName = User.FindFirst("FirstName")?.Value;
-    var lastName = User.FindFirst("LastName")?.Value;
-
-    string initials = "?";
-
-    if (!string.IsNullOrEmpty(firstName))
-    {
-        initials = firstName.Substring(0, 1).ToUpper();
-
-        if (!string.IsNullOrEmpty(lastName))
-        {
-            initials += lastName.Substring(0, 1).ToUpper();
-        }
-    }
-}
 
 <ul class="navbar-nav ms-auto align-items-center">
-    @if (SignInManager.IsSignedIn(User))
-    {
-        <li class="nav-item me-3">
-            <div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold"
-                 style="width:40px; height:40px; background-color:#2f7fa3;">
-                @initials
-            </div>
-        </li>
-
-        <li class="nav-item">
-            <form asp-action="Logout" asp-controller="Account" method="post" class="m-0">
-                <button type="submit" class="nav-link btn btn-link text-dark p-0">
-                    Logout
-                </button>
-            </form>
-        </li>
-    }
-    else
+    @if (!SignInManager.IsSignedIn(User))
     {
         <li class="nav-item">
             <a class="nav-link" asp-action="Register" asp-controller="Account">Register</a>

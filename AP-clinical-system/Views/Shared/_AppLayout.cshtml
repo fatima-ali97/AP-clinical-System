@@ -1,5 +1,35 @@
+@using AP_clinical_system.Services
+@using AP_clinical_system.Models.sql_Context
+@inject AP_Context _context
+
 @{
     ViewBag.DevRole = "Patient"; // swap this to test different navs
+
+    var email = User.Identity?.Name;
+
+    var sysUser = !string.IsNullOrEmpty(email)
+         ? _context.system_users.FirstOrDefault(u => u.Email == email)
+        : null;
+
+    string initials = "?";
+
+    if (sysUser != null)
+    {
+        var first = !string.IsNullOrEmpty(sysUser.first_name)
+            ? sysUser.first_name.Substring(0, 1).ToUpper()
+            : "";
+
+        var last = !string.IsNullOrEmpty(sysUser.last_name)
+            ? sysUser.last_name.Substring(0, 1).ToUpper()
+            : "";
+
+        initials = first + last;
+
+        if (string.IsNullOrEmpty(initials))
+        {
+            initials = "?";
+        }
+    }
 }
 
 <!DOCTYPE html>
@@ -476,18 +506,11 @@
                     <span class="badge-dot"></span>
                 </a>
                 *@
-
-                <a class="user-pill" href="#">
+                 <a class="user-pill" href="#">
                     <div class="user-pill-avatar">
-                        @* TODO: first letters of user's name — swap with real claim later *@
-                        @(User.Identity?.Name?
-                            .Split(' ')
-                            .Take(2)
-                            .Select(w => w[0].ToString().ToUpper())
-                            .Aggregate("", (a, b) => a + b) ?? "?")
+                        @initials
                     </div>
-                    <span>@User.Identity?.Name</span>
-                </a>
+                 </a>
             </div>
         </header>
 
