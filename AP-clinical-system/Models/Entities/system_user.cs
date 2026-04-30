@@ -1,8 +1,11 @@
+using Microsoft.AspNetCore.Identity;
+
 namespace AP_clinical_system.Models.Entities
 {
-    public class system_user
+    public class system_user : IdentityUser<Guid>
     {
-        public Guid id { get; set; }
+        // Identity User already provides some fields
+        // Custom fields:
         public bool? inactive { get; set; }
         public DateTime createdon { get; set; }
         public Guid? createdby { get; set; }
@@ -13,9 +16,6 @@ namespace AP_clinical_system.Models.Entities
         public string? cpr { get; set; }
         public string? first_name { get; set; }
         public string? last_name { get; set; }
-        public string? email { get; set; }
-        public string? phone_number { get; set; }
-        public string? hashed_password { get; set; }
         public int? user_role { get; set; }
     }
 }

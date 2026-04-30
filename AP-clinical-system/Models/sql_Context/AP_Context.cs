@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using AP_clinical_system.Models.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace AP_clinical_system.Models.sql_Context
 {
-    public class AP_Context : DbContext
+    public class AP_Context : IdentityDbContext<system_user, IdentityRole<Guid>, Guid>
     {
         public AP_Context(DbContextOptions<AP_Context> options) : base(options) { }
         public DbSet<appointment> appointments { get; set; }
@@ -21,9 +23,26 @@ namespace AP_clinical_system.Models.sql_Context
         public DbSet<patient_information> patient_informations { get; set; }
         public DbSet<receptionist_information> receptionist_informations { get; set; }
 
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder); // Required — lets Identity configure its tables
 
+            builder.Entity<system_user>(entity =>
+            {
+                entity.ToTable("system_users");
 
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.Email).HasColumnName("email");
+                entity.Property(e => e.PhoneNumber).HasColumnName("phone_number");
+                entity.Property(e => e.PasswordHash).HasColumnName("hashed_password");
+            });
 
-        
+            builder.Entity<IdentityRole<Guid>>(entity => entity.ToTable("system_roles"));
+            builder.Entity<IdentityUserRole<Guid>>(entity => entity.ToTable("system_user_roles"));
+            builder.Entity<IdentityUserClaim<Guid>>(entity => entity.ToTable("system_user_claims"));
+            builder.Entity<IdentityUserLogin<Guid>>(entity => entity.ToTable("system_user_logins"));
+            builder.Entity<IdentityUserToken<Guid>>(entity => entity.ToTable("system_user_tokens"));
+            builder.Entity<IdentityRoleClaim<Guid>>(entity => entity.ToTable("system_role_claims"));
+        }
     }
 }

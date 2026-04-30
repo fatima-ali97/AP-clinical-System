@@ -68,7 +68,7 @@ namespace AP_clinical_system.Controllers
             var doctorID = body.GetProperty("doctorID").GetGuid();
 
             var doctor = context.system_users
-                .Where(u => u.id == doctorID && u.user_role == (int)user_role.doctor && u.inactive != true)
+                .Where(u => u.Id == doctorID && u.user_role == (int)user_role.doctor && u.inactive != true)
                 .FirstOrDefault();
 
             if (doctor == null)
@@ -315,7 +315,7 @@ namespace AP_clinical_system.Controllers
             var doctorIDs = context.system_users
                 .Select(u => new
                 {
-                    u.id,
+                    u.Id,
                     u.user_role,
                     u.inactive
                 })
@@ -324,7 +324,7 @@ namespace AP_clinical_system.Controllers
 
             foreach (var doctor in doctorIDs)
             {
-                var doctorObject = GeneralHelper.GetDoctorObjectByID(context, doctor.id);
+                var doctorObject = GeneralHelper.GetDoctorObjectByID(context, doctor.Id);
                 if (doctorObject.Success)
                 {
                     doctors.Add(doctorObject);
