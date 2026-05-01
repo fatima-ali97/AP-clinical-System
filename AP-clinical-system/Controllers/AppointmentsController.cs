@@ -4,6 +4,10 @@ using AP_clinical_system.Models.Enums;
 using AP_clinical_system.Models.sql_Context;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
+using Microsoft.Identity.Client;
+using System.Net.WebSockets;
 using System.Text.Json;
 using static AP_clinical_system.Models.GeneralHelper;
 
@@ -64,7 +68,7 @@ namespace AP_clinical_system.Controllers
             var doctorID = body.GetProperty("doctorID").GetGuid();
 
             var doctor = context.system_users
-                .Where(u => u.id == doctorID && u.user_role == (int)user_role.doctor && u.inactive != true)
+                .Where(u => u.Id == doctorID && u.user_role == (int)user_role.doctor && u.inactive != true)
                 .FirstOrDefault();
 
             if (doctor == null)
@@ -179,7 +183,115 @@ namespace AP_clinical_system.Controllers
             return Ok(result);
         }
 
-        private (string? start, string? end) GetScheduleForDay(doctor_schedule schedule, DayOfWeek day)
+        [HttpPost]
+        public async Task<IActionResult> BookAppointment([FromBody] JsonElement body)
+        {
+            try
+            {
+                var patientId = GeneralHelper.GetUserIdByJWT(User);
+
+                var patientUserCheck = GeneralHelper.VerifyUserType(context, patientId, (int)user_role.patient);
+
+                if (!patientUserCheck)
+                {
+                    return BadRequest("Current User is not a Patient");
+                }
+
+                // system fields
+                var id = Guid.NewGuid();
+                var createdon = DateTime.Now;
+                var createdby = patientId;
+                var modifiedon = createdon;
+                var modifiedby = createdby;
+                var inactive = false;
+
+                // autonumber
+                var appointment_no = await GeneralHelper.GetAutonumber(context, "appointment");
+
+                // body properties
+                var appointment_reason = body.GetProperty("appointment_reason").GetString() ?? "";
+                var appointment_time_slot = body.GetProperty("appointment_time_slot").GetInt32();
+
+                var doctor_ref = body.GetProperty("doctor_ref").GetGuid();
+                var doctorUserCheck = GeneralHelper.VerifyUserType(context,doctor_ref, (int)user_role.doctor);
+                
+                if (!doctorUserCheck) {
+                    return BadRequest("Doctor ID provided does not belong to a doctor");
+                }
+
+                var specialization_ref = body.GetProperty("specialization_ref").GetGuid();
+             
+                var dateTime = body.GetProperty("date").GetDateTime();
+                var date = DateOnly.FromDateTime(dateTime);
+
+                var newAppointment = new appointment
+                {
+                    id = id,
+                    inactive = inactive,
+                    createdon = createdon,
+                    createdby = createdby,
+                    modifiedon = modifiedon,
+                    modifiedby = modifiedby,
+                    appointment_no = appointment_no,
+                    appointment_reason = appointment_reason,
+                    patient_ref = createdby,
+                    doctor_ref = doctor_ref,
+                    specialization_ref = specialization_ref,
+                    date = date,
+                    appointment_time_slot = appointment_time_slot,
+                    appointment_status = (int)appointment_status.requested
+                };
+
+                context.Add(newAppointment);
+                await context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+
+            return Ok();
+        }
+
+        [HttpPost]
+        public IActionResult ConfirmAppointment([FromBody] JsonElement body)
+        {
+            try
+            {
+                var appointmentId = body.GetProperty("appointment_id").GetGuid();
+
+                var appointment = context.appointments.FirstOrDefault(a => a.id == appointmentId 
+                                                                        && a.inactive != true);
+                if (appointment == null)
+                {
+                    return BadRequest("Appointment Not Found or is Inactive");
+                }
+
+                var receptionistId = GeneralHelper.GetUserIdByJWT(User);
+
+                var receptionistUserCheck = GeneralHelper.VerifyUserType(context, receptionistId, (int)user_role.receptionist);
+
+                if (!receptionistUserCheck)
+                {
+                    return BadRequest("User is not a receptionist");
+                }
+
+                appointment.receptionist_ref = receptionistId;
+                appointment.appointment_status = (int)appointment_status.confirmed;
+                appointment.modifiedon = DateTime.UtcNow;
+                appointment.modifiedby = receptionistId;
+
+                context.SaveChanges();
+            } 
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+
+            return Ok("Appointment Successfully Confirmed");
+        }
+
+        private static (string? start, string? end) GetScheduleForDay(doctor_schedule schedule, DayOfWeek day)
         {
             return day switch
             {
@@ -203,7 +315,7 @@ namespace AP_clinical_system.Controllers
             var doctorIDs = context.system_users
                 .Select(u => new
                 {
-                    u.id,
+                    u.Id,
                     u.user_role,
                     u.inactive
                 })
@@ -212,7 +324,7 @@ namespace AP_clinical_system.Controllers
 
             foreach (var doctor in doctorIDs)
             {
-                var doctorObject = GeneralHelper.GetDoctorObjectByID(context, doctor.id);
+                var doctorObject = GeneralHelper.GetDoctorObjectByID(context, doctor.Id);
                 if (doctorObject.Success)
                 {
                     doctors.Add(doctorObject);

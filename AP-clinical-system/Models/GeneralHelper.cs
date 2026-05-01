@@ -1,5 +1,8 @@
 using AP_clinical_system.Models.sql_Context;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
 using System.Net.NetworkInformation;
+using System.Security.Claims;
 
 namespace AP_clinical_system.Models
 {
@@ -8,14 +11,14 @@ namespace AP_clinical_system.Models
 
         public static DoctorObject GetDoctorObjectByID(AP_Context context, Guid doctorId)
         {
-            var doctorUser = context.system_users.Where(s => s.id == doctorId).FirstOrDefault();
+            var doctorUser = context.system_users.Where(s => s.Id == doctorId).FirstOrDefault();
 
             if (doctorUser == null)
             {
                 return new DoctorObject { Success = false, Message = "User not found" };
             }
 
-            var doctorInformation = context.doctor_informations.Where(d => d.system_user_ref == doctorUser.id).FirstOrDefault();
+            var doctorInformation = context.doctor_informations.Where(d => d.system_user_ref == doctorUser.Id).FirstOrDefault();
 
             if (doctorInformation == null)
             {
@@ -43,12 +46,12 @@ namespace AP_clinical_system.Models
 
             DoctorObject doctor = new DoctorObject()
             {
-                id = doctorUser.id,
+                id = doctorUser.Id,
                 CPR = doctorUser.cpr,
                 FirstName = doctorUser.first_name,
                 LastName = doctorUser.last_name,
-                Email = doctorUser.email,
-                Phone = doctorUser.phone_number,
+                Email = doctorUser.Email,
+                Phone = doctorUser.PhoneNumber,
                 JobTitle = doctorInformation.job_title,
                 Specializations = specializations,
                 Success = true,
@@ -60,14 +63,14 @@ namespace AP_clinical_system.Models
 
         public static PatientObject GetPatientObjectByID(AP_Context context, Guid patientId)
         {
-            var patientUser = context.system_users.Where(s => s.id == patientId).FirstOrDefault();
+            var patientUser = context.system_users.Where(s => s.Id == patientId).FirstOrDefault();
 
             if (patientUser == null)
             {
                 return new PatientObject { Success = false, Message = "User not found" };
             }
 
-            var patientInformation = context.patient_informations.Where(d => d.system_user_ref == patientUser.id).FirstOrDefault();
+            var patientInformation = context.patient_informations.Where(d => d.system_user_ref == patientUser.Id).FirstOrDefault();
 
             if (patientInformation == null)
             {
@@ -76,12 +79,12 @@ namespace AP_clinical_system.Models
 
             PatientObject patient = new PatientObject()
             {
-                id = patientUser.id,
+                id = patientUser.Id,
                 CPR = patientUser.cpr,
                 FirstName = patientUser.first_name,
                 LastName = patientUser.last_name,
-                Email = patientUser.email,
-                Phone = patientUser.phone_number,
+                Email = patientUser.Email,
+                Phone = patientUser.PhoneNumber,
                 Success = true,
                 Message = "Patient information retrieved successfully"
             };
@@ -91,14 +94,14 @@ namespace AP_clinical_system.Models
 
         public static ReceptionistObject GetReceptionistObjectByID(AP_Context context, Guid receptionistId)
         {
-            var receptionistUser = context.system_users.Where(s => s.id == receptionistId).FirstOrDefault();
+            var receptionistUser = context.system_users.Where(s => s.Id == receptionistId).FirstOrDefault();
 
             if (receptionistUser == null)
             {
                 return new ReceptionistObject { Success = false, Message = "User not found" };
             }
 
-            var receptionistInformation = context.receptionist_informations.Where(d => d.system_user_ref == receptionistUser.id).FirstOrDefault();
+            var receptionistInformation = context.receptionist_informations.Where(d => d.system_user_ref == receptionistUser.Id).FirstOrDefault();
 
             if (receptionistInformation == null)
             {
@@ -107,12 +110,12 @@ namespace AP_clinical_system.Models
 
             ReceptionistObject receptionist = new ReceptionistObject()
             {
-                id = receptionistUser.id,
+                id = receptionistUser.Id,
                 CPR = receptionistUser.cpr,
                 FirstName = receptionistUser.first_name,
                 LastName = receptionistUser.last_name,
-                Email = receptionistUser.email,
-                Phone = receptionistUser.phone_number,
+                Email = receptionistUser.Email,
+                Phone = receptionistUser.PhoneNumber,
                 JobTitle = receptionistInformation.job_title,
                 Success = true,
                 Message = "Receptionist information retrieved successfully"
@@ -123,14 +126,14 @@ namespace AP_clinical_system.Models
 
         public static ClinicManagerObject GetClinicManagerObjectByID(AP_Context context, Guid managerId)
         {
-            var managerUser = context.system_users.Where(s => s.id == managerId).FirstOrDefault();
+            var managerUser = context.system_users.Where(s => s.Id == managerId).FirstOrDefault();
 
             if (managerUser == null)
             {
                 return new ClinicManagerObject { Success = false, Message = "User not found" };
             }
 
-            var managerInformation = context.clinic_manager_informations.Where(d => d.system_user_ref == managerUser.id).FirstOrDefault();
+            var managerInformation = context.clinic_manager_informations.Where(d => d.system_user_ref == managerUser.Id).FirstOrDefault();
 
             if (managerInformation == null)
             {
@@ -139,18 +142,62 @@ namespace AP_clinical_system.Models
 
             ClinicManagerObject manager = new ClinicManagerObject()
             {
-                id = managerUser.id,
+                id = managerUser.Id,
                 CPR = managerUser.cpr,
                 FirstName = managerUser.first_name,
                 LastName = managerUser.last_name,
-                Email = managerUser.email,
-                Phone = managerUser.phone_number,
+                Email = managerUser.Email,
+                Phone = managerUser.PhoneNumber,
                 JobTitle = managerInformation.job_title,
                 Success = true,
                 Message = "Clinic manager information retrieved successfully"
             };
 
             return manager;
+        }
+
+        internal static Guid GetUserIdByJWT(ClaimsPrincipal user)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal static async Task<string> GetAutonumber(AP_Context context, string entityName)
+        {
+            var autonumberList = await context.autonumbers
+                .Where(a => a.entity_name == entityName)
+                .ToListAsync();
+
+            if (autonumberList.Any())
+            {
+                var autonumberRecord = autonumberList.First();
+                var fieldName = autonumberRecord.field_name;
+                var pattern = autonumberRecord.pattern;
+                var lastNumber = autonumberRecord.last_number;
+
+                var autogeneratedString = string.Format(pattern.Replace("{0:D5}", "{0:D5}"), lastNumber);
+                autonumberRecord.last_number = lastNumber + 1;
+
+                return autogeneratedString;
+            }
+            else
+            {
+                return "ERR:0000X";
+            }
+        }
+
+        internal static bool VerifyUserType(AP_Context context, Guid Id, int userRole)
+        {
+           var user = context.system_users.First(u=>u.Id == Id && u.user_role == userRole && u.inactive != true);
+
+            if (user == null)
+            {
+                return false;
+            }
+
+            else
+            {
+                return true;
+            }
         }
 
         public class DoctorObject
