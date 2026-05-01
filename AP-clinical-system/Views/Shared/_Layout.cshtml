@@ -38,11 +38,14 @@
                             <a class="nav-link text-dark mx-2" asp-controller="Home" asp-action="Contact">Contact us</a>
         
                         </li>
-                        <li class="nav-item ms-3 ">
+                        
+                        <!--<li class="nav-item ms-3 ">
                             <a class="btn btn-primary btn-rounded px-4" asp-area="Identity"
                                asp-page="/Account/Login">Login</a>
-                        </li>
+                        </li>-->
                     </ul>
+
+                    @await Html.PartialAsync("_LoginPartial")
                 </div>
             </div>
         </nav>

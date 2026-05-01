@@ -1,6 +1,39 @@
+@using AP_clinical_system.Services
+@using AP_clinical_system.Models.sql_Context
+@using Microsoft.AspNetCore.Identity;
+@inject AP_Context _context;
+@inject UserManager<AP_clinical_system.Models.Entities.system_user> UserManager
+
+
 @{
     ViewBag.DevRole = "Patient"; // swap this to test different navs
+
+    string initials = "?";
+
+    if (User.Identity?.IsAuthenticated ?? false)
+    {
+        var currentUser = await UserManager.GetUserAsync(User);
+
+        if (currentUser != null)
+        {
+            var first = !string.IsNullOrEmpty(currentUser.first_name)
+                ? currentUser.first_name.Substring(0, 1).ToUpper()
+                : "";
+
+            var last = !string.IsNullOrEmpty(currentUser.last_name)
+                ? currentUser.last_name.Substring(0, 1).ToUpper()
+                : "";
+
+            initials = first + last;
+
+            if (string.IsNullOrEmpty(initials))
+            {
+                initials = "?";
+            }
+        }
+    }
 }
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -476,18 +509,11 @@
                     <span class="badge-dot"></span>
                 </a>
                 *@
-
-                <a class="user-pill" href="#">
+                 <a class="user-pill" href="#">
                     <div class="user-pill-avatar">
-                        @* TODO: first letters of user's name — swap with real claim later *@
-                        @(User.Identity?.Name?
-                            .Split(' ')
-                            .Take(2)
-                            .Select(w => w[0].ToString().ToUpper())
-                            .Aggregate("", (a, b) => a + b) ?? "?")
+                        @initials
                     </div>
-                    <span>@User.Identity?.Name</span>
-                </a>
+                 </a>
             </div>
         </header>
 
