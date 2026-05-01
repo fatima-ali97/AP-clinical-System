@@ -1,41 +1,47 @@
-@* @model AP_clinical_system.UserProfile *@
+﻿@model AP_clinical_system.ViewModels.LoginViewModel
+
 @{
     ViewData["Title"] = "Login";
-    @* Layout = "_Layout"; // uses public layout *@
 }
 
+<h2>Login</h2>
 
-@using (Html.BeginForm("Login", "Home", FormMethod.Post))
-{
-    <fieldset>
-        <legend>Mvc Simple Login Application Demo</legend>
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Login" asp-controller="Account" method="post">
 
-        @Html.AntiForgeryToken()
-        @Html.ValidationSummary(true)
+            <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
 
-        @if (ViewBag.Message != null)
-        {
-            <p style="border: 1px solid red">
-                @ViewBag.Message
-            </p>
-        }
+            <div asp-validation-summary="All" class="text-danger"></div>
 
-        <table>
-            <tr>
-                @* <td>@Html.LabelFor(a => a.UserName)</td>
-                <td>@Html.TextBoxFor(a => a.UserName)</td>
-                <td>@Html.ValidationMessageFor(a => a.UserName)</td> *@
-            </tr>
-            <tr>
-                @* <td>@Html.LabelFor(a => a.Password)</td>
-                <td>@Html.PasswordFor(a => a.Password)</td>
-                <td>@Html.ValidationMessageFor(a => a.Password)</td> *@
-            </tr>
-            <tr>
-                <td></td>
-                <td><input type="submit" value="Login" /></td>
-                <td></td>
-            </tr>
-        </table>
-    </fieldset>
+            <div class="form-group mb-3">
+                <label asp-for="Email" class="control-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Password" class="control-label"></label>
+                <input asp-for="Password" class="form-control" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <div class="form-check mb-3">
+                <input asp-for="RememberMe" class="form-check-input" />
+                <label asp-for="RememberMe" class="form-check-label"></label>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Login</button>
+
+            <a asp-action="Register" asp-controller="Account" class="btn btn-link">
+                Create new account
+            </a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

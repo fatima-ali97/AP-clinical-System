@@ -1,47 +1,111 @@
 @{
     Layout = "_AppLayout";
-    ViewData["Title"] = "Patient Dashboard";
+    ViewData["Title"] = "Manager Dashboard";
     ViewData["ActivePage"] = "Dashboard";
 }
 
+<h1 class="page-heading">Clinical Manager's Dashboard</h1>
+
 <!-- ── STAT CARDS ── -->
-<div class="stat-grid patient">
+<div class="stat-grid admin">
 
-    <div class="card">
-        <div class="card-body" style="padding: 0;">
-            @* <img class="img-responsive" src="~/assets/patient-dashboard-banner.jpg" alt=""> *@
-            <a href="#" class="hpd hpd-basic">
-                <h4 class="hpd-title">Welcome, userName</h4>
-                <p class="hpd-desc">Feel free to book an appointment with us!</p>
-                <span href="#" class="hpd-btn">Book Now</span>
-            </a>
+    <div class="card stat-card">
+
+       
+        <div class="card-body" style=" background: #7a97b8;">
+            <span class="tri-bl"></span>
+            <div class="stat-card-inner">
+                <div>
+                    <div class="stat-label">Doctors</div>
+                    <div class="stat-value">67</div>
+                </div>
+                <div class="stat-icon" style="background: #c8d9eb;">
+                    <i class="fa-solid fa-stethoscope" style="color: #3a5f8a;"></i>
+                </div>
+            </div>
         </div>
-
     </div>
+
+    <div class="card  stat-card">
+        <div class="card-body" style="background: #5e9fa8;">
+            <span class="tri-bl"></span>
+            <div class="stat-card-inner">
+                <div>
+                    <div class="stat-label">Patients</div>
+                    <div class="stat-value">1600</div>
+                    
+                </div>
+                <div class="stat-icon" style="background-color: #b0d8de;">
+                    <i class="fa-solid fa-hospital-user" style="color: #205a64;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="card-body" style="background: #9080b8;">
+            <div class="stat-card-inner">
+                <div>
+                    <div class="stat-label">Completed Appointments</div>
+                    <div class="stat-value">1200</div>
+                </div>
+                <div class="stat-icon" style="background-color: #ccc0e0;">
+                    <i class="fa-solid fa-calendar-check" style="color: #4a3480;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="card-body" style="background-color: #c4975a;">
+            <div class="stat-card-inner">
+                <div>
+                    <div class="stat-label">Appointments Today</div>
+                    <div class="stat-value">10</div>
+                </div>
+                <div class="stat-icon" style="background-color: #e8d0a8;">
+                    <i class="fa-solid fa-calendar" style="color: #7a5020;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <!-- ── CALENDAR + REAL-TIME GRAPH── -->
-<div class="bottom-grid patient">
+<div class="bottom-grid">
 
     <div class="card">
         <div class="card-header">
-            <h5 class="card-title">My Doctors</h5>
+            <h5 class="card-title">Appointments</h5>
         </div>
         <div class="card-body">
+            <div class="cal-wrap">
+                <div class="cal-header">
+                    <button class="nav-btn" onclick="changeMonth(-1)"><i class="fa-solid fa-angle-left"></i></button>
+                    <h1 id="month-title"></h1>
+                    <button class="nav-btn" onclick="changeMonth(1)"><i class="fa-solid fa-angle-right"></i></button>
+                </div>
+                <div class="dow-row">
+                    <div class="dow-cell">Sun</div>
+                    <div class="dow-cell">Mon</div>
+                    <div class="dow-cell">Tue</div>
+                    <div class="dow-cell">Wed</div>
+                    <div class="dow-cell">Thu</div>
+                    <div class="dow-cell">Fri</div>
+                    <div class="dow-cell">Sat</div>
+                </div>
+                <div class="days-grid" id="days-grid"></div>
+                <div class="divider"></div>
+                <div class="section-title" id="events-label">Appointments</div>
+                <div class="events-list" id="events-list"></div>
+            </div>
         </div>
     </div>
 
     <div class="card">
         <div class="card-header">
-            <h5 class="card-title">My perscription</h5>
-        </div>
-        <div class="card-body" style="min-height:220px;">
-            <div id="world_map" style="height:100%; min-height:180px;"></div>
-        </div>
-    </div>
-    <div class="card">
-        <div class="card-header">
-            <h5 class="card-title">Recent Notifications</h5>
+            <h5 class="card-title">Real-Time</h5>
         </div>
         <div class="card-body" style="min-height:220px;">
             <div id="world_map" style="height:100%; min-height:180px;"></div>
@@ -53,65 +117,73 @@
 
 <div class="card">
     <div class="card-header">
-        <h5 class="card-title">Your Appointments</h5>
+        <h5 class="card-title">Today's Appointments</h5>
     </div>
     <div style="overflow-x: auto;">
         <table class="data-table">
             <thead>
                 <tr>
                     <th>Doctor</th>
-                    <th class="d-none-xs">Date & Time</th>
-                    
+                    <th class="d-none-xs">Start Date</th>
+                    <th class="d-none-xs">End Date</th>
                     <th>Status</th>
-                    <th class="d-none-sm"></th>
+                    <th class="d-none-sm">Assignee</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td>Project Apollo</td>
                     <td class="d-none-xs">01/01/2023</td>
+                    <td class="d-none-xs">31/06/2023</td>
                     <td><span class="badge badge-success">Done</span></td>
                     <td class="d-none-sm">Vanessa Tucker</td>
                 </tr>
                 <tr>
                     <td>Project Fireball</td>
                     <td class="d-none-xs">01/01/2023</td>
+                    <td class="d-none-xs">31/06/2023</td>
                     <td><span class="badge badge-danger">Cancelled</span></td>
                     <td class="d-none-sm">William Harris</td>
                 </tr>
                 <tr>
                     <td>Project Hades</td>
                     <td class="d-none-xs">01/01/2023</td>
+                    <td class="d-none-xs">31/06/2023</td>
                     <td><span class="badge badge-success">Done</span></td>
                     <td class="d-none-sm">Sharon Lessman</td>
                 </tr>
                 <tr>
                     <td>Project Nitro</td>
                     <td class="d-none-xs">01/01/2023</td>
+                    <td class="d-none-xs">31/06/2023</td>
                     <td><span class="badge badge-warning">In progress</span></td>
                     <td class="d-none-sm">Vanessa Tucker</td>
                 </tr>
                 <tr>
                     <td>Project Phoenix</td>
                     <td class="d-none-xs">01/01/2023</td>
+                    <td class="d-none-xs">31/06/2023</td>
                     <td><span class="badge badge-success">Done</span></td>
                     <td class="d-none-sm">William Harris</td>
                 </tr>
                 <tr>
                     <td>Project X</td>
                     <td class="d-none-xs">01/01/2023</td>
+                    <td class="d-none-xs">31/06/2023</td>
                     <td><span class="badge badge-success">Done</span></td>
                     <td class="d-none-sm">Sharon Lessman</td>
                 </tr>
                 <tr>
                     <td>Project Romeo</td>
                     <td class="d-none-xs">01/01/2023</td>
+                    <td class="d-none-xs">31/06/2023</td>
                     <td><span class="badge badge-success">Done</span></td>
                     <td class="d-none-sm">Christina Mason</td>
                 </tr>
                 <tr>
                     <td>Project Wombat</td>
                     <td class="d-none-xs">01/01/2023</td>
+                    <td class="d-none-xs">31/06/2023</td>
                     <td><span class="badge badge-warning">In progress</span></td>
                     <td class="d-none-sm">William Harris</td>
                 </tr>
@@ -221,12 +293,12 @@
             const card = document.createElement('div');
             card.className = 'event-card' + (idx === 0 ? ' highlighted' : '');
             card.innerHTML = `
-                                                  <div class="event-name">${ev.name}</div>
-                                                  <div class="event-time">
-                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                                                    ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date(...selectedDate.split('-').map((v, i) => i === 1 ? +v - 1 : +v)).getDay()]}, ${selectedDate.split('-')[2]} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][+selectedDate.split('-')[1] - 1]} ${selectedDate.split('-')[0]}, ${ev.time}
-                                                  </div>
-                                                `;
+      <div class="event-name">${ev.name}</div>
+      <div class="event-time">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date(...selectedDate.split('-').map((v, i) => i === 1 ? +v - 1 : +v)).getDay()]}, ${selectedDate.split('-')[2]} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][+selectedDate.split('-')[1] - 1]} ${selectedDate.split('-')[0]}, ${ev.time}
+      </div>
+    `;
             list.appendChild(card);
         });
     }
