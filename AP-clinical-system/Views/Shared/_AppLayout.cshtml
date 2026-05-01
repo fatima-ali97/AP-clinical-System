@@ -159,19 +159,32 @@
             text-align: center;
             border-radius: var(--radius);
             display: flex;
-               justify-content: center;
-    align-items: center;
+            justify-content: center;
+            align-items: center;
         }
-        .logout-btn a, .logout-btn .sidebar-link:hover{
-            text-align: center;
-            color: #f1f3f7;
-            transition: background var(--transition), color var(--transition);
+        .logout-btn form {
+            width: 100%;
+        }
 
+        .logout-btn .logout-button {
+            background: transparent;
+            color: #f1f3f7;
+            cursor: pointer;
+            font-family: inherit;
+            justify-content: center;
+            text-align: center;
+            transition: background var(--transition), color var(--transition);
         }
-        .logout-btn:hover{
+
+        .logout-btn .logout-button:hover {
+            color: #f1f3f7;
+        }
+
+        .logout-btn:hover {
             transition: background var(--transition), color var(--transition);
             background-color: var(--color-brand-hover);
         }
+
         /* ── MAIN AREA ── */
         .main-area {
             flex: 1;
@@ -483,9 +496,13 @@
         @await Html.PartialAsync("_Navigation")
 
         <div class="logout-btn">
-            <a class="sidebar-link" asp-controller="Account" asp-action="Logout">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
-            </a>
+            <form asp-controller="Account" asp-action="Logout" method="post" class="m-0 w-100">
+                @Html.AntiForgeryToken()
+
+                <button type="submit" class="sidebar-link logout-button border-0 w-100">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
+                </button>
+            </form>
         </div>
 
     </nav>
