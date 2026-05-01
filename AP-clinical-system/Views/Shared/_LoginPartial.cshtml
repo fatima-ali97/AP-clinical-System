@@ -1,8 +1,7 @@
 @using Microsoft.AspNetCore.Identity
-@inject SignInManager<IdentityUser> SignInManager
 
 <ul class="navbar-nav ms-auto align-items-center">
-    @if (!SignInManager.IsSignedIn(User))
+    @if (!(User.Identity?.IsAuthenticated ?? false))
     {
         <li class="nav-item">
             <a class="nav-link" asp-action="Register" asp-controller="Account">Register</a>

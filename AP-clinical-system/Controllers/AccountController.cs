@@ -1,18 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using AP_clinical_system.ViewModels;
+using AP_clinical_system.Models.Entities;
 using System.Security.Claims;
 
 namespace AP_clinical_system.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly UserManager<system_user> _userManager;
+        private readonly SignInManager<system_user> _signInManager;
 
         public AccountController(
-            UserManager<IdentityUser> userManager,
-            SignInManager<IdentityUser> signInManager)
+            UserManager<system_user> userManager,
+            SignInManager<system_user> signInManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -32,12 +33,21 @@ namespace AP_clinical_system.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = new IdentityUser
+                var user = new system_user
                 {
                     UserName = model.Email,
                     Email = model.Email,
-                    PhoneNumber = model.Phone_Number
-                };
+                    PhoneNumber = model.Phone_Number,
+
+                    first_name = model.First_Name,
+                    last_name = model.Last_Name,
+                    cpr = model.CPR,
+
+                    createdon = DateTime.Now,
+                    inactive = false,
+
+                    user_role = 1, //the registered role will always be "Paient"
+                }; 
 
                 var result = await _userManager.CreateAsync(user, model.Password);
 
