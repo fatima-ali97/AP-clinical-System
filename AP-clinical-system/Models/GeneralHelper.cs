@@ -158,7 +158,19 @@ namespace AP_clinical_system.Models
 
         internal static Guid GetUserIdByJWT(ClaimsPrincipal user)
         {
-            throw new NotImplementedException();
+            var userIdString = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? user.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
+            if (Guid.TryParse(userIdString, out Guid userId))
+            {
+                return userId;
+            }
+            return Guid.Empty;
+        }
+
+        internal static string GetFullNameFromJWT(ClaimsPrincipal user)
+        {
+            var firstName = user.FindFirst("FirstName")?.Value ?? string.Empty;
+            var lastName = user.FindFirst("LastName")?.Value ?? string.Empty;
+            return $"{firstName} {lastName}".Trim();
         }
 
         internal static async Task<string> GetAutonumber(AP_Context context, string entityName)

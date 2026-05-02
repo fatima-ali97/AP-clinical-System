@@ -3,7 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using AP_clinical_system.Models.sql_Context;
 using AP_clinical_system.Models.Entities;
 using Microsoft.AspNetCore.Identity;
-
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -38,6 +40,32 @@ builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/AccessDenied";
+});
+
+// Configure JWT Authentication
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]);
+
+builder.Services.AddAuthentication(options =>
+{
+    // The default scheme is set to cookies for MVC, but API endpoints will use JWT.
+    // If not specified, authorize attributes will check the default scheme.
+    // We can set default scheme to Cookie, but allow JWT on APIs using [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    // However, ASP.NET Core supports setting a default policy that checks both, or we just rely on default Identity schemas.
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidateAudience = true,
+        ValidAudience = jwtSettings["Audience"],
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
 });
 
 // Session support (for admin panel)
