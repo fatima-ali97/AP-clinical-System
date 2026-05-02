@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Clinical System</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --topbar-height: 70px;
+            --primary-color: #2563eb;
+            --bg-color: #f8fafc;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-color); }
+        .app-wrapper { display: flex; min-height: 100vh; }
+        .sidebar { width: var(--sidebar-width); background: #1e293b; color: white; position: fixed; height: 100vh; overflow-y: auto; }
+        .main-content { flex: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; }
+        .topbar { height: var(--topbar-height); background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; padding: 0 30px; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+        .content-body { padding: 30px; flex: 1; }
+        
+        .sidebar-header { padding: 25px; font-size: 1.2rem; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-nav { padding: 20px 0; list-style: none; }
+        .sidebar-item { padding: 2px 15px; }
+        .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: #94a3b8; text-decoration: none; border-radius: 8px; transition: 0.3s; }
+        .sidebar-link:hover, .sidebar-item.active .sidebar-link { background: rgba(255,255,255,0.05); color: white; }
+        .sidebar-item.active .sidebar-link { background: var(--primary-color); }
+        
+        .user-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .avatar { width: 35px; height: 35px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="app-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-stethoscope me-2"></i> Clinical Portal
+            </div>
+            @await Html.PartialAsync("_Navigation")
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div class="page-title">
+                    <h5 class="mb-0">@ViewData["Title"]</h5>
+                </div>
+                <div class="topbar-actions">
+                    <div class="user-profile">
+                        <div class="avatar">U</div>
+                        <span>@User.Identity?.Name</span>
+                        <form asp-controller="Account" asp-action="Logout" method="post" style="display:inline">
+                            <button type="submit" class="btn btn-link text-danger p-0 ms-3"><i class="fas fa-sign-out-alt"></i></button>
+                        </form>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-body">
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

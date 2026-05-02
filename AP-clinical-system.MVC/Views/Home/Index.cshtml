@@ -1,8 +1,72 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"] = "Welcome";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<style>
+    .hero-section {
+        height: 100vh;
+        background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/assets/hero-section-bg.jpg');
+        background-size: cover;
+        background-position: center;
+        display: flex;
+        align-items: center;
+        color: white;
+        text-align: center;
+    }
+    .hero-content { max-width: 800px; margin: 0 auto; }
+    .hero-title { font-size: 4rem; font-weight: 800; margin-bottom: 20px; }
+    .hero-subtitle { font-size: 1.5rem; margin-bottom: 40px; opacity: 0.9; }
+    .btn-hero { padding: 15px 40px; font-size: 1.1rem; font-weight: 600; border-radius: 50px; text-transform: uppercase; letter-spacing: 1px; }
+    
+    .feature-section { padding: 80px 0; background: white; }
+    .feature-card { padding: 40px; border-radius: 20px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: 0.3s; }
+    .feature-card:hover { transform: translateY(-10px); }
+    .feature-icon { width: 60px; height: 60px; background: #eff6ff; color: #2563eb; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 20px; }
+</style>
+
+<div class="hero-section">
+    <div class="container">
+        <div class="hero-content">
+            <h1 class="hero-title">AP Clinical System</h1>
+            <p class="hero-subtitle">State-of-the-art clinical management for patients and healthcare professionals.</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-hero">Sign In</a>
+                <a asp-controller="Account" asp-action="Register" class="btn btn-outline-light btn-hero">Register Now</a>
+            </div>
+        </div>
+    </div>
 </div>
+
+<section class="feature-section">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-md-8 mx-auto">
+                <h2 class="fw-bold">Our Services</h2>
+                <p class="text-muted">A complete solution for modern healthcare facilities.</p>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card feature-card">
+                    <div class="feature-icon"><i class="fas fa-calendar-alt"></i></div>
+                    <h4>Easy Booking</h4>
+                    <p class="text-muted">Schedule appointments with your preferred doctors in seconds.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card feature-card">
+                    <div class="feature-icon"><i class="fas fa-file-medical"></i></div>
+                    <h4>Medical Records</h4>
+                    <p class="text-muted">Access your health history and prescriptions securely online.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card feature-card">
+                    <div class="feature-icon"><i class="fas fa-user-md"></i></div>
+                    <h4>Expert Doctors</h4>
+                    <p class="text-muted">Our platform connects you with the best medical professionals.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
