@@ -1,7 +1,20 @@
+@using AP_clinical_system.Services
+@using AP_clinical_system.Models.sql_Context
+@using Microsoft.AspNetCore.Identity;
+@inject AP_Context _context;
+
+@inject UserManager<AP_clinical_system.Models.Entities.system_user> UserManager ;
+
 @{
     Layout = "_AppLayout";
     ViewData["Title"] = "Patient Dashboard";
     ViewData["ActivePage"] = "Dashboard";
+    
+    ViewBag.DevRole = "Patient";
+
+    var currentUser = await UserManager.GetUserAsync(User);
+    string FirstName = currentUser.first_name;
+
 }
 
 
@@ -10,7 +23,7 @@
     <div class="card">
         <div class="card-body" style="padding: 0;">
             <a href="#" class="hpd hpd-basic">
-                <h4 class="hpd-title">Welcome, from patient controllerrrr</h4>
+                <h4 class="hpd-title">Welcome, @FirstName</h4>
                 <p class="hpd-desc">Feel free to book an appointment with us!</p>
                 <span class="hpd-btn" id="openModalBtn">Book Now</span>
             </a>

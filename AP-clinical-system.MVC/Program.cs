@@ -67,12 +67,20 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+// Configure the HTTP request pipeline. --  i edited thit
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+else
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+
+// This must come AFTER UseRouting but it handles all roles universally
+app.UseStatusCodePagesWithReExecute("/Home/Error", "?statusCode={0}");
+
 
 app.UseHttpsRedirection();
 app.UseRouting();
@@ -82,6 +90,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
+
+
 
 app.MapControllerRoute(
     name: "default",
