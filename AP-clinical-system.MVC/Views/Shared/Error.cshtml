@@ -1,14 +1,96 @@
 ﻿@{
-    Layout = "_AppLayout";
     ViewData["Title"] = "Error";
     int code = ViewBag.StatusCode ?? 500;
+
+    string note = code switch
+    {
+        404 => "Page Not Found",
+        403 => "Access Denied",
+        500 => "Internal Server Error",
+        401 => "Unauthorized",
+        _ => "Something Went Wrong"
+    };
+
+    string message = code switch
+    {
+        404 => "We are sorry, but the page you requested was not found.",
+        403 => "You don't have permission to access this page.",
+        500 => "Something went wrong on our end. Please try again later.",
+        401 => "You need to log in to access this page.",
+        _ => "An unexpected error occurred. Please try again."
+    };
+
+    string[] digits = code.ToString().PadLeft(3, '0').Select(c => c.ToString()).ToArray();
 }
 
-<div style="text-align:center; padding: 80px 20px;">
-    <h1 style="font-size: 6rem; font-weight: 700; color: var(--color-primary);">@code</h1>
-    <h2>Oops!</h2>
-    <p style="color: var(--color-text-tertiary); margin: 16px 0 32px;">
-        @ViewBag.Message
-    </p>
-    <a href="/" class="hpd-btn">Go Home</a>
-</div>
+
+<style>
+    .error-page {
+        position: relative;
+        height: 100vh;
+    }
+
+        .error-page .error-container {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            -webkit-transform: translate(-50%, -50%);
+            -ms-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+            max-width: 520px;
+            width: 100%;
+            line-height: 1.4;
+            text-align: center;
+            min-width: 70%;
+        }
+
+            .error-page .error-container .error {
+                position: relative;
+                height: 240px;
+            }
+
+                .error-page .error-container .error .error-note {
+                    position: relative;
+                    font-size: 16px;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    margin: 0px;
+                    letter-spacing: 3px;
+                    padding-left: 6px;
+                }
+
+                .error-page .error-container .error .error-code {
+                    position: absolute;
+                    left: 46%;
+                    top: 50%;
+                    -webkit-transform: translate(-50%, -50%);
+                    -ms-transform: translate(-50%, -50%);
+                    transform: translate(-50%, -50%);
+                    font-size: 252px;
+                    font-weight: 900;
+                    margin: 0px;
+                    color: #38789E;
+                    text-transform: uppercase;
+                    letter-spacing: -40px;
+                    margin-left: -20px;
+                }
+
+                    .error-page .error-container .error .error-code span {
+                        text-shadow: -8px 0px 0px #FCFDFD;
+                    }
+</style>
+<main class="error-page">
+    <div class="error-container">
+        <div class="error">
+            <p class="error-note">Oops! @note</p>
+            <p class="error-code">
+                @foreach (var digit in digits)
+                {
+                    <span>@digit</span>
+                }
+            </p>
+        </div>
+        <p class="error-text">@message</p>
+        <a href="/Home/Index" style="margin-top: 10px">Go To Home</a>
+    </div>
+</main>
