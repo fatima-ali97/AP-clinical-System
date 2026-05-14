@@ -22,4 +22,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\AP-clinical-system.Reporting\AP-clinical-system.Reporting.csproj" />
+  </ItemGroup>
+
 </Project>
