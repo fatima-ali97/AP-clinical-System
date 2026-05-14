@@ -36,22 +36,26 @@ namespace AP_clinical_system.Controllers
                     return BadRequest(new { error = "At least one of the fields must be provided." });
                 }
 
+                // initialize the needed vars
                 var patientUserRecord = new system_user();
                 var patientInformationRecord = new patient_information();
                 var patient = new PatientObject();
 
+                // if user provided cpr, find the patient system user record using cpr and then use it to find the patient information record
                 if (cpr != null)
                 {
                     patientUserRecord = context.system_users.FirstOrDefault(u => u.cpr == cpr);
                     patientInformationRecord = context.patient_informations.FirstOrDefault(p => p.system_user_ref == patientUserRecord.Id);
                 }
 
+                // if user provided his user_no, find the patient information record using the record_no and then use it to find the patient system user record
                 if (record_no != null) 
                 { 
                     patientInformationRecord = context.patient_informations.FirstOrDefault(p => p.record_no == record_no);
                     patientUserRecord = context.system_users.FirstOrDefault(u => u.Id == patientInformationRecord.system_user_ref);
                 }
 
+                // fill the patient object for returning it
                 if (patientUserRecord != null && patientInformationRecord != null)
                 {
                     patient.id = patientUserRecord.Id;
@@ -67,6 +71,7 @@ namespace AP_clinical_system.Controllers
                     return NotFound(new { error = "No patient found with the provided information." });
                 }
 
+                // get all appointments 
                 var allAppointments = context.appointments
                     .Where(a => a.patient_ref == patientInformationRecord.id)
                     .Select(a => new
@@ -80,6 +85,7 @@ namespace AP_clinical_system.Controllers
                     })
                     .ToList();
 
+                // filter appointments into upcoming and past based on their status
                 var upcomingAppointments = allAppointments.Where(a => a.appointment_status == (int)appointment_status.confirmed).ToList();
                 var pastAppointments = allAppointments.Where(a => a.appointment_status == (int)appointment_status.completed).ToList();
 

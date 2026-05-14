@@ -42,28 +42,28 @@ namespace AP_clinical_system.Controllers
                 return BadRequest(ModelState);
             }
 
-            // 1. Find user by email
+            // Find user by email
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null || user.inactive == true)
             {
                 return Unauthorized(new { message = "Invalid credentials or account is inactive." });
             }
 
-            // 2. Verify password via Identity
+            // Verify password
             var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
             if (!result.Succeeded)
             {
                 return Unauthorized(new { message = "Invalid credentials." });
             }
 
-            // 3. Verify user is a clinic manager using GeneralHelper
+            // Verify user is a clinic manager using GeneralHelper
             var isClinicManager = GeneralHelper.VerifyUserType(_context, user.Id, (int)user_role.clinic_manager);
             if (!isClinicManager)
             {
                 return Unauthorized(new { message = "Access denied. Only clinic managers can access the reporting app." });
             }
 
-            // 4. Generate JWT with user_role claim (as int)
+            // Generate JWT with user_role claim (as int from our system_user table, not the IdentityUser roles)
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
