@@ -6,9 +6,20 @@ using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Add services to the container - Fatima note: i edited this cuz reporting app has the same home controller which caused an err for me 
 builder.Services.AddControllersWithViews()
-    .AddRazorRuntimeCompilation();
+    .AddRazorRuntimeCompilation()
+    .AddApplicationPart(typeof(AP_clinical_system.MVC.Controllers.HomeController).Assembly)
+    .ConfigureApplicationPartManager(m =>
+    {
+        // Remove any parts that belong to the Reporting project
+        var reportingParts = m.ApplicationParts
+            .Where(p => p.Name.Contains("Reporting"))
+            .ToList();
+
+        foreach (var part in reportingParts)
+            m.ApplicationParts.Remove(part);
+    });
 
 // Register the DbContext with SQL Server
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

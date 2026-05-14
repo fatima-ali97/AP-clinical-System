@@ -15,12 +15,24 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="21a8b2e1-ac6c-41a4-a3cc-1fb3d8aa6e80" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/AP-clinical-system.MVC/wwwroot/js/custom-dataTable.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.AP-clinical-system/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.AP-clinical-system/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AP-clinical-system.MVC/Controllers/PatientController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AP-clinical-system.MVC/Controllers/PatientController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AP-clinical-system.MVC/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AP-clinical-system.MVC/Program.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AP-clinical-system.MVC/Views/Patient/Index.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/AP-clinical-system.MVC/Views/Patient/Index.cshtml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AP-clinical-system.MVC/Views/Shared/_AppLayout.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/AP-clinical-system.MVC/Views/Shared/_AppLayout.cshtml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="JavaScript File" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -194,7 +206,7 @@
       <option name="presentableId" value="Default" />
       <updated>1778704312373</updated>
       <workItem from="1778704314215" duration="3090000" />
-      <workItem from="1778740703822" duration="4903000" />
+      <workItem from="1778740703822" duration="9586000" />
     </task>
     <servers />
   </component>
