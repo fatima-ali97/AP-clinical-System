@@ -180,7 +180,7 @@ namespace AP_clinical_system.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> BookAppointment(ViewModels.BookAppointmentViewModel model)
+        public async Task<IActionResult> BookAppointment(ViewModels.Patient.BookAppointmentViewModel model)
         {
             try
             {
@@ -210,7 +210,7 @@ namespace AP_clinical_system.Controllers
                     return BadRequest("Doctor ID provided does not belong to a doctor");
                 }
 
-                var date = DateOnly.FromDateTime(model.date);
+                var date = model.date;
 
                 var newAppointment = new appointment
                 {
