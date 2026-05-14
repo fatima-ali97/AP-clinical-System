@@ -1,69 +1,19 @@
 @using Microsoft.AspNetCore.Identity
 @using AP_clinical_system.Models.Entities
 @inject UserManager<system_user> UserManager
-
+@using AP_clinical_system.Services
 @{
-    var user = await UserManager.GetUserAsync(User);
-    var role = "";
-    if (user != null)
-    {
-        if (User.IsInRole("Patient")) role = "Patient";
-        else if (User.IsInRole("Doctor")) role = "Doctor";
-        else if (User.IsInRole("Receptionist")) role = "Receptionist";
-        else if (User.IsInRole("ClinicManager")) role = "Manager";
-    }
+    var role = "Patient";
+    var items = NavigationService.GetNavForRole(role);
     var activePage = ViewData["ActivePage"]?.ToString();
 }
 
 <ul class="sidebar-nav">
-    <li class="sidebar-header">Main Menu</li>
-    
-    @if (role == "Patient")
+    @foreach (var item in items)
     {
-        <li class="sidebar-item @(activePage == "Dashboard" ? "active" : "")">
-            <a class="sidebar-link" asp-controller="Patient" asp-action="Index">
-                <i class="fas fa-house"></i> Dashboard
-            </a>
-        </li>
-        <li class="sidebar-item @(activePage == "Appointments" ? "active" : "")">
-            <a class="sidebar-link" asp-controller="Patient" asp-action="Appointments">
-                <i class="fas fa-calendar-check"></i> My Appointments
-            </a>
-        </li>
-        <li class="sidebar-item @(activePage == "Prescriptions" ? "active" : "")">
-            <a class="sidebar-link" asp-controller="Patient" asp-action="Prescriptions">
-                <i class="fas fa-capsules"></i> Prescriptions
-            </a>
-        </li>
-    }
-    else if (role == "Doctor")
-    {
-        <li class="sidebar-item @(activePage == "Dashboard" ? "active" : "")">
-            <a class="sidebar-link" asp-controller="Doctor" asp-action="Index">
-                <i class="fas fa-house"></i> Dashboard
-            </a>
-        </li>
-        <li class="sidebar-item @(activePage == "Schedule" ? "active" : "")">
-            <a class="sidebar-link" asp-controller="Doctor" asp-action="Schedule">
-                <i class="fas fa-calendar-day"></i> My Schedule
-            </a>
-        </li>
-        <li class="sidebar-item @(activePage == "Patients" ? "active" : "")">
-            <a class="sidebar-link" asp-controller="Doctor" asp-action="Patients">
-                <i class="fas fa-users"></i> My Patients
-            </a>
-        </li>
-    }
-    else if (role == "Receptionist")
-    {
-        <li class="sidebar-item @(activePage == "Dashboard" ? "active" : "")">
-            <a class="sidebar-link" asp-controller="Receptionist" asp-action="Index">
-                <i class="fas fa-house"></i> Dashboard
-            </a>
-        </li>
-        <li class="sidebar-item @(activePage == "Book" ? "active" : "")">
-            <a class="sidebar-link" asp-controller="Receptionist" asp-action="Book">
-                <i class="fas fa-calendar-plus"></i> Book Appointment
+        <li class="sidebar-item @(activePage == item.Label ? "active" : "")">
+            <a class="sidebar-link" asp-controller="@item.Controller" asp-action="@item.Action">
+                <i class="@item.Icon"></i> @item.Label
             </a>
         </li>
     }

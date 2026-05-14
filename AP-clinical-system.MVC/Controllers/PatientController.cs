@@ -3,6 +3,7 @@ using AP_clinical_system.Models.sql_Context;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AP_clinical_system.Controllers
 {
@@ -31,9 +32,17 @@ namespace AP_clinical_system.Controllers
                 return  NotFound();
 
 
+            // fetch appointments
+            var appointments = await _context.appointments
+                .Where(a => a.patient_ref == patientInfo.id && a.inactive != true)
+                .OrderByDescending(a => a.date).ToListAsync();
 
 
-            return View();
+
+            ViewBag.PatientInfo = patientInfo;
+            ViewBag.Appointments = appointments;
+
+            return View(currentUser);
         }
 
         public ActionResult Book()
