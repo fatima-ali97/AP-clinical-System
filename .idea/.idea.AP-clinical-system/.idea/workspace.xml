@@ -16,8 +16,6 @@
   <component name="ChangeListManager">
     <list default="true" id="21a8b2e1-ac6c-41a4-a3cc-1fb3d8aa6e80" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.AP-clinical-system/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.AP-clinical-system/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AP-clinical-system.MVC/Controllers/PatientController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AP-clinical-system.MVC/Controllers/PatientController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AP-clinical-system.MVC/Views/Patient/Index.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/AP-clinical-system.MVC/Views/Patient/Index.cshtml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -196,7 +194,7 @@
       <option name="presentableId" value="Default" />
       <updated>1778704312373</updated>
       <workItem from="1778704314215" duration="3090000" />
-      <workItem from="1778740703822" duration="1679000" />
+      <workItem from="1778740703822" duration="4903000" />
     </task>
     <servers />
   </component>
