@@ -58,8 +58,8 @@ namespace AP_clinical_system.Controllers
             var result = doctors
                 .Where(d => d.system_user_ref.HasValue && users.ContainsKey(d.system_user_ref!.Value))
                 .Select(d => new {
-                    id = d.id,                                          // doctor_information.id  → used in booking form
-                    userId = d.system_user_ref!.Value,                      // system_user.id         → used for availability
+                    id = d.id,                                          
+                    userId = d.system_user_ref!.Value,                     
                     name = $"Dr. {users[d.system_user_ref!.Value].first_name} {users[d.system_user_ref!.Value].last_name}".Trim()
                 });
 
@@ -183,7 +183,7 @@ namespace AP_clinical_system.Controllers
             int appointment_time_slot,
             string? appointment_reason)
         {
-            // Conflict check — same doctor, date, slot
+           
             bool slotTaken = await context.appointments.AnyAsync(a =>
                 a.doctor_ref == doctor_ref &&
                 a.date == date &&
@@ -193,7 +193,7 @@ namespace AP_clinical_system.Controllers
             if (slotTaken)
                 return Json(new { success = false, error = "That time slot is already booked. Please choose another." });
 
-            // Auto-number
+           
             var autonum = await context.autonumbers
                 .FirstOrDefaultAsync(a => a.entity_name == "appointment" && a.field_name == "appointment_no");
 
@@ -225,7 +225,7 @@ namespace AP_clinical_system.Controllers
             return Json(new { success = true, appointment_no = appt.appointment_no });
         }
 
-        // POST /Appointments/BookAppointment  (JWT-based alternative — kept as-is)
+        // POST /Appointments/BookAppointment
         [HttpPost]
         public async Task<IActionResult> BookAppointment(ViewModels.Patient.BookAppointmentViewModel model)
         {
@@ -312,7 +312,6 @@ namespace AP_clinical_system.Controllers
             return RedirectToAction("Index", "Receptionist");
         }
 
-        // ─── Helpers ──────────────────────────────────────────────────────────
 
         private static (string? start, string? end) GetScheduleForDay(doctor_schedule schedule, DayOfWeek day)
         {

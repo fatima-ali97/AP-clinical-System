@@ -28,13 +28,11 @@ namespace AP_clinical_system.Controllers
             if (patientInfo == null)
                 return NotFound();
 
-            // ── Appointments ──────────────────────────────────────────────
             var appointments = await _context.appointments
                 .Where(a => a.patient_ref == patientInfo.id && a.inactive != true)
                 .OrderByDescending(a => a.date)
                 .ToListAsync();
 
-            // ── Doctor IDs from appointments ──────────────────────────────
             var doctorIds = appointments
                 .Where(a => a.doctor_ref.HasValue)
                 .Select(a => a.doctor_ref!.Value)
@@ -58,7 +56,6 @@ namespace AP_clinical_system.Controllers
                 .Where(d => d.system_user_ref.HasValue && doctorUsers.ContainsKey(d.system_user_ref!.Value))
                 .ToDictionary(d => d.id, d => doctorUsers[d.system_user_ref!.Value]);
 
-            // ── My Doctors (distinct + completed visit count) ─────────────
             var myDoctors = appointments
                 .Where(a => a.doctor_ref.HasValue)
                 .GroupBy(a => a.doctor_ref!.Value)
@@ -71,13 +68,11 @@ namespace AP_clinical_system.Controllers
                 .Where(d => d.User != null)
                 .ToList();
 
-            // ── Prescriptions ─────────────────────────────────────────────
             var prescriptions = await _context.prescriptions
                 .Where(p => p.patient_ref == patientInfo.id && p.inactive != true)
                 .OrderByDescending(p => p.createdon)
                 .ToListAsync();
 
-            // Fetch any extra doctors referenced in prescriptions but not in appointments
             var prescriptionDoctorIds = prescriptions
                 .Where(p => p.doctor_ref.HasValue)
                 .Select(p => p.doctor_ref!.Value)
@@ -107,13 +102,11 @@ namespace AP_clinical_system.Controllers
                 }
             }
 
-            // ── Specializations (needed by the booking modal) ─────────────
             var specializations = await _context.doctor_specializations
                 .Where(s => s.inactive != true)
                 .Select(s => new { Id = s.id, Name = s.specialization_name })
                 .ToListAsync();
 
-            // ── Calendar events ───────────────────────────────────────────
             var calendarEvents = appointments
                 .Where(a => a.date.HasValue)
                 .Select(a => new
@@ -142,7 +135,6 @@ namespace AP_clinical_system.Controllers
         public ActionResult Notifications() => View();
         public ActionResult History() => View();
 
-        // ─── Helpers ─────────────────────────────────────────────────────────
 
         private static string SlotToTime(int? slot)
         {
