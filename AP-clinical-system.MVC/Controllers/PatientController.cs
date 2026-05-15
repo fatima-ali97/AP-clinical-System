@@ -65,8 +65,8 @@ namespace AP_clinical_system.Controllers
                 .Select(g => new
                 {
                     DoctorInfoId = g.Key,
-                    TotalVisits  = g.Count(a => a.appointment_status == (int)appointment_status.completed),
-                    User         = doctorInfoToUser.ContainsKey(g.Key) ? doctorInfoToUser[g.Key] : null
+                    TotalVisits = g.Count(a => a.appointment_status == (int)appointment_status.completed),
+                    User = doctorInfoToUser.ContainsKey(g.Key) ? doctorInfoToUser[g.Key] : null
                 })
                 .Where(d => d.User != null)
                 .ToList();
@@ -107,8 +107,13 @@ namespace AP_clinical_system.Controllers
                 }
             }
 
+            // ── Specializations (needed by the booking modal) ─────────────
+            var specializations = await _context.doctor_specializations
+                .Where(s => s.inactive != true)
+                .Select(s => new { Id = s.id, Name = s.specialization_name })
+                .ToListAsync();
+
             // ── Calendar events ───────────────────────────────────────────
-            // appointments is already List<appointment> (in-memory), so SlotToTime resolves fine
             var calendarEvents = appointments
                 .Where(a => a.date.HasValue)
                 .Select(a => new
@@ -119,60 +124,32 @@ namespace AP_clinical_system.Controllers
                 })
                 .ToList();
 
-            ViewBag.PatientInfo        = patientInfo;
-            ViewBag.Appointments       = appointments;
-            ViewBag.DoctorInfoToUser   = doctorInfoToUser;
-            ViewBag.MyDoctors          = myDoctors;
-            ViewBag.Prescriptions      = prescriptions;
+            ViewBag.PatientInfo = patientInfo;
+            ViewBag.PatientId = patientInfo.id;
+            ViewBag.Appointments = appointments;
+            ViewBag.Specializations = specializations;
+            ViewBag.DoctorInfoToUser = doctorInfoToUser;
+            ViewBag.MyDoctors = myDoctors;
+            ViewBag.Prescriptions = prescriptions;
             ViewBag.CalendarEventsJson = System.Text.Json.JsonSerializer.Serialize(calendarEvents);
 
             return View(currentUser);
         }
 
-        // GET /Patient/Book
-        public ActionResult Book()
-        {
-            return View();
-        }
+        public ActionResult Book() => View();
+        public ActionResult Appointments() => View();
+        public ActionResult Prescriptions() => View();
+        public ActionResult Notifications() => View();
+        public ActionResult History() => View();
 
-        // GET /Patient/Appointments
-        public ActionResult Appointments()
-        {
-            return View();
-        }
+        // ─── Helpers ─────────────────────────────────────────────────────────
 
-        // GET /Patient/Prescriptions
-        public ActionResult Prescriptions()
-        {
-            return View();
-        }
-
-        // GET /Patient/Notifications
-        public ActionResult Notifications()
-        {
-            return View();
-        }
-
-        // GET /Patient/History
-        public ActionResult History()
-        {
-            return View();
-        }
-
-        // ─────────────────────────────────────────────
-        // HELPERS
-        // ─────────────────────────────────────────────
-
-        /// <summary>
-        /// Converts an appointment_time_slot int value to a readable time string.
-        /// Slots start at 08:00 (value 1000), each step = 30 minutes.
-        /// </summary>
         private static string SlotToTime(int? slot)
         {
             if (slot == null) return "TBD";
             int minutes = (slot.Value - 1000) * 30;
-            int hour    = 8 + minutes / 60;
-            int min     = minutes % 60;
+            int hour = 8 + minutes / 60;
+            int min = minutes % 60;
             return new DateTime(2000, 1, 1, hour, min, 0).ToString("hh:mm tt");
         }
     }

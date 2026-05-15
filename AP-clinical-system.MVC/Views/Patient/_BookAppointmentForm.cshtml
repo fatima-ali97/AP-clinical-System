@@ -1,18 +1,332 @@
-﻿@* Views/Shared/_AppointmentBookingModal.cshtml *@
+﻿@using AP_clinical_system.Models.Entities
+@using AP_clinical_system.Models.Enums
 
-<div class="modal-backdrop" id="modalBackdrop">
-    <div class="modal" id="appointmentModal">
-        <form id="appointmentForm">
+@* ── Booking Modal ── *@
+<style>
+    /* ── Backdrop ── */
+    .appt-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        background: rgba(10, 14, 26, 0.55);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        animation: backdropIn 0.2s ease;
+    }
+
+        .appt-backdrop.open {
+            display: flex;
+        }
+
+    @@keyframes backdropIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    /* ── Modal shell ── */
+    .appt-modal {
+        background: var(--color-surface, #fff);
+        border-radius: 16px;
+        box-shadow: 0 24px 64px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.08);
+        width: 100%;
+        max-width: 520px;
+        max-height: 92vh;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        animation: modalSlideIn 0.28s cubic-bezier(0.34, 1.26, 0.64, 1);
+    }
+
+    @@keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(24px) scale(0.97);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    /* ── Header ── */
+    .appt-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 24px 16px;
+        border-bottom: 1px solid var(--color-border, #eee);
+        position: sticky;
+        top: 0;
+        background: var(--color-surface, #fff);
+        border-radius: 16px 16px 0 0;
+        z-index: 1;
+    }
+
+        .appt-modal-header h5 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--color-text-primary, #111);
+            letter-spacing: -0.01em;
+        }
+
+    .appt-close-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: none;
+        background: var(--color-bg, #f4f5f7);
+        color: var(--color-text-secondary, #666);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s, transform 0.15s;
+        flex-shrink: 0;
+    }
+
+        .appt-close-btn:hover {
+            background: var(--color-danger-light, #fee2e2);
+            color: var(--color-danger, #dc2626);
+            transform: scale(1.1);
+        }
+
+    /* ── Body ── */
+    .appt-modal-body {
+        padding: 20px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    /* ── Field group ── */
+    .appt-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+        .appt-field label {
+            font-size: 12.5px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--color-text-secondary, #666);
+        }
+
+        .appt-field select,
+        .appt-field input[type="date"],
+        .appt-field textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid var(--color-border, #e2e5ea);
+            border-radius: 10px;
+            background: var(--color-bg, #f8f9fb);
+            color: var(--color-text-primary, #111);
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+            .appt-field select:focus,
+            .appt-field input[type="date"]:focus,
+            .appt-field textarea:focus {
+                border-color: var(--color-primary, #4f6ef7);
+                box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.12);
+                background: var(--color-surface, #fff);
+            }
+
+            .appt-field select:disabled,
+            .appt-field input:disabled {
+                opacity: 0.45;
+                cursor: not-allowed;
+            }
+
+        .appt-field textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+    /* ── Slot grid ── */
+    #apptSlotGrid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 2px;
+    }
+
+    .appt-slot {
+        padding: 7px 14px;
+        border-radius: 8px;
+        border: 1.5px solid var(--color-border, #e2e5ea);
+        background: var(--color-bg, #f8f9fb);
+        color: var(--color-text-primary, #111);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s;
+        font-family: inherit;
+    }
+
+        .appt-slot:hover {
+            border-color: var(--color-primary, #4f6ef7);
+            color: var(--color-primary, #4f6ef7);
+            background: rgba(79, 110, 247, 0.06);
+        }
+
+        .appt-slot.active {
+            border-color: var(--color-primary, #4f6ef7);
+            background: var(--color-primary, #4f6ef7);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(79, 110, 247, 0.3);
+        }
+
+    .appt-slot-hint {
+        color: var(--color-text-tertiary, #999);
+        font-size: 13px;
+        margin: 0;
+    }
+
+    /* ── Feedback ── */
+    .appt-feedback {
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 13.5px;
+        display: none;
+    }
+
+        .appt-feedback.error {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        .appt-feedback.success {
+            background: #f0fdf4;
+            color: #16a34a;
+            border: 1px solid #bbf7d0;
+        }
+
+    /* ── Footer ── */
+    .appt-modal-footer {
+        padding: 16px 24px 20px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        border-top: 1px solid var(--color-border, #eee);
+        position: sticky;
+        bottom: 0;
+        background: var(--color-surface, #fff);
+        border-radius: 0 0 16px 16px;
+    }
+
+    .appt-btn-cancel {
+        padding: 10px 20px;
+        border-radius: 9px;
+        border: 1.5px solid var(--color-border, #e2e5ea);
+        background: transparent;
+        color: var(--color-text-secondary, #555);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 0.15s;
+    }
+
+        .appt-btn-cancel:hover {
+            background: var(--color-bg, #f4f5f7);
+        }
+
+    .appt-btn-confirm {
+        padding: 10px 22px;
+        border-radius: 9px;
+        border: none;
+        background: var(--color-primary, #4f6ef7);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 0.15s;
+        box-shadow: 0 2px 8px rgba(79, 110, 247, 0.25);
+    }
+
+        .appt-btn-confirm:hover {
+            background: var(--color-primary-dark, #3a56d4);
+            box-shadow: 0 4px 14px rgba(79, 110, 247, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .appt-btn-confirm:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+    /* ── Steps indicator ── */
+    .appt-steps {
+        display: flex;
+        gap: 0;
+        margin-bottom: 4px;
+    }
+
+    .appt-step {
+        flex: 1;
+        height: 3px;
+        background: var(--color-border, #e2e5ea);
+        border-radius: 99px;
+        transition: background 0.3s;
+    }
+
+        .appt-step + .appt-step {
+            margin-left: 5px;
+        }
+
+        .appt-step.done {
+            background: var(--color-primary, #4f6ef7);
+        }
+</style>
+
+<div class="appt-backdrop" id="apptModalBackdrop">
+    <div class="appt-modal" id="apptModal" role="dialog" aria-modal="true" aria-labelledby="apptModalTitle">
+        <form id="apptForm" novalidate>
             @Html.AntiForgeryToken()
+            <input type="hidden" id="apptPatientRef" name="patient_ref" value="@ViewBag.PatientId" />
 
-            <div class="modal-header"> ... </div>
+            <div class="appt-modal-header">
+                <h5 id="apptModalTitle">Book an Appointment</h5>
+                <button type="button" class="appt-close-btn" id="apptCloseBtn" aria-label="Close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
 
-            <div class="modal-body">
-                <input type="hidden" id="patientRef" name="patient_ref" value="@ViewBag.PatientId" />
+            <div class="appt-modal-body">
 
-                <div class="field">
-                    <label>Specialization</label>
-                    <select name="specialization_ref" id="specialization">
+                <div class="appt-steps" id="apptSteps">
+                    <div class="appt-step" id="step1"></div>
+                    <div class="appt-step" id="step2"></div>
+                    <div class="appt-step" id="step3"></div>
+                    <div class="appt-step" id="step4"></div>
+                </div>
+
+                <div class="appt-field">
+                    <label for="apptSpecialization">Specialization</label>
+                    <select name="specialization_ref" id="apptSpecialization">
                         <option value="">Select specialization</option>
                         @foreach (var s in ViewBag.Specializations)
                         {
@@ -21,82 +335,225 @@
                     </select>
                 </div>
 
-                <div class="field">
-                    <label>Doctor</label>
-                    <select name="doctor_ref" id="doctor">
-                        <option value="">Select doctor</option>
+                <div class="appt-field">
+                    <label for="apptDoctor">Doctor</label>
+                    <select name="doctor_ref" id="apptDoctor" disabled>
+                        <option value="">Select specialization first</option>
                     </select>
                 </div>
 
-                <div class="field">
-                    <label>Date</label>
-                    <input type="date" name="date" id="appointmentDate" />
+                <div class="appt-field">
+                    <label for="apptDate">Date</label>
+                    <input type="date" name="date" id="apptDate" disabled />
                 </div>
 
-                <div class="field">
+                <div class="appt-field">
                     <label>Time Slot</label>
-                    <input type="hidden" name="appointment_time_slot" id="slotInput" />
-                    <div id="slotGrid"> ... </div>
+                    <input type="hidden" name="appointment_time_slot" id="apptSlotInput" />
+                    <div id="apptSlotGrid">
+                        <p class="appt-slot-hint">Select a doctor and date to see available slots.</p>
+                    </div>
                 </div>
 
-                <div class="field">
-                    <label>Reason for visit</label>
-                    <textarea name="appointment_reason"></textarea>
+                <div class="appt-field">
+                    <label for="apptReason">Reason for visit</label>
+                    <textarea name="appointment_reason" id="apptReason" rows="3" placeholder="Briefly describe your reason..."></textarea>
                 </div>
+
+                <div class="appt-feedback error" id="apptError"></div>
+                <div class="appt-feedback success" id="apptSuccess"></div>
+
             </div>
 
-            <div class="modal-footer">
-                <button type="button" id="cancelBtn">Cancel</button>
-                <button type="submit">Confirm Booking</button>
+            <div class="appt-modal-footer">
+                <button type="button" class="appt-btn-cancel" id="apptCancelBtn">Cancel</button>
+                <button type="submit" class="appt-btn-confirm" id="apptConfirmBtn">Confirm Booking</button>
             </div>
         </form>
     </div>
 </div>
 
-
-
-
-
-
 <script>
-    // Dynamic doctor dropdown — fires when specialization changes
-    document.getElementById('specialization').addEventListener('change', async function () {
-        const specializationId = this.value;
-        const doctorSelect = document.getElementById('doctor');
-
-        doctorSelect.innerHTML = '<option value="">Loading...</option>';
-
-        const res = await fetch(`/Appointment/GetDoctorsBySpecialization?specializationId=${specializationId}`);
-        const doctors = await res.json();
-
-        doctorSelect.innerHTML = '<option value="">Select doctor</option>';
-        doctors.forEach(d => {
-            const opt = document.createElement('option');
-            opt.value = d.id;
-            opt.textContent = d.name;
-            doctorSelect.appendChild(opt);
-        });
-    });
-
-    // Form submit via AJAX
-    document.getElementById('appointmentForm').addEventListener('submit', async function (e) {
-        e.preventDefault();
-
-        const formData = new FormData(this);
-
-        const res = await fetch('/Appointment/Book', {
-            method: 'POST',
-            body: formData   // FormData sends the antiforgery token automatically
-        });
-
-        const result = await res.json();
-
-        if (result.success) {
-            // show success state, display result.appointment_no
-        } else {
-            // show validation errors
+    (function () {
+        // ── Open / close ────────────────────────────────────────────────────────
+        function openModal() {
+            resetApptForm();
+            document.getElementById('apptModalBackdrop').classList.add('open');
+            document.body.style.overflow = 'hidden';
         }
-    });
+        function closeModal() {
+            document.getElementById('apptModalBackdrop').classList.remove('open');
+            document.body.style.overflow = '';
+        }
 
+        document.getElementById('openModalBtn')?.addEventListener('click', e => { e.preventDefault(); openModal(); });
+        document.getElementById('apptCloseBtn').addEventListener('click', closeModal);
+        document.getElementById('apptCancelBtn').addEventListener('click', closeModal);
+        document.getElementById('apptModalBackdrop').addEventListener('click', function (e) {
+            if (e.target === this) closeModal();
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeModal();
+        });
 
+        // ── Step indicator ──────────────────────────────────────────────────────
+        function updateSteps(n) {
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById('step' + i)?.classList.toggle('done', i <= n);
+            }
+        }
+
+        // ── Step 1: Specialization → load doctors ───────────────────────────────
+        document.getElementById('apptSpecialization').addEventListener('change', async function () {
+            const specId     = this.value;
+            const doctorSel  = document.getElementById('apptDoctor');
+            const dateInput  = document.getElementById('apptDate');
+
+            doctorSel.innerHTML = '<option value="">Loading…</option>';
+            doctorSel.disabled  = true;
+            dateInput.value     = '';
+            dateInput.disabled  = true;
+            clearApptSlots();
+            updateSteps(specId ? 1 : 0);
+
+            if (!specId) {
+                doctorSel.innerHTML = '<option value="">Select specialization first</option>';
+                return;
+            }
+            try {
+                const res     = await fetch(`/Appointments/GetDoctorsBySpecialization?specializationId=${specId}`);
+                const doctors = await res.json();
+                doctorSel.innerHTML = '<option value="">Select doctor</option>';
+                doctors.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value          = d.id;
+                    opt.dataset.userId = d.userId;
+                    opt.textContent    = d.name;
+                    doctorSel.appendChild(opt);
+                });
+                doctorSel.disabled = false;
+            } catch {
+                doctorSel.innerHTML = '<option value="">Failed to load doctors</option>';
+            }
+        });
+
+        // ── Step 2: Doctor → enable date ────────────────────────────────────────
+        document.getElementById('apptDoctor').addEventListener('change', function () {
+            const dateInput = document.getElementById('apptDate');
+            clearApptSlots();
+            dateInput.value = '';
+            if (this.value) {
+                dateInput.min      = new Date().toISOString().split('T')[0];
+                dateInput.disabled = false;
+                updateSteps(2);
+            } else {
+                dateInput.disabled = true;
+                updateSteps(1);
+            }
+        });
+
+        // ── Step 3: Date → load slots ────────────────────────────────────────────
+        document.getElementById('apptDate').addEventListener('change', function () {
+            const sel    = document.getElementById('apptDoctor').selectedOptions[0];
+            const userId = sel?.dataset.userId;
+            const date   = this.value;
+            if (userId && date) { loadApptSlots(userId, date); updateSteps(3); }
+        });
+
+        async function loadApptSlots(doctorUserId, date) {
+            const grid = document.getElementById('apptSlotGrid');
+            grid.innerHTML = '<p class="appt-slot-hint">Loading slots…</p>';
+            document.getElementById('apptSlotInput').value = '';
+            try {
+                const res  = await fetch('/Appointments/GetAvailableDatesAndTimesByDoctorID', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body:    `doctorID=${encodeURIComponent(doctorUserId)}`
+                });
+                if (!res.ok) { grid.innerHTML = '<p class="appt-slot-hint" style="color:var(--color-danger,#dc2626)">No schedule found for this doctor.</p>'; return; }
+                const data  = await res.json();
+                const match = data.find(d => d.date === date);
+                grid.innerHTML = '';
+                if (!match || !match.availableTimeSlots.length) {
+                    grid.innerHTML = '<p class="appt-slot-hint">No available slots for this date.</p>'; return;
+                }
+                match.availableTimeSlots.forEach(sv => {
+                    const btn = document.createElement('button');
+                    btn.type          = 'button';
+                    btn.className     = 'appt-slot';
+                    btn.dataset.slotValue = sv;
+                    btn.textContent   = apptSlotToTime(sv);
+                    btn.addEventListener('click', function () {
+                        document.querySelectorAll('#apptSlotGrid .appt-slot').forEach(s => s.classList.remove('active'));
+                        this.classList.add('active');
+                        document.getElementById('apptSlotInput').value = sv;
+                        updateSteps(4);
+                    });
+                    grid.appendChild(btn);
+                });
+            } catch {
+                grid.innerHTML = '<p class="appt-slot-hint" style="color:var(--color-danger,#dc2626)">Error loading slots.</p>';
+            }
+        }
+
+        function apptSlotToTime(sv) {
+            const mins  = (sv - 1000) * 30;
+            const h     = 8 + Math.floor(mins / 60);
+            const m     = mins % 60;
+            const p     = h >= 12 ? 'PM' : 'AM';
+            const dh    = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+            return `${String(dh).padStart(2,'0')}:${String(m).padStart(2,'0')} ${p}`;
+        }
+
+        function clearApptSlots() {
+            document.getElementById('apptSlotGrid').innerHTML = '<p class="appt-slot-hint">Select a doctor and date to see available slots.</p>';
+            document.getElementById('apptSlotInput').value = '';
+        }
+
+        // ── Step 4: Submit ───────────────────────────────────────────────────────
+        document.getElementById('apptForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const errDiv = document.getElementById('apptError');
+            const okDiv  = document.getElementById('apptSuccess');
+            errDiv.style.display = okDiv.style.display = 'none';
+
+            if (!document.getElementById('apptSlotInput').value) {
+                errDiv.textContent = 'Please select a time slot before confirming.';
+                errDiv.style.display = 'block'; return;
+            }
+            const btn = document.getElementById('apptConfirmBtn');
+            btn.disabled = true; btn.textContent = 'Booking…';
+            try {
+                const res    = await fetch('/Appointments/Book', { method: 'POST', body: new FormData(this) });
+                const result = await res.json();
+                if (result.success) {
+                    okDiv.textContent   = `Appointment ${result.appointment_no} booked successfully!`;
+                    okDiv.style.display = 'block';
+                    setTimeout(() => { closeModal(); location.reload(); }, 1500);
+                } else {
+                    errDiv.textContent  = result.error ?? 'Booking failed. Please try again.';
+                    errDiv.style.display = 'block';
+                }
+            } catch {
+                errDiv.textContent  = 'An unexpected error occurred. Please try again.';
+                errDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false; btn.textContent = 'Confirm Booking';
+            }
+        });
+
+        // ── Reset ────────────────────────────────────────────────────────────────
+        function resetApptForm() {
+            document.getElementById('apptForm').reset();
+            const doc  = document.getElementById('apptDoctor');
+            const date = document.getElementById('apptDate');
+            doc.innerHTML = '<option value="">Select specialization first</option>';
+            doc.disabled  = true;
+            date.disabled = true;
+            clearApptSlots();
+            document.getElementById('apptError').style.display   = 'none';
+            document.getElementById('apptSuccess').style.display = 'none';
+            updateSteps(0);
+        }
+    })();
 </script>

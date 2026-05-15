@@ -89,19 +89,32 @@
             <h5 class="card-title">My Doctors</h5>
         </div>
         <div class="card-body">
-            
-            <div class="event-card highlighted">
-                <div class="doc-avatars">
-                    <div class="doc-avatar">MA</div>
-                </div>
-                <div class="event-info" style="margin-left: 20px;">
-                    <div class="event-name">Mohammed Ahmed</div>
-                    <div class="event-sub-text">
-                        10 Visits
+            @if (myDoctors != null)
+            {
+                @foreach (var doc in myDoctors)
+                {
+                    var docUser = doc.User as AP_clinical_system.Models.Entities.system_user;
+                    string fullName = $"{docUser?.first_name} {docUser?.last_name}".Trim();
+                    int visits = doc.TotalVisits;
+
+                    <div class="event-card highlighted">
+                        <div class="doc-avatars">
+                            <div class="doc-avatar">@Initials(docUser)</div>
+                        </div>
+                        <div class="event-info" style="margin-left: 20px;">
+                            <div class="event-name">@fullName</div>
+                            <div class="event-sub-text">@visits Visit@(visits == 1 ? "" : "s")</div>
+                        </div>
                     </div>
-                </div>
-                
-            </div>
+                }
+            }
+
+            @if (myDoctors == null || !((IEnumerable<dynamic>)myDoctors).Any())
+            {
+                <p style="color: var(--color-text-tertiary); font-size: 14px; text-align: center; padding: 16px;">
+                    No doctors yet.
+                </p>
+            }
         </div>
     </div>
 
@@ -219,7 +232,7 @@
         </table>
     </div>
 </div>
-@* @await Html.PartialAsync("_AppointmentBookingModal"); *@
+ @await Html.PartialAsync("_BookAppointmentForm");
 
 <script>
     // TODO: change this to fetch data or recieve them from C# handler or whatever
