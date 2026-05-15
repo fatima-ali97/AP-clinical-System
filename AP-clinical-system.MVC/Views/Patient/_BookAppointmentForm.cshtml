@@ -93,12 +93,7 @@
             if (e.key === 'Escape') closeModal();
         });
 
-        // ── Step indicator ──────────────────────────────────────────────────────
-        function updateSteps(n) {
-            for (let i = 1; i <= 4; i++) {
-                document.getElementById('step' + i)?.classList.toggle('done', i <= n);
-            }
-        }
+        
 
         document.getElementById('apptSpecialization').addEventListener('change', async function () {
             const specId     = this.value;

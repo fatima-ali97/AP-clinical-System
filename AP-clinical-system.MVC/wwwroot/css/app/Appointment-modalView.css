@@ -1,0 +1,44 @@
+﻿/* ── Backdrop overlay ── */
+.singleAppt-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1050;
+    align-items: center;
+    justify-content: center;
+}
+
+    .singleAppt-backdrop.open {
+        display: flex;
+    }
+
+/* ── Modal box ── */
+.singleAppt-modal {
+    background: var(--color-surface, #fff);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 520px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    overflow: hidden;
+}
+
+/* ── Header ── */
+.singleAppt-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--color-border, #e5e7eb);
+}
+
+    .singleAppt-modal-header h5 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+/* ── Body ── */
+.singleAppt-modal-body {
+    padding: 20px;
+}

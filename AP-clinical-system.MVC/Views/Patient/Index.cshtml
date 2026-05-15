@@ -67,6 +67,7 @@
 { 
     <link href="~/css/app/app.css" rel="stylesheet" /> 
     <link href="~/css/components/Forms.css" rel="stylesheet" />
+    <link href="~/css/app/Appointment-modalView.css" rel="stylesheet" />
 }
 
 @section scripts
@@ -75,7 +76,6 @@
 }
 
 <div class="stat-grid patient">
-
     <div class="card">
         <div class="card-body" style="padding: 0;">
             <a href="#" class="hpd hpd-basic">
@@ -225,17 +225,15 @@
                             @StatusLabel(appt.appointment_status)
                         </span>
                     </td>
-                    <td class="text-center">
-                        <a asp-action="Details" asp-route-id="@appt.id" class="btn btn-sm btn-outline-primary">
-                            View
-                        </a>
-                    </td>
+                        <td class="text-center">
+                            <button type="button" class="hpd-btn" data-action="view-appointment">View</button>
+                        </td>
                 </tr>
             }
             </tbody>
         </table>
     </div>
 </div>
-
+@await Html.PartialAsync("_SingleAppointmentView")
  @await Html.PartialAsync("_BookAppointmentForm")
 
