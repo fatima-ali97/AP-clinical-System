@@ -487,7 +487,7 @@ ul.timeline-3 {
         padding-left: 20px;
     }
 
-        ul.timeline-3 > li:before {
+    ul.timeline-3 > li:before {
             content: " ";
             background: white;
             display: inline-block;
@@ -498,5 +498,5 @@ ul.timeline-3 {
             width: 20px;
             height: 20px;
             z-index: 400;
-        }
+    }
 
