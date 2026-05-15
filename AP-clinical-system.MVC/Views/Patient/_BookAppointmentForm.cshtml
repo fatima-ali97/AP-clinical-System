@@ -1,9 +1,6 @@
 ﻿@using AP_clinical_system.Models.Entities
 @using AP_clinical_system.Models.Enums
 
-@section Styles {
-  <link href="~/css/components/Forms.css" rel="stylesheet" />
-}
 
 <div class="appt-backdrop" id="apptModalBackdrop">
     <div class="appt-modal" id="apptModal" role="dialog" aria-modal="true" aria-labelledby="apptModalTitle">
@@ -105,7 +102,7 @@
             dateInput.value     = '';
             dateInput.disabled  = true;
             clearApptSlots();
-            updateSteps(specId ? 1 : 0);
+           
 
             if (!specId) {
                 doctorSel.innerHTML = '<option value="">Select specialization first</option>';
@@ -135,10 +132,10 @@
             if (this.value) {
                 dateInput.min      = new Date().toISOString().split('T')[0];
                 dateInput.disabled = false;
-                updateSteps(2);
+                
             } else {
                 dateInput.disabled = true;
-                updateSteps(1);
+                
             }
         });
 
@@ -146,7 +143,7 @@
             const sel    = document.getElementById('apptDoctor').selectedOptions[0];
             const userId = sel?.dataset.userId;
             const date   = this.value;
-            if (userId && date) { loadApptSlots(userId, date); updateSteps(3); }
+            if (userId && date) { loadApptSlots(userId, date); }
         });
 
         async function loadApptSlots(doctorUserId, date) {
@@ -176,7 +173,7 @@
                         document.querySelectorAll('#apptSlotGrid .appt-slot').forEach(s => s.classList.remove('active'));
                         this.classList.add('active');
                         document.getElementById('apptSlotInput').value = sv;
-                        updateSteps(4);
+                        
                     });
                     grid.appendChild(btn);
                 });
@@ -240,7 +237,7 @@
             clearApptSlots();
             document.getElementById('apptError').style.display   = 'none';
             document.getElementById('apptSuccess').style.display = 'none';
-            updateSteps(0);
+           
         }
     })();
 </script>
