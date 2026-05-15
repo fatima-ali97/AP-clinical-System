@@ -20,4 +20,9 @@
     <ProjectReference Include="..\AP-clinical-system.API\AP-clinical-system.API.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\js\app\" />
+    <Folder Include="wwwroot\js\website\" />
+  </ItemGroup>
+
 </Project>
