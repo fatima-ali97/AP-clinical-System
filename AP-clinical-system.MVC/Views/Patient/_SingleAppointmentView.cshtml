@@ -8,7 +8,8 @@
         <div class="singleAppt-modal-header">
             <h5>Appointment Info</h5>
             <button type="button" class="appt-close-btn" id="singleApptCloseBtn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                     stroke-linecap="round">
                     <line x1="18" y1="6" x2="6" y2="18" />
                     <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
@@ -16,6 +17,7 @@
         </div>
         <div class="singleAppt-modal-body">
             <p id="singleApptContent">Appointment info goes here.</p>
+            <div id="apptInfo"></div>
         </div>
     </div>
 </div>
@@ -48,6 +50,71 @@
 
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') closeModal();
+        });
+
+        function apptSlotToTime(sv) {
+            const mins = (sv - 1000) * 30;
+            const h = 8 + Math.floor(mins / 60);
+            const m = mins % 60;
+            const p = h >= 12 ? 'PM' : 'AM';
+            const dh = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+            return `${String(dh).padStart(2, '0')}:${String(m).padStart(2, '0')} ${p}`;
+        }
+
+
+        //=========== load data function
+        async function loadApptInfo(apptID) {
+            console.log('Loading appt ID:', apptID);
+            const grid = document.getElementById('apptInfo');
+            grid.innerHTML = '<p class="appt-slot-hint">Loading…</p>';
+
+            try {
+                const res = await fetch('/Patient/GetAppointmentInfo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `apptID=${encodeURIComponent(apptID)}`
+                });
+                if (!res.ok) {
+                    grid.innerHTML = '<p class="appt-slot-hint" style="color:var(--color-danger,#dc2626)">Appointment not found.</p>';
+                    return;
+                }
+                const d = await res.json();
+                console.log('Response data:', d);
+
+                grid.innerHTML = `
+            <div class="appt-info-row"><span class="appt-info-label">Appointment No</span><span>${d.appointment_no ?? '—'}</span></div>
+            <div class="appt-info-row"><span class="appt-info-label">Date</span><span>${d.date ?? '—'}</span></div>
+            <div class="appt-info-row"><span class="appt-info-label">Time Slot</span><span>${apptSlotToTime(d.time_slot)}</span></div>
+            <div class="appt-info-row"><span class="appt-info-label">Status</span><span>${apptStatusLabel(d.status)}</span></div>
+            <div class="appt-info-row"><span class="appt-info-label">Reason</span><span>${d.reason ?? '—'}</span></div>
+            <div class="appt-info-row"><span class="appt-info-label">Patient</span><span>${d.patient_name}</span></div>
+            <div class="appt-info-row"><span class="appt-info-label">Doctor</span><span>${d.doctor_name}</span></div>
+            <div class="appt-info-row"><span class="appt-info-label">Specialization</span><span>${d.specialization}</span></div>
+        `;
+            } catch (err) {
+                console.error('Fetch error:', err);
+                grid.innerHTML = `<p class="appt-slot-hint" style="color:var(--color-danger,#dc2626)">Error: ${err.message}</p>`;
+            }
+        }
+
+        // Helper — mirrors your option_sets enums
+        function apptStatusLabel(val) {
+            const map = {
+                1000: 'Requested', 1001: 'Confirmed', 1002: 'Checked In',
+                1003: 'In Progress', 1004: 'Completed', 1005: 'Cancelled', 1006: 'No Show'
+            };
+            return map[val] ?? '—';
+        }
+
+        // Update click handler to pass appointment ID
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('[data-action="view-appointment"]');
+            if (btn) {
+                e.preventDefault();
+                const apptID = btn.dataset.apptId; // add data-appt-id="@@appt.id" on each row button
+                loadApptInfo(apptID);
+                openModal();
+            }
         });
     })();
 </script>

@@ -14,35 +14,35 @@
 
     var currentUser = await UserManager.GetUserAsync(User);
     string FirstName = currentUser.first_name;
+
     
-    
-    var appointments  = ViewBag.Appointments  as List<appointment>      ?? new();
-    var prescriptions = ViewBag.Prescriptions as List<prescription>     ?? new();
-    var myDoctors     = ViewBag.MyDoctors;
-    var doctorMap     = ViewBag.DoctorInfoToUser as Dictionary<Guid, AP_clinical_system.Models.Entities.system_user> ?? new();
+    var appointments = ViewBag.Appointments as List<appointment> ?? new();
+    var prescriptions = ViewBag.Prescriptions as List<prescription> ?? new();
+    var myDoctors = ViewBag.MyDoctors;
+    var doctorMap = ViewBag.DoctorInfoToUser as Dictionary<Guid, AP_clinical_system.Models.Entities.system_user> ?? new();
 
     // Status badge helper
     static string StatusBadge(int? status) => status switch
     {
-        (int)appointment_status.completed  => "badge-success",
-        (int)appointment_status.cancelled  => "badge-danger",
-        (int)appointment_status.no_show    => "badge-danger",
+        (int)appointment_status.completed => "badge-success",
+        (int)appointment_status.cancelled => "badge-danger",
+        (int)appointment_status.no_show => "badge-danger",
         (int)appointment_status.in_progress => "badge-warning",
-        (int)appointment_status.confirmed  => "badge-info",
+        (int)appointment_status.confirmed => "badge-info",
         (int)appointment_status.checked_in => "badge-info",
-        _                                  => "badge-secondary"
+        _ => "badge-secondary"
     };
 
     static string StatusLabel(int? status) => status switch
     {
-        (int)appointment_status.completed   => "Completed",
-        (int)appointment_status.cancelled   => "Cancelled",
-        (int)appointment_status.no_show     => "No Show",
+        (int)appointment_status.completed => "Completed",
+        (int)appointment_status.cancelled => "Cancelled",
+        (int)appointment_status.no_show => "No Show",
         (int)appointment_status.in_progress => "In Progress",
-        (int)appointment_status.confirmed   => "Confirmed",
-        (int)appointment_status.checked_in  => "Checked In",
-        (int)appointment_status.requested   => "Requested",
-        _                                   => "Unknown"
+        (int)appointment_status.confirmed => "Confirmed",
+        (int)appointment_status.checked_in => "Checked In",
+        (int)appointment_status.requested => "Requested",
+        _ => "Unknown"
     };
 
     static string SlotToTime(int? slot)
@@ -50,7 +50,7 @@
         if (slot == null) return "TBD";
         int minutes = (slot.Value - 1000) * 30;
         int hour = 8 + minutes / 60;
-        int min  = minutes % 60;
+        int min = minutes % 60;
         return new DateTime(2000, 1, 1, hour, min, 0).ToString("hh:mm tt");
     }
 
@@ -58,13 +58,13 @@
     {
         if (u == null) return "??";
         var f = u.first_name?.Length > 0 ? u.first_name[0].ToString() : "";
-        var l = u.last_name?.Length  > 0 ? u.last_name[0].ToString()  : "";
+        var l = u.last_name?.Length > 0 ? u.last_name[0].ToString() : "";
         return (f + l).ToUpper();
     }
 }
-@section Styles 
-{ 
-    <link href="~/css/app/app.css" rel="stylesheet" /> 
+@section Styles
+{
+    <link href="~/css/app/app.css" rel="stylesheet" />
     <link href="~/css/components/Forms.css" rel="stylesheet" />
     <link href="~/css/app/Appointment-modalView.css" rel="stylesheet" />
     <link href="~/css/components/Forms.css" rel="stylesheet" />
@@ -150,7 +150,7 @@
                             <circle cx="12" cy="12" r="3" />
                         </svg>
                     </button>
-                    
+
                 </div>
             </div>
         </div>
@@ -160,7 +160,7 @@
             <h5 class="card-title">Recent Notifications</h5>
         </div>
         <div class="card-body" style="min-height:220px;">
-           
+
             <div class="container my-5">
                 <div class="row">
                     <div class="col-md-6 offset-md-3">
@@ -196,44 +196,45 @@
     <div style="overflow-x: auto;">
         <table class="data-table Custom-dataTable">
             <thead>
-            <tr>
-                <th>Appointment No.</th>
-                <th>Doctor</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Status</th>
-                <th>Actions</th> 
-            </tr>
+                <tr>
+                    <th>Appointment No.</th>
+                    <th>Doctor</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
             </thead>
             <tbody>
-            @foreach (var appt in appointments)
-            {
-                AP_clinical_system.Models.Entities.system_user? apptDoctor = null;
-                if (appt.doctor_ref.HasValue)
-                    doctorMap.TryGetValue(appt.doctor_ref.Value, out apptDoctor);
+                @foreach (var appt in appointments)
+                {
+                    AP_clinical_system.Models.Entities.system_user? apptDoctor = null;
+                    if (appt.doctor_ref.HasValue)
+                        doctorMap.TryGetValue(appt.doctor_ref.Value, out apptDoctor);
 
-                string doctorName = apptDoctor != null
-                    ? $"Dr. {apptDoctor.first_name} {apptDoctor.last_name}".Trim(): "—";
+                    string doctorName = apptDoctor != null
+                        ? $"Dr. {apptDoctor.first_name} {apptDoctor.last_name}".Trim() : "—";
 
-                <tr>
-                    <td>@(appt.appointment_no ?? "—")</td>
-                    <td>@doctorName</td>
-                    <td>@(appt.date?.ToString("dd MMM yyyy") ?? "—")</td>
-                    <td>@SlotToTime(appt.appointment_time_slot)</td>
-                    <td>
-                        <span class="badge @StatusBadge(appt.appointment_status)">
-                            @StatusLabel(appt.appointment_status)
-                        </span>
-                    </td>
-                        <td class="text-center">
-                            <button type="button" class="hpd-btn" data-action="view-appointment">View</button>
+                    <tr>
+                        <td>@(appt.appointment_no ?? "—")</td>
+                        <td>@doctorName</td>
+                        <td>@(appt.date?.ToString("dd MMM yyyy") ?? "—")</td>
+                        <td>@SlotToTime(appt.appointment_time_slot)</td>
+                        <td>
+                            <span class="badge @StatusBadge(appt.appointment_status)">
+                                @StatusLabel(appt.appointment_status)
+                            </span>
                         </td>
-                </tr>
-            }
+                        <td class="text-center">
+                            <button type="button" class="hpd-btn" data-action="view-appointment"
+                                    data-appt-id="@appt.id">View</button>
+                        </td>
+                    </tr>
+                }
             </tbody>
         </table>
     </div>
 </div>
 @await Html.PartialAsync("_SingleAppointmentView")
- @await Html.PartialAsync("_BookAppointmentForm")
+@await Html.PartialAsync("_BookAppointmentForm")
 

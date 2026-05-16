@@ -3,12 +3,13 @@
 @{
     ViewData["Title"] = "Login";
 }
+<partial name="_LoadingOverlay" />
 
 <h2>Login</h2>
 
 <div class="row">
     <div class="col-md-6">
-        <form asp-action="Login" asp-controller="Account" method="post">
+        <form asp-action="Login" asp-controller="Account" method="post" id="loginForm">
 
             <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
 
@@ -31,7 +32,7 @@
                 <label asp-for="RememberMe" class="form-check-label"></label>
             </div>
 
-            <button type="submit" class="btn btn-primary">Login</button>
+            <button type="submit" class="btn btn-primary" id="btnSubmit">Login</button>
 
             <a asp-action="Register" asp-controller="Account" class="btn btn-link">
                 Create new account
@@ -44,4 +45,15 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        $(function () {
+            $('#loginForm').on('submit', function () {
+                if ($(this).valid()) {
+                    $('#blockui-overlay').css('display', 'flex');
+                    $('#btnSubmit').prop('disabled', true).text('Please wait...');
+                }
+            });
+        });
+    </script>
 }
