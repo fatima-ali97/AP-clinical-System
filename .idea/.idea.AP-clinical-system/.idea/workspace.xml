@@ -15,14 +15,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="21a8b2e1-ac6c-41a4-a3cc-1fb3d8aa6e80" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/AP-clinical-system.MVC/AP-clinical-system.MVC.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/AP-clinical-system.MVC/AP-clinical-system.MVC.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AP-clinical-system.MVC/Views/Patient/Index.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/AP-clinical-system.MVC/Views/Patient/Index.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AP-clinical-system.MVC/Views/Patient/_BookAppointmentForm.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/AP-clinical-system.MVC/Views/Patient/_BookAppointmentForm.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AP-clinical-system.MVC/Views/Shared/_AppLayout.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/AP-clinical-system.MVC/Views/Shared/_AppLayout.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AP-clinical-system.MVC/wwwroot/css/app/app-index.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/AP-clinical-system.MVC/wwwroot/css/app/app.css" beforeDir="false" afterPath="$PROJECT_DIR$/AP-clinical-system.MVC/wwwroot/css/app/app.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AP-clinical-system.MVC/wwwroot/js/custom-dataTable.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/AP-clinical-system.MVC/wwwroot/js/site.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.AP-clinical-system/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.AP-clinical-system/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,26 +47,26 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    ".NET Launch Settings Profile.AP-clinical-system.MVC: https.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "refactored-UI",
-    "junie.onboarding.icon.badge.shown": "true",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "to.speed.mode.migration.done": "true",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;.NET Launch Settings Profile.AP-clinical-system.MVC: https.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;refactored-UI&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected=".NET Launch Settings Profile.AP-clinical-system.MVC: https">
     <configuration name="AP-clinical-system.API: http" type="LaunchSettings" factoryName=".NET Launch Settings Profile">
       <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/AP-clinical-system.API/AP-clinical-system.API.csproj" />
@@ -166,6 +159,7 @@
       <option name="SEND_DEBUG_REQUEST" value="1" />
       <option name="ADDITIONAL_IIS_EXPRESS_ARGUMENTS" value="" />
       <option name="AUTO_ATTACH_CHILDREN" value="0" />
+      <option name="RUNTIME_TYPE" value="coreclr" />
       <option name="MIXED_MODE_DEBUG" value="0" />
       <method v="2">
         <option name="Build" />
@@ -214,6 +208,7 @@
       <workItem from="1778704314215" duration="3090000" />
       <workItem from="1778740703822" duration="12937000" />
       <workItem from="1778842969891" duration="6158000" />
+      <workItem from="1778930308871" duration="419000" />
     </task>
     <servers />
   </component>
