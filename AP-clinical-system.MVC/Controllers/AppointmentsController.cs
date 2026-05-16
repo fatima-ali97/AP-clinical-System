@@ -37,30 +37,25 @@ namespace AP_clinical_system.Controllers
         [HttpGet]
         public async Task<IActionResult> GetDoctorsBySpecialization(Guid specializationId)
         {
-            var doctorIds = await context.doctor_information_specialization_mtms
-                .Where(m => m.doctor_specialization_ref == specializationId && m.inactive != true)
-                .Select(m => m.doctor_information_ref)
-                .ToListAsync();
+            // get specialization
+            var specialization = context.doctor_specializations
+                .Where(s => s.id == specializationId && s.inactive != true)
+                .FirstOrDefaultAsync();
+            
+            // verify it exists
+            if (specialization == null)
+            {
+                return NotFound("Specialization ID provided does not belong to any active specialization.");
+            }
 
-            var doctors = await context.doctor_informations
-                .Where(d => doctorIds.Contains(d.id) && d.inactive != true)
-                .ToListAsync();
-
-            var userIds = doctors
-                .Where(d => d.system_user_ref.HasValue)
-                .Select(d => d.system_user_ref!.Value)
-                .ToList();
-
-            var users = await context.Users
-                .Where(u => userIds.Contains(u.Id))
-                .ToDictionaryAsync(u => u.Id);
-
-            var result = doctors
-                .Where(d => d.system_user_ref.HasValue && users.ContainsKey(d.system_user_ref!.Value))
-                .Select(d => new {
-                    id = d.id,                                          
-                    userId = d.system_user_ref!.Value,                     
-                    name = $"Dr. {users[d.system_user_ref!.Value].first_name} {users[d.system_user_ref!.Value].last_name}".Trim()
+            // get all doctors who specialize in the specialization
+            var result = GeneralHelper.GetAllDoctors(context)
+                .Where(d => d.Specializations.Any(s => s.id == specializationId))
+                .Select(d => new
+                {
+                    d.id,
+                    userId = d.id,
+                    name = $"Dr. {d.FirstName} {d.LastName}".Trim()
                 });
 
             return Json(result);
@@ -327,24 +322,6 @@ namespace AP_clinical_system.Controllers
                 _ => (null, null)
             };
         }
-
-        private List<DoctorObject> GetAllDoctors()
-        {
-            var doctors = new List<DoctorObject>();
-
-            var doctorIDs = context.system_users
-                .Select(u => new { u.Id, u.user_role, u.inactive })
-                .Where(u => u.user_role == (int)user_role.doctor && u.inactive != true)
-                .ToList();
-
-            foreach (var doctor in doctorIDs)
-            {
-                var doctorObject = GeneralHelper.GetDoctorObjectByID(context, doctor.Id);
-                if (doctorObject.Success)
-                    doctors.Add(doctorObject);
-            }
-
-            return doctors;
-        }
+        
     }
 }
