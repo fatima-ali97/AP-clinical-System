@@ -33,7 +33,7 @@ namespace AP_clinical_system.Controllers
             return Ok(specializations);
         }
 
-     
+
         [HttpGet]
         public async Task<IActionResult> GetDoctorsBySpecialization(Guid specializationId)
         {
@@ -57,9 +57,10 @@ namespace AP_clinical_system.Controllers
 
             var result = doctors
                 .Where(d => d.system_user_ref.HasValue && users.ContainsKey(d.system_user_ref!.Value))
-                .Select(d => new {
-                    id = d.id,                                          
-                    userId = d.system_user_ref!.Value,                     
+                .Select(d => new
+                {
+                    id = d.id,
+                    userId = d.system_user_ref!.Value,
                     name = $"Dr. {users[d.system_user_ref!.Value].first_name} {users[d.system_user_ref!.Value].last_name}".Trim()
                 });
 
@@ -172,18 +173,27 @@ namespace AP_clinical_system.Controllers
             return Ok(result);
         }
 
-        // POST /Appointments/Book
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Book(
-            Guid patient_ref,
             Guid specialization_ref,
             Guid doctor_ref,
             DateOnly date,
             int appointment_time_slot,
             string? appointment_reason)
         {
-           
+            var currentUser = await context.Users
+                .FirstOrDefaultAsync(u => u.UserName == User.Identity!.Name);
+
+            if (currentUser == null)
+                return Json(new { success = false, error = "User not found." });
+
+            var patientInfo = await context.patient_informations
+                .FirstOrDefaultAsync(p => p.system_user_ref == currentUser.Id && p.inactive != true);
+
+            if (patientInfo == null)
+                return Json(new { success = false, error = "Patient record not found." });
+
             bool slotTaken = await context.appointments.AnyAsync(a =>
                 a.doctor_ref == doctor_ref &&
                 a.date == date &&
@@ -193,7 +203,6 @@ namespace AP_clinical_system.Controllers
             if (slotTaken)
                 return Json(new { success = false, error = "That time slot is already booked. Please choose another." });
 
-           
             var autonum = await context.autonumbers
                 .FirstOrDefaultAsync(a => a.entity_name == "appointment" && a.field_name == "appointment_no");
 
@@ -201,21 +210,25 @@ namespace AP_clinical_system.Controllers
             if (autonum != null)
             {
                 autonum.last_number = (autonum.last_number ?? 0) + 1;
-                apptNo = autonum.pattern!.Replace("{n}", autonum.last_number.Value.ToString("D4"));
+                apptNo = string.Format(autonum.pattern!, autonum.last_number.Value);
             }
 
+            var now = DateTime.UtcNow;
             var appt = new appointment
             {
                 id = Guid.NewGuid(),
                 appointment_no = apptNo,
                 appointment_reason = appointment_reason,
-                patient_ref = patient_ref,
+                patient_ref = patientInfo.id,
                 doctor_ref = doctor_ref,
                 specialization_ref = specialization_ref,
                 date = date,
                 appointment_time_slot = appointment_time_slot,
                 appointment_status = (int)appointment_status.requested,
-                createdon = DateTime.UtcNow,
+                createdon = now,
+                createdby = currentUser.Id,
+                modifiedon = now,
+                modifiedby = currentUser.Id,
                 inactive = false
             };
 
@@ -236,6 +249,13 @@ namespace AP_clinical_system.Controllers
                 var patientUserCheck = GeneralHelper.VerifyUserType(context, patientId, (int)user_role.patient);
                 if (!patientUserCheck)
                     return BadRequest("Current User is not a Patient");
+
+
+                var patientInfo = await context.patient_informations
+                    .FirstOrDefaultAsync(p => p.system_user_ref == patientId && p.inactive != true);
+
+                if (patientInfo == null)
+                    return BadRequest("Patient information record not found.");
 
                 var id = Guid.NewGuid();
                 var createdon = DateTime.Now;
@@ -260,7 +280,7 @@ namespace AP_clinical_system.Controllers
                     modifiedby = modifiedby,
                     appointment_no = appointment_no,
                     appointment_reason = model.appointment_reason ?? "",
-                    patient_ref = createdby,
+                    patient_ref = patientInfo.id,
                     doctor_ref = model.doctor_ref,
                     specialization_ref = model.specialization_ref,
                     date = model.date,
@@ -278,7 +298,6 @@ namespace AP_clinical_system.Controllers
 
             return RedirectToAction("Index", "Patient");
         }
-
         // POST /Appointments/ConfirmAppointment
         [HttpPost]
         public IActionResult ConfirmAppointment(Guid appointment_id)
@@ -311,7 +330,6 @@ namespace AP_clinical_system.Controllers
 
             return RedirectToAction("Index", "Receptionist");
         }
-
 
         private static (string? start, string? end) GetScheduleForDay(doctor_schedule schedule, DayOfWeek day)
         {

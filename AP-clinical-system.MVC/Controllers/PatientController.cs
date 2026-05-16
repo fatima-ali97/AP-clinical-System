@@ -136,6 +136,51 @@ namespace AP_clinical_system.Controllers
         public ActionResult History() => View();
 
 
+        [HttpPost]
+        public async Task<IActionResult> GetAppointmentInfo(Guid apptID)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            // Get patient_information record
+            var patientInfo = await _context.patient_informations
+                .FirstOrDefaultAsync(p => p.system_user_ref == currentUser!.Id && p.inactive != true);
+
+            if (patientInfo == null) return NotFound();
+
+            // Check BOTH possible ways patient_ref was stored
+            var appt = await _context.appointments
+                .FirstOrDefaultAsync(a => a.id == apptID
+                                       && a.inactive != true
+                                       && (a.patient_ref == patientInfo.id
+                                           || a.patient_ref == currentUser!.Id));
+
+            if (appt == null) return NotFound();
+
+            var doctor = appt.doctor_ref.HasValue
+                ? await _context.doctor_informations.FirstOrDefaultAsync(d => d.id == appt.doctor_ref)
+                : null;
+
+            var doctorUser = doctor?.system_user_ref.HasValue == true
+                ? await _context.Users.FirstOrDefaultAsync(u => u.Id == doctor.system_user_ref)
+                : null;
+
+            var specialization = appt.specialization_ref.HasValue
+                ? await _context.doctor_specializations.FirstOrDefaultAsync(s => s.id == appt.specialization_ref)
+                : null;
+
+            return Json(new
+            {
+                appointment_no = appt.appointment_no,
+                date = appt.date?.ToString("dd MMM yyyy"),
+                time_slot = appt.appointment_time_slot,
+                status = appt.appointment_status,
+                reason = appt.appointment_reason,
+                doctor_name = doctorUser != null
+                                    ? $"Dr. {doctorUser.first_name} {doctorUser.last_name}".Trim()
+                                    : "—",
+                specialization = specialization?.specialization_name ?? "—"
+            });
+        }
         private static string SlotToTime(int? slot)
         {
             if (slot == null) return "TBD";
