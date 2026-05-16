@@ -12,7 +12,7 @@ using AP_clinical_system.Reporting.ViewModels;
 
 namespace AP_clinical_system.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     [ApiController]
     public class AuthController : ControllerBase
     {
@@ -34,7 +34,7 @@ namespace AP_clinical_system.Controllers
         }
 
         // POST: api/Auth/ReportingAppLogin
-        [HttpPost("ReportingAppLogin")]
+        [HttpPost]
         public async Task<IActionResult> ReportingAppLogin([FromBody] ReportingLoginViewModel model)
         {
             if (!ModelState.IsValid)

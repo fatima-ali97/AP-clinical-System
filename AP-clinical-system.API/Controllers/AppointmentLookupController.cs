@@ -11,7 +11,7 @@ using static AP_clinical_system.Models.GeneralHelper;
 
 namespace AP_clinical_system.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     [ApiController]
     public class AppointmentLookupController : ControllerBase
     {
@@ -22,6 +22,7 @@ namespace AP_clinical_system.Controllers
             context = _context;
         }
 
+        // GET: api/AppointmentLookup/AnonAppLookup
         [HttpGet]
         [AllowAnonymous]
         public IActionResult AnonAppLookup([FromBody] JsonElement body)
