@@ -1,18 +1,27 @@
-﻿@* Views/Shared/_AppointmentBookingModal.cshtml *@
+﻿@using AP_clinical_system.Models.Entities
+@using AP_clinical_system.Models.Enums
 
-<div class="modal-backdrop" id="modalBackdrop">
-    <div class="modal" id="appointmentModal">
-        <form id="appointmentForm">
+
+<div class="appt-backdrop" id="apptModalBackdrop">
+    <div class="appt-modal" id="apptModal" role="dialog" aria-modal="true" aria-labelledby="apptModalTitle">
+        <form id="apptForm" novalidate>
             @Html.AntiForgeryToken()
+            <input type="hidden" id="apptPatientRef" name="patient_ref" value="@ViewBag.PatientId" />
 
-            <div class="modal-header"> ... </div>
+            <div class="appt-modal-header">
+                <h5 id="apptModalTitle">Book an Appointment</h5>
+                <button type="button" class="appt-close-btn" id="apptCloseBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
 
-            <div class="modal-body">
-                <input type="hidden" id="patientRef" name="patient_ref" value="@ViewBag.PatientId" />
-
-                <div class="field">
-                    <label>Specialization</label>
-                    <select name="specialization_ref" id="specialization">
+            <div class="appt-modal-body">
+                <div class="appt-field">
+                    <label for="apptSpecialization">Specialization</label>
+                    <select name="specialization_ref" id="apptSpecialization">
                         <option value="">Select specialization</option>
                         @foreach (var s in ViewBag.Specializations)
                         {
@@ -21,82 +30,214 @@
                     </select>
                 </div>
 
-                <div class="field">
-                    <label>Doctor</label>
-                    <select name="doctor_ref" id="doctor">
-                        <option value="">Select doctor</option>
+                <div class="appt-field">
+                    <label for="apptDoctor">Doctor</label>
+                    <select name="doctor_ref" id="apptDoctor" disabled>
+                        <option value="">Select specialization first</option>
                     </select>
                 </div>
 
-                <div class="field">
-                    <label>Date</label>
-                    <input type="date" name="date" id="appointmentDate" />
+                <div class="appt-field">
+                    <label for="apptDate">Date</label>
+                    <input type="date" name="date" id="apptDate" disabled />
                 </div>
 
-                <div class="field">
+                <div class="appt-field">
                     <label>Time Slot</label>
-                    <input type="hidden" name="appointment_time_slot" id="slotInput" />
-                    <div id="slotGrid"> ... </div>
+                    <input type="hidden" name="appointment_time_slot" id="apptSlotInput" />
+                    <div id="apptSlotGrid">
+                        <p class="appt-slot-hint">Select a doctor and date to see available slots.</p>
+                    </div>
                 </div>
 
-                <div class="field">
-                    <label>Reason for visit</label>
-                    <textarea name="appointment_reason"></textarea>
+                <div class="appt-field">
+                    <label for="apptReason">Reason for visit</label>
+                    <textarea name="appointment_reason" id="apptReason" rows="3" placeholder="Briefly describe your reason..."></textarea>
                 </div>
+
+                <div class="appt-feedback error" id="apptError"></div>
+                <div class="appt-feedback success" id="apptSuccess"></div>
+
             </div>
 
-            <div class="modal-footer">
-                <button type="button" id="cancelBtn">Cancel</button>
-                <button type="submit">Confirm Booking</button>
+            <div class="appt-modal-footer">
+                <button type="button" class="appt-btn-cancel" id="apptCancelBtn">Cancel</button>
+                <button type="submit" class="appt-btn-confirm" id="apptConfirmBtn">Confirm Booking</button>
             </div>
         </form>
     </div>
 </div>
 
-
-
-
-
-
 <script>
-    // Dynamic doctor dropdown — fires when specialization changes
-    document.getElementById('specialization').addEventListener('change', async function () {
-        const specializationId = this.value;
-        const doctorSelect = document.getElementById('doctor');
-
-        doctorSelect.innerHTML = '<option value="">Loading...</option>';
-
-        const res = await fetch(`/Appointment/GetDoctorsBySpecialization?specializationId=${specializationId}`);
-        const doctors = await res.json();
-
-        doctorSelect.innerHTML = '<option value="">Select doctor</option>';
-        doctors.forEach(d => {
-            const opt = document.createElement('option');
-            opt.value = d.id;
-            opt.textContent = d.name;
-            doctorSelect.appendChild(opt);
-        });
-    });
-
-    // Form submit via AJAX
-    document.getElementById('appointmentForm').addEventListener('submit', async function (e) {
-        e.preventDefault();
-
-        const formData = new FormData(this);
-
-        const res = await fetch('/Appointment/Book', {
-            method: 'POST',
-            body: formData   // FormData sends the antiforgery token automatically
-        });
-
-        const result = await res.json();
-
-        if (result.success) {
-            // show success state, display result.appointment_no
-        } else {
-            // show validation errors
+    (function () {
+        function openModal() {
+            resetApptForm();
+            document.getElementById('apptModalBackdrop').classList.add('open');
+            document.body.style.overflow = 'hidden';
         }
-    });
+        function closeModal() {
+            document.getElementById('apptModalBackdrop').classList.remove('open');
+            document.body.style.overflow = '';
+        }
 
+        document.getElementById('openModalBtn')?.addEventListener('click', e => { e.preventDefault(); openModal(); });
+        document.getElementById('apptCloseBtn').addEventListener('click', closeModal);
+        document.getElementById('apptCancelBtn').addEventListener('click', closeModal);
+        document.getElementById('apptModalBackdrop').addEventListener('click', function (e) {
+            if (e.target === this) closeModal();
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeModal();
+        });
 
+        
+
+        document.getElementById('apptSpecialization').addEventListener('change', async function () {
+            const specId     = this.value;
+            const doctorSel  = document.getElementById('apptDoctor');
+            const dateInput  = document.getElementById('apptDate');
+
+            doctorSel.innerHTML = '<option value="">Loading…</option>';
+            doctorSel.disabled  = true;
+            dateInput.value     = '';
+            dateInput.disabled  = true;
+            clearApptSlots();
+           
+
+            if (!specId) {
+                doctorSel.innerHTML = '<option value="">Select specialization first</option>';
+                return;
+            }
+            try {
+                const res     = await fetch(`/Appointments/GetDoctorsBySpecialization?specializationId=${specId}`);
+                const doctors = await res.json();
+                doctorSel.innerHTML = '<option value="">Select doctor</option>';
+                doctors.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value          = d.id;
+                    opt.dataset.userId = d.userId;
+                    opt.textContent    = d.name;
+                    doctorSel.appendChild(opt);
+                });
+                doctorSel.disabled = false;
+            } catch {
+                doctorSel.innerHTML = '<option value="">Failed to load doctors</option>';
+            }
+        });
+
+        document.getElementById('apptDoctor').addEventListener('change', function () {
+            const dateInput = document.getElementById('apptDate');
+            clearApptSlots();
+            dateInput.value = '';
+            if (this.value) {
+                dateInput.min      = new Date().toISOString().split('T')[0];
+                dateInput.disabled = false;
+                
+            } else {
+                dateInput.disabled = true;
+                
+            }
+        });
+
+        document.getElementById('apptDate').addEventListener('change', function () {
+            const sel    = document.getElementById('apptDoctor').selectedOptions[0];
+            const userId = sel?.dataset.userId;
+            const date   = this.value;
+            if (userId && date) { loadApptSlots(userId, date); }
+        });
+
+        async function loadApptSlots(doctorUserId, date) {
+            const grid = document.getElementById('apptSlotGrid');
+            grid.innerHTML = '<p class="appt-slot-hint">Loading slots…</p>';
+            document.getElementById('apptSlotInput').value = '';
+            try {
+                const res  = await fetch('/Appointments/GetAvailableDatesAndTimesByDoctorID', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body:    `doctorID=${encodeURIComponent(doctorUserId)}`
+                });
+                if (!res.ok) { grid.innerHTML = '<p class="appt-slot-hint" style="color:var(--color-danger,#dc2626)">No schedule found for this doctor.</p>'; return; }
+                const data  = await res.json();
+                const match = data.find(d => d.date === date);
+                grid.innerHTML = '';
+                if (!match || !match.availableTimeSlots.length) {
+                    grid.innerHTML = '<p class="appt-slot-hint">No available slots for this date.</p>'; return;
+                }
+                match.availableTimeSlots.forEach(sv => {
+                    const btn = document.createElement('button');
+                    btn.type          = 'button';
+                    btn.className     = 'appt-slot';
+                    btn.dataset.slotValue = sv;
+                    btn.textContent   = apptSlotToTime(sv);
+                    btn.addEventListener('click', function () {
+                        document.querySelectorAll('#apptSlotGrid .appt-slot').forEach(s => s.classList.remove('active'));
+                        this.classList.add('active');
+                        document.getElementById('apptSlotInput').value = sv;
+                        
+                    });
+                    grid.appendChild(btn);
+                });
+            } catch {
+                grid.innerHTML = '<p class="appt-slot-hint" style="color:var(--color-danger,#dc2626)">Error loading slots.</p>';
+            }
+        }
+
+        function apptSlotToTime(sv) {
+            const mins  = (sv - 1000) * 30;
+            const h     = 8 + Math.floor(mins / 60);
+            const m     = mins % 60;
+            const p     = h >= 12 ? 'PM' : 'AM';
+            const dh    = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+            return `${String(dh).padStart(2,'0')}:${String(m).padStart(2,'0')} ${p}`;
+        }
+
+        function clearApptSlots() {
+            document.getElementById('apptSlotGrid').innerHTML = '<p class="appt-slot-hint">Select a doctor and date to see available slots.</p>';
+            document.getElementById('apptSlotInput').value = '';
+        }
+
+        document.getElementById('apptForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const errDiv = document.getElementById('apptError');
+            const okDiv  = document.getElementById('apptSuccess');
+            errDiv.style.display = okDiv.style.display = 'none';
+
+            if (!document.getElementById('apptSlotInput').value) {
+                errDiv.textContent = 'Please select a time slot before confirming.';
+                errDiv.style.display = 'block'; return;
+            }
+            const btn = document.getElementById('apptConfirmBtn');
+            btn.disabled = true; btn.textContent = 'Booking…';
+            try {
+                const res    = await fetch('/Appointments/Book', { method: 'POST', body: new FormData(this) });
+                const result = await res.json();
+                if (result.success) {
+                    okDiv.textContent   = `Appointment ${result.appointment_no} booked successfully!`;
+                    okDiv.style.display = 'block';
+                    setTimeout(() => { closeModal(); location.reload(); }, 1500);
+                } else {
+                    errDiv.textContent  = result.error ?? 'Booking failed. Please try again.';
+                    errDiv.style.display = 'block';
+                }
+            } catch {
+                errDiv.textContent  = 'An unexpected error occurred. Please try again.';
+                errDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false; btn.textContent = 'Confirm Booking';
+            }
+        });
+
+        function resetApptForm() {
+            document.getElementById('apptForm').reset();
+            const doc  = document.getElementById('apptDoctor');
+            const date = document.getElementById('apptDate');
+            doc.innerHTML = '<option value="">Select specialization first</option>';
+            doc.disabled  = true;
+            date.disabled = true;
+            clearApptSlots();
+            document.getElementById('apptError').style.display   = 'none';
+            document.getElementById('apptSuccess').style.display = 'none';
+           
+        }
+    })();
 </script>

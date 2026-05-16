@@ -6,9 +6,20 @@ using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Add services to the container - Fatima note: i edited this cuz reporting app has the same home controller which caused an err for me 
 builder.Services.AddControllersWithViews()
-    .AddRazorRuntimeCompilation();
+    .AddRazorRuntimeCompilation()
+    .AddApplicationPart(typeof(AP_clinical_system.MVC.Controllers.HomeController).Assembly)
+    .ConfigureApplicationPartManager(m =>
+    {
+        // Remove any parts that belong to the Reporting project
+        var reportingParts = m.ApplicationParts
+            .Where(p => p.Name.Contains("Reporting"))
+            .ToList();
+
+        foreach (var part in reportingParts)
+            m.ApplicationParts.Remove(part);
+    });
 
 // Register the DbContext with SQL Server
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -67,12 +78,20 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+// Configure the HTTP request pipeline. --  i edited thit
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+else
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+
+// This must come AFTER UseRouting but it handles all roles universally
+app.UseStatusCodePagesWithReExecute("/Home/Error", "?statusCode={0}");
+
 
 app.UseHttpsRedirection();
 app.UseRouting();
@@ -82,6 +101,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
+
+
 
 app.MapControllerRoute(
     name: "default",
