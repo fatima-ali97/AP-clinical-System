@@ -193,6 +193,16 @@ namespace AP_clinical_system.Models
             return $"{firstName} {lastName}".Trim();
         }
 
+        public static string GetUserFullNameByID(AP_Context context, Guid userId)
+        {
+            var user = context.system_users.FirstOrDefault(s => s.Id == userId);
+            if (user != null)
+            {
+                return $"{user.first_name} {user.last_name}".Trim();
+            }
+            return "N/A";
+        }
+
         public static async Task<string> GetAutonumber(AP_Context context, string entityName)
         {
             var autonumberList = await context.autonumbers

@@ -55,7 +55,7 @@ namespace AP_clinical_system.Controllers
                 {
                     d.id,
                     userId = d.id,
-                    name = $"Dr. {d.FirstName} {d.LastName}".Trim()
+                    name = $"Dr. {GeneralHelper.GetUserFullNameByID(context, d.id)}"
                 });
 
             return Json(result);

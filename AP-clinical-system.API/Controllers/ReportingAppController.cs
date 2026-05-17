@@ -117,13 +117,9 @@ namespace AP_clinical_system.Controllers
                     int dTotal     = doctorApps.Count;
                     int dCancelled = doctorApps.Count(a => a.appointment_status == (int)appointment_status.cancelled);
                     int dNoShow    = doctorApps.Count(a => a.appointment_status == (int)appointment_status.no_show);
-
-                    var doctorObj = GeneralHelper.GetDoctorObjectByID(context, di.system_user_ref.Value);
-                       
-                    var doctorName = doctorObj?.Success == true
-                        ? $"{doctorObj.FirstName} {doctorObj.LastName}".Trim()
-                        : "Unknown";
-
+                    
+                    var doctorName = GeneralHelper.GetUserFullNameByID(context, di.system_user_ref.Value);   
+                    
                     return new
                     {
                         doctorId          = di.system_user_ref,
@@ -255,12 +251,8 @@ namespace AP_clinical_system.Controllers
                     int completed = docApps.Count(a => a.appointment_status == (int)appointment_status.completed);
                     int cancelled = docApps.Count(a => a.appointment_status == (int)appointment_status.cancelled);
                     int noShow    = docApps.Count(a => a.appointment_status == (int)appointment_status.no_show);
-
-                    var doctorObj = GeneralHelper.GetDoctorObjectByID(context, di.system_user_ref.Value);
-
-                    var doctorName = doctorObj?.Success == true
-                        ? $"{doctorObj.FirstName} {doctorObj.LastName}".Trim()
-                        : "Unknown";
+                    
+                    var doctorName = GeneralHelper.GetUserFullNameByID(context, di.system_user_ref.Value);      
 
                     return new
                     {
@@ -341,11 +333,7 @@ namespace AP_clinical_system.Controllers
                 {
                     var docLeaves  = leaves.Where(l => l.doctor_information_ref == di.id).ToList();
 
-                    var doctorObj = GeneralHelper.GetDoctorObjectByID(context, di.system_user_ref.Value);
-
-                    var doctorName = doctorObj?.Success == true
-                        ? $"{doctorObj.FirstName} {doctorObj.LastName}".Trim()
-                        : "Unknown";
+                    var doctorName = GeneralHelper.GetUserFullNameByID(context, di.system_user_ref.Value);      
 
                     int totalDays = docLeaves.Sum(l =>
                     {
