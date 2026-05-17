@@ -197,15 +197,7 @@ namespace AP_clinical_system.Controllers
             if (slotTaken)
                 return Json(new { success = false, error = "That time slot is already booked. Please choose another." });
 
-            var autonum = await context.autonumbers
-                .FirstOrDefaultAsync(a => a.entity_name == "appointment" && a.field_name == "appointment_no");
-
-            string apptNo = "APT-0001";
-            if (autonum != null)
-            {
-                autonum.last_number = (autonum.last_number ?? 0) + 1;
-                apptNo = string.Format(autonum.pattern!, autonum.last_number.Value);
-            }
+            var apptNo = await GeneralHelper.GetAutonumber(context, "appointment");
 
             var now = DateTime.UtcNow;
             var appt = new appointment
