@@ -5,11 +5,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+
 namespace AP_clinical_system.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
-    [Authorize(Roles = "clinic_manager")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "ClinicManagerOnly")]
     public class ReportingAppController : ControllerBase
     {
         private readonly AP_Context context;

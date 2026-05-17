@@ -9,6 +9,7 @@ using AP_clinical_system.Models.Entities;
 using AP_clinical_system.Models.Enums;
 using AP_clinical_system.Models.sql_Context;
 using AP_clinical_system.Reporting.ViewModels;
+using System.ComponentModel.Design.Serialization;
 
 namespace AP_clinical_system.Controllers
 {
@@ -43,7 +44,7 @@ namespace AP_clinical_system.Controllers
             }
 
             // Find user by email
-            var user = await _userManager.FindByEmailAsync(model.Email);
+            var user = _context.system_users.First(u => u.Email == model.Email);
             if (user == null || user.inactive == true)
             {
                 return Unauthorized(new { message = "Invalid credentials or account is inactive." });
