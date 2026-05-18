@@ -1,6 +1,14 @@
-@AP_clinical_system.API_HostAddress = http://localhost:5249
+@AP_clinical_system_HostAddress = http:/localhost:7293
 
-GET {{AP_clinical_system.API_HostAddress}}/weatherforecast/
+### Get Weather Forecast (Default Endpoint)
+GET {{AP_clinical_system_HostAddress}}/weatherforecast/
 Accept: application/json
 
-###
+### Test AdvancedHealth Anonymous Patient Lookup
+GET {{AP_clinical_system_HostAddress}}/api/anon-lookup
+Content-Type: application/json
+
+{
+  "cpr": "980101125",
+  "record_no": "PAT-005"
+}

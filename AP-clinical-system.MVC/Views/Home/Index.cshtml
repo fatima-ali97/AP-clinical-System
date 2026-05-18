@@ -1,22 +1,21 @@
-
-@{
+﻿@{
     ViewData["Title"] = "Home";
-    Layout = "_Layout"; 
+    Layout = "_Layout";
 }
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-md-5 mx-5">
-            <h1 class="hero-section-title ">
+<section class="container-fluid" id="hero-section">
+    <div class="row align-items-center g-0">
+        <div class="col-12 col-md-5 px-0 px-md-4 order-2 order-md-1">
+            <h1 class="hero-section-title">
                 Trusted Care <br>
                 for Every <br>
                 Stage of Life
             </h1>
-            <div class="d-grid gap-2 col-6 mt-4">
+            <div class="d-grid gap-2 mt-4 w-100 w-md-75">
                 <button type="button" class="btn btn-outline-dark cta-btn">Explore our medical team</button>
-                <button type="button" class="btn btn-primary btn-rounded cta-btn">Book Consultation</button>
+                <button type="button" class="btn btn-primary btn-rounded cta-btn">View Your Appointments</button>
             </div>
         </div>
-        <div class="col-md-6 container-tg">
+        <div class="col-12 col-md-7 order-1 order-md-2 position-relative">
             <div class="card tag">
                 <div class="hero-section-display-doctor-div">
                     <span class="doctor-name">Ryan Gosling</span>
@@ -30,10 +29,401 @@
                     </svg>
                 </div>
             </div>
-            <img src="~/assets/hero-section-bg.jpg" class="img-fluid" alt="">
+            <img src="~/assets/hero-section-bg.jpg" class="img-fluid rounded overflow-hidden" alt="">
         </div>
     </div>
 
+</section>
+<section class="container mt-5" id="stats-section">
+    <div class="row g-4">
+
+        <div class="col-md-4">
+            <div class="static-card static">
+                <div class="static-card--title">
+                    <p>
+                        <span class="counter" data-target="98">0</span>%
+                    </p>
+                </div>
+
+                <div class="static-card--body">
+                    <h5>General Consultation</h5>
+                    <p>
+                        Providing comprehensive healthcare consultations with experienced medical professionals focused on your overall wellness and preventive care.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="static-card static">
+                <div class="static-card--title">
+                    <p>
+                        <span class="counter" data-target="96">0</span>%
+                    </p>
+                </div>
+
+                <div class="static-card--body">
+                    <h5>Pediatric Care</h5>
+                    <p>
+                        Compassionate pediatric services dedicated to the health, growth, and development of infants, children, and adolescents.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="static-card static">
+                <div class="static-card--title">
+                    <p>
+                        <span class="counter" data-target="91">0</span>%
+                    </p>
+                </div>
+
+                <div class="static-card--body">
+                    <h5>Laboratory & Diagnostics</h5>
+                    <p>
+                        Providing comprehensive healthcare consultations with experienced medical professionals focused on your overall wellness and preventive care.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+<section class="container mt-5">
+    <div class="row g-4 align-items-stretch">
+
+        <div class="col-md-6  order-2 order-md-1">
+            <div class="rounded overflow-hidden img-hover-zoom h-100">
+                <img src="~/assets/looking-at-documents-in-reception-of-medical-center.jpg" alt="Reception staff reviewing documents at a medical center" class="img-fluid h-100 w-100 object-fit-cover" style="object-position: right;" />
+            </div>
+        </div>
+
+        <div class="col-md-6  order-1 order-md-2 ">
+            <div class="d-flex justify-content-end gap-3 mb-3 align-items-end">
+                <div class="rounded overflow-hidden" style="width: 190px; height: 100px;">
+                    <img src="~/assets/dental-facility.jpg"
+                         class="w-100 h-100 object-fit-cover"
+                         alt="Dental facility">
+                </div>
+
+                <div class="rounded overflow-hidden" style="width: 280px; height: 130px;">
+                    <img src="~/assets/woman-in-black-blazer-sitting-on-dental-chair.jpg"
+                         class="w-100 h-100 object-fit-cover"
+                         alt="Dental facility interior">
+                </div>
+
+            </div>
 
 
-</div>
+            <div class="p-3 p-md-4">
+                <h2 class="about-clinic-highlight">
+                    More Than a Clinic - We're Your Health Partner
+                </h2>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="container mt-5">
+    <div class="row g-4  align-items-center">
+
+        <div class="col-md-7">
+            <h2 class="about-clinic-highlight">
+                Quality Healthcare, Close to Home
+            </h2>
+        </div>
+
+        <div class="col-md-5">
+            <div class="d-flex justify-content-space gap-3 flex-wrap">
+                <div class="static">
+                    <h5 class="static--counter-number"><span class="counter" data-target="200">0</span>+</h5>
+                    <p>Expert Doctors</p>
+                </div>
+                <div class="static">
+                    <h5 class="static--counter-number"><span class="counter" data-target="70">0</span>K+</h5>
+                    <p>Happy Patients</p>
+                </div>
+                <div class="static">
+                    <h5 class="static--counter-number"><span class="counter" data-target="44">0</span>M</h5>
+                    <p>Medical Procedures</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="container mt-5">
+    <div class="row g-4 align-items-stretch">
+        <div class="col-md-4 d-flex flex-column justify-content-between">
+            <div class="d-flex justify-content-end gap-3 mb-3 flex-column align-items-start">
+                <div class="rounded overflow-hidden" style="width: 150px; height: 150px;">
+                    <img src="~/assets/doctor-working-with-laptop.jpg"
+                         class="w-100 h-100 object-fit-cover"
+                         alt="">
+                </div>
+            </div>
+            <div>
+                <h2>
+                    Bridging Moodren Medicine and Empathy
+                </h2>
+                <button type="button" class="mt-2 btn btn-primary btn-rounded cta-btn" asp-action="Login" asp-controller="Account">Login Now</button>
+
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="rounded overflow-hidden img-hover-zoom h-100" style="min-height: 300px;">
+                <img src="~/assets/white-thermometer-beside-white-power-bank-and-black-and-silver-scissors.jpg"
+                     class="w-100 h-100 object-fit-cover"
+                     alt="">
+            </div>
+        </div>
+        <div class="col-md-4 d-flex justify-content-between flex-column">
+            <div>
+                <div class="avatar-group mb-2">
+                    <div class="avatar-circle overflow-hidden">
+                        <img src="~/assets/young-doctor-holding-a-stethoscope.jpg"
+                             class="w-100 h-100 object-fit-cover"
+                             alt="">
+                    </div>
+                    <div class="avatar-circle overflow-hidden">
+                        <img src="~/assets/confident-female-nurse-in-medical-uniform.jpg"
+                             class="w-100 h-100 object-fit-cover"
+                             alt="">
+                    </div>
+                    <div class="avatar-circle overflow-hidden">
+                        <img src="~/assets/smiling-young-doctor.jpg"
+                             class="w-100 h-100 object-fit-cover"
+                             alt="">
+                    </div>
+                    <div class="avatar-circle overflow-hidden">
+                        <i class="bi bi-arrow-up-right"></i>
+                    </div>
+                </div>
+                <p>We combine advanced medical care with compassionate support, ensuring every patient receives personalized treatment in a comfortable and caring environment.</p>
+            </div>
+            <div class="d-flex justify-content-end gap-3 mb-3 flex-column align-items-end">
+                <div class="rounded overflow-hidden" style="width: 150px; height: 150px;">
+                    <img src="~/assets/workers-wearing-face-mask-holding-lollipops.jpg"
+                         class="w-100 h-100 object-fit-cover"
+                         alt="">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="container mt-5">
+    <div class="row g-4">
+        <div class="col-md-7">
+            <h2 class="about-clinic-highlight">
+                Your Health, Our Commitment
+            </h2>
+        </div>
+        <div class="col-md-5 card-white-rounded flex-row">
+            <div class="rounded overflow-hidden" style="height:120px;">
+                <img src="~/assets/dental-facility.jpg"
+                     class="w-100 h-100 object-fit-cover"
+                     alt="Dental facility">
+            </div>
+            <div>
+                <h5>Top Fails of Drugs</h5>
+                <p>Most health risks associated with drug use</p>
+                <div class="d-flex justify-content-around">
+                    <p>Heart Attacks</p> 
+                    <p>Brain Damage</p>
+                </div>
+            </div>
+        </div>
+        <div class="service-card-wrapper row g-4 col-12 p-0 m-0">
+            <div class="col-md-6">
+                <div class="service-card card-white-rounded p-0">
+                    <div class="service-card--head">
+                        <div class="service-card--icon">
+                            <i class="bi bi-shield-plus"></i>
+                        </div>
+                        <div class="service-card--content">
+                            <h5>Vaccination & Immunization</h5>
+                            <p>Protecting you and your family from preventable diseases through safe and effective vaccines.</p>
+                        </div>
+                    </div>
+                    <div class="service-card-img rounded overflow-hidden">
+                        <img src="~/assets/close-up-shot-of-a-health-worker-injecting-a-vaccine-on-a-patient.jpg"
+                             class="w-100 h-100 object-fit-cover"
+                             alt="vaccine injection doctor">
+                    </div>
+                </div>
+                
+            </div>
+            <div class="col-md-6">
+                <div class="service-card card-white-rounded p-0">
+                    <div class="service-card--head">
+                        <div class="service-card--icon">
+                            <i class="bi bi-clipboard2-pulse"></i>
+                        </div>
+                        <div class="service-card--content">
+                            <h5>Health Screening Packages</h5>
+                            <p>Early detection of health issues with comprehensive and affordable screening tests.</p>
+                        </div>
+                    </div>
+                    <div class="service-card-img rounded overflow-hidden">
+                        <img src="~/assets/a-healthcare-worker-measuring-a-patient-s-blood-pressure-using-a-sphygmomanometer.jpg"
+                             class="w-100 h-100 object-fit-cover"
+                             alt="medical checkup">
+                    </div>
+                </div>
+                
+            </div>
+            <div class="col-md-6">
+                <div class="service-card card-white-rounded p-0">
+                    <div class="service-card--head">
+                        <div class="service-card--icon">
+                            <i class="bi bi-heart-pulse"></i>
+                        </div>
+                        <div class="service-card--content">
+                            <h5>Chronic Disease Management</h5>
+                            <p>Ongoing care and monitoring for long-term conditions to improve quality of life.</p>
+                        </div>
+                    </div>
+                    <div class="service-card-img rounded overflow-hidden">
+                        <img src="~/assets/octor-talking-with-woman-in-white-long-sleeve-shirt.jpg"
+                             class="w-100 h-100 object-fit-cover"
+                             alt="care checkup">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="service-card card-white-rounded p-0">
+                    <div class="service-card--head">
+                        <div class="service-card--icon">
+                            <i class="bi bi-lightning-charge"></i>
+                        </div>
+                        <div class="service-card--content">
+                            <h5>Emergency First Aid</h5>
+                            <p>Immediate medical attention and rapid response for urgent health situations.</p>
+                        </div>
+                    </div>
+                    <div class="service-card-img rounded overflow-hidden">
+                        <img src="~/assets/a-low-angle-shot-of-an-ambulance.jpg"
+                             class="w-100 h-100 object-fit-cover"
+                             alt="Ambulance">
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</section>
+<section class="container mt-5 rounded call-to-contact-card">
+    <h2>Walk In or Book Online - We're Ready</h2>
+    <button type="button" class="btn btn-outline-dark cta-btn">Contact Now</button>
+</section>
+<section>
+    <div id="testimonialCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
+
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#testimonialCarousel" data-bs-slide-to="0" class="active"></button>
+            <button type="button" data-bs-target="#testimonialCarousel" data-bs-slide-to="1"></button>
+        </div>
+
+        <div class="carousel-inner px-5">
+            <div class="carousel-item active">
+                <div class="row">
+
+                    <!-- Card 1 -->
+                    <div class="col-md-3 mb-3">
+                        <div class="p-4 bg-light rounded-4 position-relative h-100">
+                            <div class="text-warning mb-2">★★★★★</div>
+                            <p class="text-muted small">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                            <h5 class="mb-0">Alpha User</h5>
+                            <small class="text-muted">Company A</small>
+                            <div class="position-absolute bottom-0 end-0 p-3 text-secondary opacity-25"><h1>“</h1></div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div class="col-md-3 mb-3">
+                        <div class="p-4 bg-light rounded-4 position-relative h-100">
+                            <div class="text-warning mb-2">★★★★★</div>
+                            <p class="text-muted small">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                            <h5 class="mb-0">Beta User</h5>
+                            <small class="text-muted">Company B</small>
+                            <div class="position-absolute bottom-0 end-0 p-3 text-secondary opacity-25"><h1>“</h1></div>
+                        </div>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div class="col-md-3 mb-3">
+                        <div class="p-4 bg-light rounded-4 position-relative h-100">
+                            <div class="text-warning mb-2">★★★★★</div>
+                            <p class="text-muted small">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                            <h5 class="mb-0">Gamma User</h5>
+                            <small class="text-muted">Company C</small>
+                            <div class="position-absolute bottom-0 end-0 p-3 text-secondary opacity-25"><h1>“</h1></div>
+                        </div>
+                    </div>
+
+                    <!-- Card 4 -->
+                    <div class="col-md-3 mb-3">
+                        <div class="p-4 bg-light rounded-4 position-relative h-100">
+                            <div class="text-warning mb-2">★★★★★</div>
+                            <p class="text-muted small">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                            <h5 class="mb-0">Delta User</h5>
+                            <small class="text-muted">Company D</small>
+                            <div class="position-absolute bottom-0 end-0 p-3 text-secondary opacity-25"><h1>“</h1></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="carousel-item">
+                <div class="row">
+
+                    <!-- Card 5 -->
+                    <div class="col-md-3 mb-3">
+                        <div class="p-4 bg-light rounded-4 position-relative h-100">
+                            <div class="text-warning mb-2">★★★★★</div>
+                            <p class="text-muted small">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                            <h5 class="mb-0">Epsilon User</h5>
+                            <small class="text-muted">Company E</small>
+                            <div class="position-absolute bottom-0 end-0 p-3 text-secondary opacity-25"><h1>“</h1></div>
+                        </div>
+                    </div>
+
+                    <!-- Card 6 -->
+                    <div class="col-md-3 mb-3">
+                        <div class="p-4 bg-light rounded-4 position-relative h-100">
+                            <div class="text-warning mb-2">★★★★★</div>
+                            <p class="text-muted small">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                            <h5 class="mb-0">Zeta User</h5>
+                            <small class="text-muted">Company F</small>
+                            <div class="position-absolute bottom-0 end-0 p-3 text-secondary opacity-25"><h1>“</h1></div>
+                        </div>
+                    </div>
+
+                    <!-- Card 7 -->
+                    <div class="col-md-3 mb-3">
+                        <div class="p-4 bg-light rounded-4 position-relative h-100">
+                            <div class="text-warning mb-2">★★★★★</div>
+                            <p class="text-muted small">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                            <h5 class="mb-0">Eta User</h5>
+                            <small class="text-muted">Company G</small>
+                            <div class="position-absolute bottom-0 end-0 p-3 text-secondary opacity-25"><h1>“</h1></div>
+                        </div>
+                    </div>
+
+                    <!-- Card 8 -->
+                    <div class="col-md-3 mb-3">
+                        <div class="p-4 bg-light rounded-4 position-relative h-100">
+                            <div class="text-warning mb-2">★★★★★</div>
+                            <p class="text-muted small">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                            <h5 class="mb-0">Theta User</h5>
+                            <small class="text-muted">Company H</small>
+                            <div class="position-absolute bottom-0 end-0 p-3 text-secondary opacity-25"><h1>“</h1></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
