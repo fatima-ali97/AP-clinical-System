@@ -19,8 +19,7 @@ GET {{AP_clinical_system.API_HostAddress}}/api/AppointmentLookup/AnonAppLookup
 Content-Type: application/json
 
 {
-  "cpr": "123456789",
-  "record_no": "REC123"
+  "cpr": "980101121"
 }
 
 ### Get Appointment Statistics
