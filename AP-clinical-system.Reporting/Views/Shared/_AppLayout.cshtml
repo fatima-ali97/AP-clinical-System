@@ -1,0 +1,87 @@
+﻿@{
+    string initials = "?";
+
+    if (User.Identity?.IsAuthenticated ?? false)
+    {
+        var firstName = User.FindFirst("FirstName")?.Value;
+        var lastName = User.FindFirst("LastName")?.Value;
+        var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+
+        if (!string.IsNullOrEmpty(firstName))
+        {
+            initials = firstName.Substring(0, 1).ToUpper();
+
+            if (!string.IsNullOrEmpty(lastName))
+            {
+                initials += lastName.Substring(0, 1).ToUpper();
+            }
+        }
+        else if (!string.IsNullOrEmpty(email))
+        {
+            initials = email.Substring(0, 1).ToUpper();
+        }
+    }
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"] - AdvancedHealth Reporting</title>
+
+    <script src="https://kit.fontawesome.com/5544d11b5b.js" crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/app/AppLayout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/app/app.css" asp-append-version="true" />
+
+    @RenderSection("Styles", required: false)
+</head>
+
+<body>
+    <div class="container-fluid">
+
+        <!-- Topbar only -->
+        <header class="d-flex align-items-center py-3 px-4 border-bottom bg-white shadow-sm mb-4">
+
+            <!-- Left: initials -->
+            <div class="d-flex justify-content-start" style="width: 33.33%;">
+                <div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold"
+                     style="width:42px; height:42px; background-color:#2F647F;">
+                    @initials
+                </div>
+            </div>
+
+            <!-- Center: title -->
+            <div class="text-center" style="width: 33.33%;">
+                <h4 class="m-0">AdvancedHealth Reporting</h4>
+            </div>
+
+            <!-- Right: logout -->
+            <div class="d-flex justify-content-end" style="width: 33.33%;">
+                <form asp-controller="Auth" asp-action="Logout" method="post" class="m-0">
+                    @Html.AntiForgeryToken()
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        Logout
+                    </button>
+                </form>
+            </div>
+
+        </header>
+
+        <!-- Page content -->
+        <main class="px-4">
+            @RenderBody()
+        </main>
+
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

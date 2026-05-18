@@ -1,0 +1,50 @@
+﻿@model AP_clinical_system.Reporting.Dtos.LoginReq
+
+@{
+    Layout = null;
+    ViewData["Title"] = "Reporting Login";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Reporting Login</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+</head>
+
+<body style="background-color:#2F647F;">
+    <div class="container min-vh-100 d-flex justify-content-center align-items-center">
+
+        <div class="card shadow p-4" style="width: 420px; border-radius: 18px;">
+            <h2 class="text-center mb-4">Clinic Reporting App</h2>
+
+            <form asp-action="Login" asp-controller="Auth" method="post">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="All" class="text-danger"></div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Email" class="control-label"></label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Password" class="control-label"></label>
+                    <input asp-for="Password" type="password" class="form-control" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 mt-2">
+                    Login
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

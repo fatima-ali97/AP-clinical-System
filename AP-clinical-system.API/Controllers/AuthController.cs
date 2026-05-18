@@ -8,7 +8,7 @@ using AP_clinical_system.Models;
 using AP_clinical_system.Models.Entities;
 using AP_clinical_system.Models.Enums;
 using AP_clinical_system.Models.sql_Context;
-using AP_clinical_system.Reporting.ViewModels;
+using AP_clinical_system.Reporting.Dtos;
 using System.ComponentModel.Design.Serialization;
 
 namespace AP_clinical_system.Controllers
@@ -36,7 +36,7 @@ namespace AP_clinical_system.Controllers
 
         // POST: api/Auth/ReportingAppLogin
         [HttpPost]
-        public async Task<IActionResult> ReportingAppLogin([FromBody] ReportingLoginViewModel model)
+        public async Task<IActionResult> ReportingAppLogin([FromBody] LoginReq model)
         {
             if (!ModelState.IsValid)
             {
