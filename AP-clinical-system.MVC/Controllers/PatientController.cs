@@ -28,13 +28,11 @@ namespace AP_clinical_system.Controllers
             if (patientInfo == null)
                 return NotFound();
 
-            // ── Appointments ──────────────────────────────────────────────
             var appointments = await _context.appointments
                 .Where(a => a.patient_ref == patientInfo.id && a.inactive != true)
                 .OrderByDescending(a => a.date)
                 .ToListAsync();
 
-            // ── Doctor IDs from appointments ──────────────────────────────
             var doctorIds = appointments
                 .Where(a => a.doctor_ref.HasValue)
                 .Select(a => a.doctor_ref!.Value)
@@ -58,26 +56,23 @@ namespace AP_clinical_system.Controllers
                 .Where(d => d.system_user_ref.HasValue && doctorUsers.ContainsKey(d.system_user_ref!.Value))
                 .ToDictionary(d => d.id, d => doctorUsers[d.system_user_ref!.Value]);
 
-            // ── My Doctors (distinct + completed visit count) ─────────────
             var myDoctors = appointments
                 .Where(a => a.doctor_ref.HasValue)
                 .GroupBy(a => a.doctor_ref!.Value)
                 .Select(g => new
                 {
                     DoctorInfoId = g.Key,
-                    TotalVisits  = g.Count(a => a.appointment_status == (int)appointment_status.completed),
-                    User         = doctorInfoToUser.ContainsKey(g.Key) ? doctorInfoToUser[g.Key] : null
+                    TotalVisits = g.Count(a => a.appointment_status == (int)appointment_status.completed),
+                    User = doctorInfoToUser.ContainsKey(g.Key) ? doctorInfoToUser[g.Key] : null
                 })
                 .Where(d => d.User != null)
                 .ToList();
 
-            // ── Prescriptions ─────────────────────────────────────────────
             var prescriptions = await _context.prescriptions
                 .Where(p => p.patient_ref == patientInfo.id && p.inactive != true)
                 .OrderByDescending(p => p.createdon)
                 .ToListAsync();
 
-            // Fetch any extra doctors referenced in prescriptions but not in appointments
             var prescriptionDoctorIds = prescriptions
                 .Where(p => p.doctor_ref.HasValue)
                 .Select(p => p.doctor_ref!.Value)
@@ -107,8 +102,11 @@ namespace AP_clinical_system.Controllers
                 }
             }
 
-            // ── Calendar events ───────────────────────────────────────────
-            // appointments is already List<appointment> (in-memory), so SlotToTime resolves fine
+            var specializations = await _context.doctor_specializations
+                .Where(s => s.inactive != true)
+                .Select(s => new { Id = s.id, Name = s.specialization_name })
+                .ToListAsync();
+
             var calendarEvents = appointments
                 .Where(a => a.date.HasValue)
                 .Select(a => new
@@ -119,60 +117,76 @@ namespace AP_clinical_system.Controllers
                 })
                 .ToList();
 
-            ViewBag.PatientInfo        = patientInfo;
-            ViewBag.Appointments       = appointments;
-            ViewBag.DoctorInfoToUser   = doctorInfoToUser;
-            ViewBag.MyDoctors          = myDoctors;
-            ViewBag.Prescriptions      = prescriptions;
+            ViewBag.PatientInfo = patientInfo;
+            ViewBag.PatientId = patientInfo.id;
+            ViewBag.Appointments = appointments;
+            ViewBag.Specializations = specializations;
+            ViewBag.DoctorInfoToUser = doctorInfoToUser;
+            ViewBag.MyDoctors = myDoctors;
+            ViewBag.Prescriptions = prescriptions;
             ViewBag.CalendarEventsJson = System.Text.Json.JsonSerializer.Serialize(calendarEvents);
 
             return View(currentUser);
         }
 
-        // GET /Patient/Book
-        public ActionResult Book()
+        public ActionResult Book() => View();
+        public ActionResult Appointments() => View();
+        public ActionResult Prescriptions() => View();
+        public ActionResult Notifications() => View();
+        public ActionResult History() => View();
+
+
+        [HttpPost]
+        public async Task<IActionResult> GetAppointmentInfo(Guid apptID)
         {
-            return View();
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            // Get patient_information record
+            var patientInfo = await _context.patient_informations
+                .FirstOrDefaultAsync(p => p.system_user_ref == currentUser!.Id && p.inactive != true);
+
+            if (patientInfo == null) return NotFound();
+
+            // Check BOTH possible ways patient_ref was stored
+            var appt = await _context.appointments
+                .FirstOrDefaultAsync(a => a.id == apptID
+                                       && a.inactive != true
+                                       && (a.patient_ref == patientInfo.id
+                                           || a.patient_ref == currentUser!.Id));
+
+            if (appt == null) return NotFound();
+
+            var doctor = appt.doctor_ref.HasValue
+                ? await _context.doctor_informations.FirstOrDefaultAsync(d => d.id == appt.doctor_ref)
+                : null;
+
+            var doctorUser = doctor?.system_user_ref.HasValue == true
+                ? await _context.Users.FirstOrDefaultAsync(u => u.Id == doctor.system_user_ref)
+                : null;
+
+            var specialization = appt.specialization_ref.HasValue
+                ? await _context.doctor_specializations.FirstOrDefaultAsync(s => s.id == appt.specialization_ref)
+                : null;
+
+            return Json(new
+            {
+                appointment_no = appt.appointment_no,
+                date = appt.date?.ToString("dd MMM yyyy"),
+                time_slot = appt.appointment_time_slot,
+                status = appt.appointment_status,
+                reason = appt.appointment_reason,
+                doctor_name = doctorUser != null
+                                    ? $"Dr. {doctorUser.first_name} {doctorUser.last_name}".Trim()
+                                    : "—",
+                specialization = specialization?.specialization_name ?? "—"
+            });
         }
-
-        // GET /Patient/Appointments
-        public ActionResult Appointments()
-        {
-            return View();
-        }
-
-        // GET /Patient/Prescriptions
-        public ActionResult Prescriptions()
-        {
-            return View();
-        }
-
-        // GET /Patient/Notifications
-        public ActionResult Notifications()
-        {
-            return View();
-        }
-
-        // GET /Patient/History
-        public ActionResult History()
-        {
-            return View();
-        }
-
-        // ─────────────────────────────────────────────
-        // HELPERS
-        // ─────────────────────────────────────────────
-
-        /// <summary>
-        /// Converts an appointment_time_slot int value to a readable time string.
-        /// Slots start at 08:00 (value 1000), each step = 30 minutes.
-        /// </summary>
         private static string SlotToTime(int? slot)
         {
             if (slot == null) return "TBD";
             int minutes = (slot.Value - 1000) * 30;
-            int hour    = 8 + minutes / 60;
-            int min     = minutes % 60;
+            int hour = 8 + minutes / 60;
+            int min = minutes % 60;
             return new DateTime(2000, 1, 1, hour, min, 0).ToString("hh:mm tt");
         }
     }

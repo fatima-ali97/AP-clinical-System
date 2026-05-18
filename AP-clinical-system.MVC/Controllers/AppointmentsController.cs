@@ -1,14 +1,9 @@
-using AP_clinical_system.Models;
+﻿using AP_clinical_system.Models;
 using AP_clinical_system.Models.Entities;
 using AP_clinical_system.Models.Enums;
 using AP_clinical_system.Models.sql_Context;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
-using Microsoft.Identity.Client;
-using System.Net.WebSockets;
-using System.Text.Json;
 using static AP_clinical_system.Models.GeneralHelper;
 
 namespace AP_clinical_system.Controllers
@@ -22,73 +17,74 @@ namespace AP_clinical_system.Controllers
             context = _context;
         }
 
+        // GET /Appointments/getAllSpecializations
         [HttpGet]
         public IActionResult getAllSpecializations()
         {
             var specializations = context.doctor_specializations
-            .Where(s => s.inactive != true)
-            .Select(s => new
-            {
-                s.id,
-                s.specialization_name
-            })
-            .ToList();
+                .Where(s => s.inactive != true)
+                .Select(s => new
+                {
+                    s.id,
+                    s.specialization_name
+                })
+                .ToList();
 
             return Ok(specializations);
         }
 
-        [HttpPost]
-        public IActionResult getDoctorsBySpecialization(Guid specializationID)
+     
+        [HttpGet]
+        public async Task<IActionResult> GetDoctorsBySpecialization(Guid specializationId)
         {
-
+            // get specialization
             var specialization = context.doctor_specializations
-                .Where(s => s.id == specializationID && s.inactive != true)
-                .FirstOrDefault();
-
+                .Where(s => s.id == specializationId && s.inactive != true)
+                .FirstOrDefaultAsync();
+            
+            // verify it exists
             if (specialization == null)
             {
-                return NotFound("Specialization not found.");
+                return NotFound("Specialization ID provided does not belong to any active specialization.");
             }
 
-            var doctors = GetAllDoctors();
+            // get all doctors who specialize in the specialization
+            var result = GeneralHelper.GetAllDoctors(context)
+                .Where(d => d.Specializations.Any(s => s.id == specializationId))
+                .Select(d => new
+                {
+                    d.id,
+                    userId = d.id,
+                    name = $"Dr. {d.FirstName} {d.LastName}".Trim()
+                });
 
-            var filteredDoctors = doctors
-                .Where(d => d.Specializations.Any(s => s.id == specializationID))
-                .ToList();
-
-            return Ok(filteredDoctors);
+            return Json(result);
         }
 
+        // POST /Appointments/GetAvailableDatesAndTimesByDoctorID
         [HttpPost]
         public IActionResult GetAvailableDatesAndTimesByDoctorID(Guid doctorID)
         {
-
             var doctor = context.system_users
                 .Where(u => u.Id == doctorID && u.user_role == (int)user_role.doctor && u.inactive != true)
                 .FirstOrDefault();
 
             if (doctor == null)
-            {
                 return NotFound("Doctor not found.");
-            }
 
             var doctor_information = context.doctor_informations
                 .Where(d => d.system_user_ref == doctorID && d.inactive != true)
                 .FirstOrDefault();
 
             if (doctor_information == null)
-            {
                 return NotFound("Doctor information not found.");
-            }
 
             var doctor_schedule = context.doctor_schedules
                 .Where(s => s.doctor_information_ref == doctor_information.id && s.inactive != true)
                 .FirstOrDefault();
 
             if (doctor_schedule == null)
-            {
                 return NotFound("Doctor schedule not found.");
-            }
 
             var doctor_leaves = context.doctor_leaves
                 .Where(l => l.doctor_information_ref == doctor_information.id
@@ -103,8 +99,6 @@ namespace AP_clinical_system.Controllers
                     && a.appointment_status != (int)appointment_status.cancelled)
                 .ToList();
 
-            // Build a lookup of time slot enum values to their corresponding times
-            // Each slot is 30 min: 1000 = 08:00, 1001 = 08:30, ..., 1018 = 17:00
             var allTimeSlots = Enum.GetValues<appointment_time_slot>()
                 .Select(s => new
                 {
@@ -122,20 +116,16 @@ namespace AP_clinical_system.Controllers
             {
                 var currentDate = today.AddDays(i);
 
-                // Get the schedule start/end for this day of the week
                 var (startTime, endTime) = GetScheduleForDay(doctor_schedule, currentDate.DayOfWeek);
 
-                // Skip if doctor doesn't work on this day
                 if (string.IsNullOrEmpty(startTime) || string.IsNullOrEmpty(endTime))
                     continue;
 
-                // Skip if doctor is on leave this day
                 bool isOnLeave = doctor_leaves.Any(l =>
                     l.start_date <= currentDate && l.end_date >= currentDate);
                 if (isOnLeave)
                     continue;
 
-                // Parse schedule start/end into hours and minutes
                 var startParts = startTime.Split(':');
                 int startHour = int.Parse(startParts[0]);
                 int startMinute = int.Parse(startParts[1]);
@@ -144,7 +134,6 @@ namespace AP_clinical_system.Controllers
                 int endHour = int.Parse(endParts[0]);
                 int endMinute = int.Parse(endParts[1]);
 
-                // Filter time slots that fall within the doctor's working hours for this day
                 var availableSlots = allTimeSlots
                     .Where(s =>
                     {
@@ -156,10 +145,9 @@ namespace AP_clinical_system.Controllers
                     .Select(s => s.EnumValue)
                     .ToList();
 
-                // Remove slots that are already booked
                 var bookedSlots = existingAppointments
                     .Where(a => a.date == currentDate && a.appointment_time_slot.HasValue)
-                    .Select(a => a.appointment_time_slot.Value)
+                    .Select(a => a.appointment_time_slot!.Value)
                     .ToHashSet();
 
                 availableSlots = availableSlots
@@ -170,7 +158,7 @@ namespace AP_clinical_system.Controllers
                 {
                     result.Add(new
                     {
-                        date = currentDate,
+                        date = currentDate.ToString("yyyy-MM-dd"),
                         availableTimeSlots = availableSlots
                     });
                 }
@@ -180,6 +168,72 @@ namespace AP_clinical_system.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Book(
+            Guid specialization_ref,
+            Guid doctor_ref,
+            DateOnly date,
+            int appointment_time_slot,
+            string? appointment_reason)
+        {
+            var currentUser = await context.Users
+                .FirstOrDefaultAsync(u => u.UserName == User.Identity!.Name);
+
+            if (currentUser == null)
+                return Json(new { success = false, error = "User not found." });
+
+            var patientInfo = await context.patient_informations
+                .FirstOrDefaultAsync(p => p.system_user_ref == currentUser.Id && p.inactive != true);
+
+            if (patientInfo == null)
+                return Json(new { success = false, error = "Patient record not found." });
+
+            bool slotTaken = await context.appointments.AnyAsync(a =>
+                a.doctor_ref == doctor_ref &&
+                a.date == date &&
+                a.appointment_time_slot == appointment_time_slot &&
+                a.inactive != true);
+
+            if (slotTaken)
+                return Json(new { success = false, error = "That time slot is already booked. Please choose another." });
+
+            var autonum = await context.autonumbers
+                .FirstOrDefaultAsync(a => a.entity_name == "appointment" && a.field_name == "appointment_no");
+
+            string apptNo = "APT-0001";
+            if (autonum != null)
+            {
+                autonum.last_number = (autonum.last_number ?? 0) + 1;
+                apptNo = string.Format(autonum.pattern!, autonum.last_number.Value);
+            }
+
+            var now = DateTime.UtcNow;
+            var appt = new appointment
+            {
+                id = Guid.NewGuid(),
+                appointment_no = apptNo,
+                appointment_reason = appointment_reason,
+                patient_ref = patientInfo.id,
+                doctor_ref = doctor_ref,
+                specialization_ref = specialization_ref,
+                date = date,
+                appointment_time_slot = appointment_time_slot,
+                appointment_status = (int)appointment_status.requested,
+                createdon = now,
+                createdby = currentUser.Id,
+                modifiedon = now,
+                modifiedby = currentUser.Id,
+                inactive = false
+            };
+
+            context.appointments.Add(appt);
+            await context.SaveChangesAsync();
+
+            return Json(new { success = true, appointment_no = appt.appointment_no });
+        }
+
+        // POST /Appointments/BookAppointment
+        [HttpPost]
         public async Task<IActionResult> BookAppointment(ViewModels.Patient.BookAppointmentViewModel model)
         {
             try
@@ -187,13 +241,16 @@ namespace AP_clinical_system.Controllers
                 var patientId = GeneralHelper.GetUserIdByJWT(User);
 
                 var patientUserCheck = GeneralHelper.VerifyUserType(context, patientId, (int)user_role.patient);
-
                 if (!patientUserCheck)
-                {
                     return BadRequest("Current User is not a Patient");
-                }
 
-                // system fields
+
+                var patientInfo = await context.patient_informations
+                    .FirstOrDefaultAsync(p => p.system_user_ref == patientId && p.inactive != true);
+
+                if (patientInfo == null)
+                    return BadRequest("Patient information record not found.");
+
                 var id = Guid.NewGuid();
                 var createdon = DateTime.Now;
                 var createdby = patientId;
@@ -201,16 +258,11 @@ namespace AP_clinical_system.Controllers
                 var modifiedby = createdby;
                 var inactive = false;
 
-                // autonumber
                 var appointment_no = await GeneralHelper.GetAutonumber(context, "appointment");
 
                 var doctorUserCheck = GeneralHelper.VerifyUserType(context, model.doctor_ref, (int)user_role.doctor);
-                
-                if (!doctorUserCheck) {
+                if (!doctorUserCheck)
                     return BadRequest("Doctor ID provided does not belong to a doctor");
-                }
-
-                var date = model.date;
 
                 var newAppointment = new appointment
                 {
@@ -222,10 +274,10 @@ namespace AP_clinical_system.Controllers
                     modifiedby = modifiedby,
                     appointment_no = appointment_no,
                     appointment_reason = model.appointment_reason ?? "",
-                    patient_ref = createdby,
+                    patient_ref = patientInfo.id,
                     doctor_ref = model.doctor_ref,
                     specialization_ref = model.specialization_ref,
-                    date = date,
+                    date = model.date,
                     appointment_time_slot = model.appointment_time_slot,
                     appointment_status = (int)appointment_status.requested
                 };
@@ -240,28 +292,23 @@ namespace AP_clinical_system.Controllers
 
             return RedirectToAction("Index", "Patient");
         }
-
+        // POST /Appointments/ConfirmAppointment
         [HttpPost]
         public IActionResult ConfirmAppointment(Guid appointment_id)
         {
             try
             {
+                var appointment = context.appointments
+                    .FirstOrDefault(a => a.id == appointment_id && a.inactive != true);
 
-                var appointment = context.appointments.FirstOrDefault(a => a.id == appointment_id 
-                                                                        && a.inactive != true);
                 if (appointment == null)
-                {
                     return BadRequest("Appointment Not Found or is Inactive");
-                }
 
                 var receptionistId = GeneralHelper.GetUserIdByJWT(User);
 
                 var receptionistUserCheck = GeneralHelper.VerifyUserType(context, receptionistId, (int)user_role.receptionist);
-
                 if (!receptionistUserCheck)
-                {
                     return BadRequest("User is not a receptionist");
-                }
 
                 appointment.receptionist_ref = receptionistId;
                 appointment.appointment_status = (int)appointment_status.confirmed;
@@ -269,7 +316,7 @@ namespace AP_clinical_system.Controllers
                 appointment.modifiedby = receptionistId;
 
                 context.SaveChanges();
-            } 
+            }
             catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);
@@ -292,33 +339,6 @@ namespace AP_clinical_system.Controllers
                 _ => (null, null)
             };
         }
-
-
-        private List<DoctorObject> GetAllDoctors()
-        {
-
-            var doctors = new List<DoctorObject>();
-
-            var doctorIDs = context.system_users
-                .Select(u => new
-                {
-                    u.Id,
-                    u.user_role,
-                    u.inactive
-                })
-                .Where(u => u.user_role == (int)user_role.doctor && u.inactive != true)
-                .ToList();
-
-            foreach (var doctor in doctorIDs)
-            {
-                var doctorObject = GeneralHelper.GetDoctorObjectByID(context, doctor.Id);
-                if (doctorObject.Success)
-                {
-                    doctors.Add(doctorObject);
-                }
-            }
-
-            return doctors;
-        }
+        
     }
 }

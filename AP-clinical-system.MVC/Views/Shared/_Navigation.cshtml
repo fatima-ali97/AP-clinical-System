@@ -3,6 +3,7 @@
 @inject UserManager<system_user> UserManager
 @using AP_clinical_system.Services
 @{
+    @* TODO: ask hoor ab this! *@
     var role = "Patient";
     var items = NavigationService.GetNavForRole(role);
     var activePage = ViewData["ActivePage"]?.ToString();
@@ -15,6 +16,7 @@
             <a class="sidebar-link" asp-controller="@item.Controller" asp-action="@item.Action">
                 <i class="@item.Icon"></i> @item.Label
             </a>
+            <div class="arrow">›</div>
         </li>
     }
 </ul>
