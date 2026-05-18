@@ -11,8 +11,8 @@
                 Stage of Life
             </h1>
             <div class="d-grid gap-2 mt-4 w-100 w-md-75">
-                <button type="button" class="btn btn-outline-dark cta-btn">Explore our medical team</button>
-                <button type="button" class="btn btn-primary btn-rounded cta-btn">View Your Appointments</button>
+                <a class="btn btn-outline-dark cta-btn" asp-action="Login" asp-controller="Account">Login</a>
+                <a class="btn btn-primary btn-rounded cta-btn" asp-action="Lookup" asp-controller="Home">View Your Appointments</a>
             </div>
         </div>
         <div class="col-12 col-md-7 order-1 order-md-2 position-relative">
@@ -313,9 +313,13 @@
 </section>
 <section class="container mt-5 rounded call-to-contact-card">
     <h2>Walk In or Book Online - We're Ready</h2>
-    <button type="button" class="btn btn-outline-dark cta-btn">Contact Now</button>
+    <a asp-action="Contact" asp-controller="Home" class="btn btn-outline-dark cta-btn ">Contact Now</a>
 </section>
-<section>
+<section class="mt-5">
+    <h2>
+        Compassion You Can <br/>
+        Feel, Care You Can Trust
+    </h2>
     <div id="testimonialCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
 
         <div class="carousel-indicators">
@@ -327,46 +331,54 @@
             <div class="carousel-item active">
                 <div class="row">
 
-                    <!-- Card 1 -->
                     <div class="col-md-3 mb-3">
                         <div class="p-4 bg-light rounded-4 position-relative h-100">
-                            <div class="text-warning mb-2">★★★★★</div>
-                            <p class="text-muted small">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                            <h5 class="mb-0">Alpha User</h5>
-                            <small class="text-muted">Company A</small>
+                            <div class="text-warning mb-2">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                            </div>
+                            <p class="text-muted small">
+                                The doctors and nurses provided exceptional care throughout my treatment. The hospital environment was clean, modern, and comforting.
+                            </p>
+                            <h5 class="mb-0">Sarah Ahmed</h5>
                             <div class="position-absolute bottom-0 end-0 p-3 text-secondary opacity-25"><h1>“</h1></div>
                         </div>
                     </div>
 
-                    <!-- Card 2 -->
                     <div class="col-md-3 mb-3">
                         <div class="p-4 bg-light rounded-4 position-relative h-100">
-                            <div class="text-warning mb-2">★★★★★</div>
-                            <p class="text-muted small">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                            <h5 class="mb-0">Beta User</h5>
-                            <small class="text-muted">Company B</small>
+                            <div class="text-warning mb-2">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                            </div>
+                            <p class="text-muted small">
+                                Advanced Health Hospital exceeded my expectations with fast appointments, professional staff, and outstanding medical services.
+                            </p>
+                            <h5 class="mb-0">Mohammed Ali</h5>
                             <div class="position-absolute bottom-0 end-0 p-3 text-secondary opacity-25"><h1>“</h1></div>
                         </div>
                     </div>
 
-                    <!-- Card 3 -->
                     <div class="col-md-3 mb-3">
                         <div class="p-4 bg-light rounded-4 position-relative h-100">
-                            <div class="text-warning mb-2">★★★★★</div>
-                            <p class="text-muted small">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                            <h5 class="mb-0">Gamma User</h5>
-                            <small class="text-muted">Company C</small>
+                            <div class="text-warning mb-2">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                            </div>
+                            <p class="text-muted small">
+                                From reception to discharge, every step was handled with care and professionalism. Highly recommended healthcare facility.
+                            </p>
+                            <h5 class="mb-0">Fatima Noor</h5>
                             <div class="position-absolute bottom-0 end-0 p-3 text-secondary opacity-25"><h1>“</h1></div>
                         </div>
                     </div>
 
-                    <!-- Card 4 -->
                     <div class="col-md-3 mb-3">
                         <div class="p-4 bg-light rounded-4 position-relative h-100">
-                            <div class="text-warning mb-2">★★★★★</div>
-                            <p class="text-muted small">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                            <h5 class="mb-0">Delta User</h5>
-                            <small class="text-muted">Company D</small>
+                            <div class="text-warning mb-2">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                            </div>
+                            <p class="text-muted small">
+                                The emergency department responded quickly and efficiently. I felt safe and well cared for during my visit.
+                            </p>
+                            <h5 class="mb-0">Omar Hassan</h5>
                             <div class="position-absolute bottom-0 end-0 p-3 text-secondary opacity-25"><h1>“</h1></div>
                         </div>
                     </div>
@@ -377,46 +389,54 @@
             <div class="carousel-item">
                 <div class="row">
 
-                    <!-- Card 5 -->
                     <div class="col-md-3 mb-3">
                         <div class="p-4 bg-light rounded-4 position-relative h-100">
-                            <div class="text-warning mb-2">★★★★★</div>
-                            <p class="text-muted small">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                            <h5 class="mb-0">Epsilon User</h5>
-                            <small class="text-muted">Company E</small>
+                            <div class="text-warning mb-2">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                            </div>
+                            <p class="text-muted small">
+                                I appreciate the compassionate care and attention provided by the medical team. Truly a world-class hospital experience.
+                            </p>
+                            <h5 class="mb-0">Layla Karim</h5>
                             <div class="position-absolute bottom-0 end-0 p-3 text-secondary opacity-25"><h1>“</h1></div>
                         </div>
                     </div>
 
-                    <!-- Card 6 -->
                     <div class="col-md-3 mb-3">
                         <div class="p-4 bg-light rounded-4 position-relative h-100">
-                            <div class="text-warning mb-2">★★★★★</div>
-                            <p class="text-muted small">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                            <h5 class="mb-0">Zeta User</h5>
-                            <small class="text-muted">Company F</small>
+                            <div class="text-warning mb-2">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                            </div>
+                            <p class="text-muted small">
+                                The hospital uses advanced technology and provides excellent patient support. My recovery process was smooth and comfortable.
+                            </p>
+                            <h5 class="mb-0">Ahmed Salman</h5>
                             <div class="position-absolute bottom-0 end-0 p-3 text-secondary opacity-25"><h1>“</h1></div>
                         </div>
                     </div>
 
-                    <!-- Card 7 -->
                     <div class="col-md-3 mb-3">
                         <div class="p-4 bg-light rounded-4 position-relative h-100">
-                            <div class="text-warning mb-2">★★★★★</div>
-                            <p class="text-muted small">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                            <h5 class="mb-0">Eta User</h5>
-                            <small class="text-muted">Company G</small>
+                            <div class="text-warning mb-2">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                            </div>
+                            <p class="text-muted small">
+                                I received excellent medical attention and clear guidance throughout my treatment. Thank you for the outstanding service.
+                            </p>
+                            <h5 class="mb-0">Batool Albunni</h5>
                             <div class="position-absolute bottom-0 end-0 p-3 text-secondary opacity-25"><h1>“</h1></div>
                         </div>
                     </div>
 
-                    <!-- Card 8 -->
                     <div class="col-md-3 mb-3">
                         <div class="p-4 bg-light rounded-4 position-relative h-100">
-                            <div class="text-warning mb-2">★★★★★</div>
-                            <p class="text-muted small">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                            <h5 class="mb-0">Theta User</h5>
-                            <small class="text-muted">Company H</small>
+                            <div class="text-warning mb-2">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                            </div>
+                            <p class="text-muted small">
+                                Every staff member treated me with kindness and respect. The facilities were modern, clean, and very organized.
+                            </p>
+                            <h5 class="mb-0">Noura Ibrahim</h5>
                             <div class="position-absolute bottom-0 end-0 p-3 text-secondary opacity-25"><h1>“</h1></div>
                         </div>
                     </div>

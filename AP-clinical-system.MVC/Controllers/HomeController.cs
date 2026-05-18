@@ -1,8 +1,10 @@
+using AP_clinical_system.Models;
 using AP_clinical_system.MVC.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace AP_clinical_system.MVC.Controllers;
 
@@ -25,9 +27,10 @@ public class HomeController : Controller
         return View("~/Views/Shared/Error.cshtml");
     }
 
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(ILogger<HomeController> logger, IHttpClientFactory httpClientFactory)
     {
         _logger = logger;
+        _httpClientFactory = httpClientFactory;
     }
 
     public IActionResult Index()
@@ -52,40 +55,74 @@ public class HomeController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Lookup(string cpr, string record_no)
+    public async Task<IActionResult> Lookup(LookupRequest model)
     {
-        if (string.IsNullOrWhiteSpace(cpr) && string.IsNullOrWhiteSpace(record_no))
+        // model.Cpr maps from the "Cpr" input, model.RecordNo from the "RecordNo" input
+        if (string.IsNullOrWhiteSpace(model.Cpr) && string.IsNullOrWhiteSpace(model.RecordNo))
         {
             ModelState.AddModelError("", "Please enter either a CPR or a Record Number.");
-            return View();
+            return View(model);
         }
+
         try
         {
             var client = _httpClientFactory.CreateClient("api");
 
             var payload = new
             {
-                cpr = string.IsNullOrWhiteSpace(cpr) ? null : cpr,
-                record_no = string.IsNullOrWhiteSpace(record_no) ? null : record_no
+                cpr = string.IsNullOrWhiteSpace(model.Cpr) ? null : model.Cpr,
+                record_no = string.IsNullOrWhiteSpace(model.RecordNo) ? null : model.RecordNo
             };
 
-            var response = await client.PostAsJsonAsync("AppointmentLookup", payload);
+            var response = await client.PostAsJsonAsync("api/AppointmentLookup/AnonAppLookup", payload);
 
             if (!response.IsSuccessStatusCode)
             {
-                ModelState.AddModelError("", $"Lookup failed: {response.StatusCode}");
-                return View();
+                var errorBody = await response.Content.ReadAsStringAsync();
+                string customMessage = null;
+
+                
+                try
+                {
+                    using (var doc = JsonDocument.Parse(errorBody))
+                    {
+                        if (doc.RootElement.TryGetProperty("message", out var msgElement))
+                        {
+                            customMessage = msgElement.GetString();
+                        }
+                        else if (doc.RootElement.TryGetProperty("error", out var errElement))
+                        {
+                            customMessage = errElement.GetString();
+                        }
+                    }
+                }
+                catch
+                {
+                    _logger.LogWarning("API error response was not valid JSON. Raw body: {ErrorBody}", errorBody);
+                }
+
+                if (!string.IsNullOrEmpty(customMessage))
+                {
+                    ModelState.AddModelError("", $"Lookup failed:\n {response.StatusCode} : {customMessage}");
+                }
+                else
+                {
+                    ModelState.AddModelError("", $"Lookup failed:\n {response.StatusCode} : {response.ReasonPhrase}");
+                }
+
+                return View(model);
             }
 
             var resultJson = await response.Content.ReadAsStringAsync();
             ViewBag.LookupResultJson = resultJson;
 
-            return View();
+            return View(model);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Lookup error");
             ModelState.AddModelError("", ex.Message);
-            return View();
+            return View(model);
         }
     }
 }
