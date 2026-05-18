@@ -253,8 +253,9 @@ namespace AP_clinical_system.Controllers
                     int completed = docApps.Count(a => a.appointment_status == (int)appointment_status.completed);
                     int cancelled = docApps.Count(a => a.appointment_status == (int)appointment_status.cancelled);
                     int noShow    = docApps.Count(a => a.appointment_status == (int)appointment_status.no_show);
-                    
-                    var doctorName = GeneralHelper.GetUserFullNameByID(context, di.system_user_ref.Value);      
+
+                    var doctorName = di.system_user_ref.HasValue ?
+                    GeneralHelper.GetUserFullNameByID(context, di.system_user_ref.Value) : "N/A";   
 
                     return new
                     {
@@ -335,7 +336,8 @@ namespace AP_clinical_system.Controllers
                 {
                     var docLeaves  = leaves.Where(l => l.doctor_information_ref == di.id).ToList();
 
-                    var doctorName = GeneralHelper.GetUserFullNameByID(context, di.system_user_ref.Value);      
+                    var doctorName = di.system_user_ref.HasValue ?
+                     GeneralHelper.GetUserFullNameByID(context, di.system_user_ref.Value) : "N/A";
 
                     int totalDays = docLeaves.Sum(l =>
                     {
