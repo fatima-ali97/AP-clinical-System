@@ -1,0 +1,70 @@
+﻿body {
+    background-color: #fff;
+    font-family: "Segoe UI", sans-serif;
+}
+
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.login-card {
+    width: 550px;
+    background-color: #2f647f;
+    border-radius: 18px;
+    padding: 30px;
+    color: #fff;
+    box-shadow: 0 0 14px 0 rgba(33, 37, 41, 0.12);
+}
+
+    .login-card h2 {
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .login-card label {
+        color: #fff;
+        font-weight: 500;
+    }
+
+.form-control {
+    border-radius: 10px;
+    padding: 10px 12px;
+    border: 1px solid #dee2e6;
+}
+
+    .form-control:focus {
+        border-color: #f5f7fb;
+        box-shadow: 0 0 0 0.2rem rgba(245, 246, 248, 0.25);
+    }
+
+.btn-primary {
+    background-color: #fff;
+    border-color: #fff;
+    border-radius: 10px;
+    padding: 10px;
+    font-weight: 500;
+    color: #2f647f;
+}
+
+    .btn-primary:hover {
+        background-color: #2f647f;
+        border-color: #fff;
+        color: #fff;
+        box-shadow: 0 0 0 0.2rem rgba(245, 246, 248, 0.25);
+    }
+
+.text-danger {
+    font-size: 14px;
+    color: #ffd6d6 !important;
+}
+
+@media (max-width: 575px) {
+    .login-card {
+        width: 100%;
+        padding: 25px;
+    }
+}

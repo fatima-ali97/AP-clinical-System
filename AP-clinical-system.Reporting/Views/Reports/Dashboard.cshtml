@@ -75,9 +75,10 @@
     catch { }
 }
 
+
 <h1 class="page-heading">Clinical Manager's Reporting Dashboard</h1>
 
-<form method="get" asp-controller="Reports" asp-action="Dashboard" class="row mb-4">
+<form method="get" asp-controller="Reports" asp-action="Dashboard" class="row dashboard-filter report-section">
     <div class="col-md-4">
         <label>Start Date</label>
         <input type="date" name="startDate" value="@startDate" class="form-control" />
@@ -95,215 +96,364 @@
     </div>
 </form>
 
+<div class="export-row">
+    <button type="button" class="btn btn-primary" onclick="exportDashboardPdf()">
+        <i class="fa-solid fa-file-pdf"></i>
+        Export PDF
+    </button>
+</div>
+
 <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
-<!-- STAT CARDS -->
-<div class="stat-grid admin">
+<div id="reportContent">
 
-    <div class="card stat-card">
-        <div class="card-body" style="background: #7a97b8;">
-            <span class="tri-bl"></span>
-            <div class="stat-card-inner">
-                <div>
-                    <div class="stat-label">Total Doctors</div>
-                    <div class="stat-value">@totalDoctors</div>
+    <div class="section-card report-section">
+        <h5 class="card-title mb-4">Doctor Summary</h5>
+
+        <div class="mini-card-row">
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon">
+                        <i class="fa-solid fa-stethoscope"></i>
+                    </div>
+                    <div class="mini-card-label">Total Doctors</div>
                 </div>
-                <div class="stat-icon" style="background: #c8d9eb;">
-                    <i class="fa-solid fa-stethoscope" style="color: #3a5f8a;"></i>
-                </div>
+                <div class="mini-card-value">@totalDoctors</div>
             </div>
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon">
+                        <i class="fa-solid fa-user-doctor"></i>
+                    </div>
+                    <div class="mini-card-label">Active Doctors</div>
+                </div>
+                <div class="mini-card-value">@activeDoctors</div>
+            </div>
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon">
+                        <i class="fa-solid fa-plane-departure"></i>
+                    </div>
+                    <div class="mini-card-label">Doctors on Leave</div>
+                </div>
+                <div class="mini-card-value">@doctorsOnLeave</div>
+            </div>
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon">
+                        <i class="fa-solid fa-file-medical"></i>
+                    </div>
+                    <div class="mini-card-label">Leave Records</div>
+                </div>
+                <div class="mini-card-value">@totalLeaveRecords</div>
+            </div>
+
         </div>
     </div>
 
-    <div class="card stat-card">
-        <div class="card-body" style="background: #5e9fa8;">
-            <span class="tri-bl"></span>
-            <div class="stat-card-inner">
-                <div>
-                    <div class="stat-label">Active Doctors</div>
-                    <div class="stat-value">@activeDoctors</div>
+    <div class="section-card report-section">
+        <h5 class="card-title mb-4">Appointment Summary</h5>
+
+        <div class="mini-card-row">
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon">
+                        <i class="fa-solid fa-calendar-days"></i>
+                    </div>
+                    <div class="mini-card-label">Total Appointments</div>
                 </div>
-                <div class="stat-icon" style="background-color: #b0d8de;">
-                    <i class="fa-solid fa-user-doctor" style="color: #205a64;"></i>
-                </div>
+                <div class="mini-card-value">@totalAppointments</div>
             </div>
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </div>
+                    <div class="mini-card-label">Completed</div>
+                </div>
+                <div class="mini-card-value">@completedAppointments</div>
+            </div>
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon">
+                        <i class="fa-solid fa-calendar-xmark"></i>
+                    </div>
+                    <div class="mini-card-label">Cancelled</div>
+                </div>
+                <div class="mini-card-value">@cancelledAppointments</div>
+            </div>
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon">
+                        <i class="fa-solid fa-user-clock"></i>
+                    </div>
+                    <div class="mini-card-label">No Show</div>
+                </div>
+                <div class="mini-card-value">@noShowAppointments</div>
+            </div>
+
         </div>
     </div>
 
-    <div class="card stat-card">
-        <div class="card-body" style="background: #9080b8;">
-            <div class="stat-card-inner">
-                <div>
-                    <div class="stat-label">Total Appointments</div>
-                    <div class="stat-value">@totalAppointments</div>
+    <div class="section-card report-section">
+        <h5 class="card-title mb-4">Report Summary</h5>
+
+        <div class="mini-card-row">
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon">
+                        <i class="fa-solid fa-percent"></i>
+                    </div>
+                    <div class="mini-card-label">Cancellation Rate</div>
                 </div>
-                <div class="stat-icon" style="background-color: #ccc0e0;">
-                    <i class="fa-solid fa-calendar-days" style="color: #4a3480;"></i>
-                </div>
+                <div class="mini-card-value">@cancellationRate%</div>
             </div>
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon">
+                        <i class="fa-solid fa-user-slash"></i>
+                    </div>
+                    <div class="mini-card-label">No Show Rate</div>
+                </div>
+                <div class="mini-card-value">@noShowRate%</div>
+            </div>
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon">
+                        <i class="fa-solid fa-chart-simple"></i>
+                    </div>
+                    <div class="mini-card-label">Combined Rate</div>
+                </div>
+                <div class="mini-card-value">@combinedRate%</div>
+            </div>
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <div class="mini-card-label">Avg. Appointments / Doctor</div>
+                </div>
+                <div class="mini-card-value">@avgAppointmentsPerDoctor</div>
+            </div>
+
         </div>
     </div>
 
-    <div class="card stat-card">
-        <div class="card-body" style="background-color: #c4975a;">
-            <div class="stat-card-inner">
-                <div>
-                    <div class="stat-label">Completed</div>
-                    <div class="stat-value">@completedAppointments</div>
-                </div>
-                <div class="stat-icon" style="background-color: #e8d0a8;">
-                    <i class="fa-solid fa-calendar-check" style="color: #7a5020;"></i>
-                </div>
+    <div class="chart-row-3">
+
+        <div class="card report-card">
+            <div class="card-header">
+                <h5 class="card-title">Completed / Cancelled / No Show</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="appointmentBarChart" class="chart-large"></canvas>
             </div>
         </div>
+
+        <div class="card report-card">
+            <div class="card-header">
+                <h5 class="card-title">Appointments by Specialization</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="specializationChart" class="chart-large"></canvas>
+            </div>
+        </div>
+
+        <div class="card report-card">
+            <div class="card-header">
+                <h5 class="card-title">Doctor Workload Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="workloadChart" class="chart-large"></canvas>
+            </div>
+        </div>
+
     </div>
 
+    <div class="chart-row-2">
+
+        <div class="card report-card">
+            <div class="card-header">
+                <h5 class="card-title">Appointment Status</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="appointmentStatusChart" class="chart-large"></canvas>
+            </div>
+        </div>
+
+        <div class="card report-card">
+            <div class="card-header">
+                <h5 class="card-title">Doctor Leave Types</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="leaveChart" class="chart-large"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="report-generated-footer">
+    Generated on @DateTime.Now.ToString("dd MMM yyyy, hh:mm tt")
 </div>
-
-<div class="stat-grid admin mt-4">
-
-    <div class="card stat-card">
-        <div class="card-body" style="background: #b86f6f;">
-            <div class="stat-card-inner">
-                <div>
-                    <div class="stat-label">Cancelled</div>
-                    <div class="stat-value">@cancelledAppointments</div>
-                </div>
-                <div class="stat-icon" style="background-color: #e7bcbc;">
-                    <i class="fa-solid fa-calendar-xmark" style="color: #7a2d2d;"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card stat-card">
-        <div class="card-body" style="background: #a86f8d;">
-            <div class="stat-card-inner">
-                <div>
-                    <div class="stat-label">No Show</div>
-                    <div class="stat-value">@noShowAppointments</div>
-                </div>
-                <div class="stat-icon" style="background-color: #dfbfd0;">
-                    <i class="fa-solid fa-user-clock" style="color: #6b2b4c;"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card stat-card">
-        <div class="card-body" style="background: #6f9f7a;">
-            <div class="stat-card-inner">
-                <div>
-                    <div class="stat-label">Doctors on Leave</div>
-                    <div class="stat-value">@doctorsOnLeave</div>
-                </div>
-                <div class="stat-icon" style="background-color: #c2dfc7;">
-                    <i class="fa-solid fa-plane-departure" style="color: #2f6b3b;"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card stat-card">
-        <div class="card-body" style="background: #6f88a8;">
-            <div class="stat-card-inner">
-                <div>
-                    <div class="stat-label">Leave Records</div>
-                    <div class="stat-value">@totalLeaveRecords</div>
-                </div>
-                <div class="stat-icon" style="background-color: #c2d2e6;">
-                    <i class="fa-solid fa-file-medical" style="color: #304f78;"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-</div>
-
-<!-- GRAPHS -->
-<div class="bottom-grid mt-4">
-
-    <div class="card">
-        <div class="card-header">
-            <h5 class="card-title">Appointment Status</h5>
-        </div>
-        <div class="card-body">
-            <canvas id="appointmentStatusChart"></canvas>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-header">
-            <h5 class="card-title">Cancellation / No Show Rates</h5>
-        </div>
-        <div class="card-body">
-            <canvas id="ratesChart"></canvas>
-        </div>
-    </div>
-
-</div>
-
-<div class="bottom-grid mt-4">
-
-    <div class="card">
-        <div class="card-header">
-            <h5 class="card-title">Appointments by Specialization</h5>
-        </div>
-        <div class="card-body">
-            <canvas id="specializationChart"></canvas>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-header">
-            <h5 class="card-title">Doctor Workload Distribution</h5>
-        </div>
-        <div class="card-body">
-            <canvas id="workloadChart"></canvas>
-        </div>
-    </div>
-
-</div>
-
-<div class="bottom-grid mt-4">
-
-    <div class="card">
-        <div class="card-header">
-            <h5 class="card-title">Doctor Leave Types</h5>
-        </div>
-        <div class="card-body">
-            <canvas id="leaveChart"></canvas>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-header">
-            <h5 class="card-title">Summary</h5>
-        </div>
-        <div class="card-body">
-            <h4>Cancellation Rate: @cancellationRate%</h4>
-            <h4>No Show Rate: @noShowRate%</h4>
-            <h4>Combined Rate: @combinedRate%</h4>
-            <hr />
-            <h4>Average Appointments Per Active Doctor</h4>
-            <h2>@avgAppointmentsPerDoctor</h2>
-        </div>
-    </div>
 
 </div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <script>
         const appointmentStats = @Html.Raw(appointmentStatsJson);
-        const cancellationStats = @Html.Raw(cancellationJson);
         const specializationStats = @Html.Raw(specializationJson);
         const workloadStats = @Html.Raw(workloadJson);
         const leaveStats = @Html.Raw(leaveJson);
 
-        //Appointment Status Chart
+        const colors = ['#2F647F', '#4A8199', '#75A8BA', '#A9CDD9', '#DCEBF0'];
+
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#52666f',
+                        usePointStyle: true,
+                        padding: 16
+                    }
+                }
+            }
+        };
+
+        const noGridScales = {
+            x: {
+                grid: {
+                    display: false,
+                    drawBorder: false
+                },
+                ticks: {
+                    color: '#52666f'
+                }
+            },
+            y: {
+                beginAtZero: true,
+                grid: {
+                    display: false,
+                    drawBorder: false
+                },
+                ticks: {
+                    color: '#52666f'
+                }
+            }
+        };
+
         const appointmentSummary = appointmentStats.summary || {};
+
+        new Chart(document.getElementById('appointmentBarChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Completed', 'Cancelled', 'No Show'],
+                datasets: [{
+                    data: [
+                        appointmentSummary.completed || 0,
+                        appointmentSummary.cancelled || 0,
+                        appointmentSummary.noShow || 0
+                    ],
+                    backgroundColor: colors,
+                    borderRadius: 10,
+                    barThickness: 28
+                }]
+            },
+            options: {
+                ...commonOptions,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: noGridScales
+            }
+        });
+
+        const specializations = specializationStats.bySpecialization || [];
+
+        new Chart(document.getElementById('specializationChart'), {
+            type: 'bar',
+            data: {
+                labels: specializations.map(x => x.specializationName),
+                datasets: [{
+                    data: specializations.map(x => x.totalAppointments),
+                    backgroundColor: '#2F647F',
+                    borderRadius: 10,
+                    barThickness: 24
+                }]
+            },
+            options: {
+                ...commonOptions,
+                indexAxis: 'y',
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#52666f'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#52666f'
+                        }
+                    }
+                }
+            }
+        });
+
+        const doctorWorkloads = workloadStats.doctorWorkloads || [];
+
+        new Chart(document.getElementById('workloadChart'), {
+            type: 'bar',
+            data: {
+                labels: doctorWorkloads.map(x => x.doctorName),
+                datasets: [{
+                    data: doctorWorkloads.map(x => x.totalAppointments),
+                    backgroundColor: '#4A8199',
+                    borderRadius: 10,
+                    barThickness: 26
+                }]
+            },
+            options: {
+                ...commonOptions,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: noGridScales
+            }
+        });
 
         new Chart(document.getElementById('appointmentStatusChart'), {
             type: 'doughnut',
@@ -314,91 +464,28 @@
                         appointmentSummary.completed || 0,
                         appointmentSummary.cancelled || 0,
                         appointmentSummary.noShow || 0
-                    ]
+                    ],
+                    backgroundColor: ['#2F647F', '#75A8BA', '#DCEBF0'],
+                    borderColor: '#ffffff',
+                    borderWidth: 3
                 }]
             },
             options: {
-                responsive: true,
+                ...commonOptions,
+                cutout: '62%',
                 plugins: {
                     legend: {
-                        position: 'bottom'
+                        position: 'bottom',
+                        labels: {
+                            color: '#52666f',
+                            usePointStyle: true,
+                            padding: 18
+                        }
                     }
                 }
             }
         });
 
-        //Cancellation / No Show Rates
-        const overallRates = cancellationStats.overall || {};
-
-        new Chart(document.getElementById('ratesChart'), {
-            type: 'bar',
-            data: {
-                labels: ['Cancellation Rate', 'No Show Rate', 'Combined Rate'],
-                datasets: [{
-                    label: 'Rate %',
-                    data: [
-                        overallRates.cancellationRate || 0,
-                        overallRates.noShowRate || 0,
-                        overallRates.combinedRate || 0
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-
-        //Appointments by Specialization
-        const specializations = specializationStats.bySpecialization || [];
-
-        new Chart(document.getElementById('specializationChart'), {
-            type: 'bar',
-            data: {
-                labels: specializations.map(x => x.specializationName),
-                datasets: [{
-                    label: 'Appointments',
-                    data: specializations.map(x => x.totalAppointments)
-                }]
-            },
-            options: {
-                responsive: true,
-                indexAxis: 'y',
-                scales: {
-                    x: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-
-        //Doctor Workload Distribution
-        const doctorWorkloads = workloadStats.doctorWorkloads || [];
-
-        new Chart(document.getElementById('workloadChart'), {
-            type: 'bar',
-            data: {
-                labels: doctorWorkloads.map(x => x.doctorName),
-                datasets: [{
-                    label: 'Total Appointments',
-                    data: doctorWorkloads.map(x => x.totalAppointments)
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-
-        //Doctor Leave Types
         const leaveTypeBreakdown = leaveStats.summary?.leaveTypeBreakdown || [];
 
         new Chart(document.getElementById('leaveChart'), {
@@ -406,17 +493,29 @@
             data: {
                 labels: leaveTypeBreakdown.map(x => x.leaveType),
                 datasets: [{
-                    data: leaveTypeBreakdown.map(x => x.count)
+                    data: leaveTypeBreakdown.map(x => x.count),
+                    backgroundColor: colors,
+                    borderColor: '#ffffff',
+                    borderWidth: 3
                 }]
             },
             options: {
-                responsive: true,
+                ...commonOptions,
                 plugins: {
                     legend: {
-                        position: 'bottom'
+                        position: 'bottom',
+                        labels: {
+                            color: '#52666f',
+                            usePointStyle: true,
+                            padding: 18
+                        }
                     }
                 }
             }
         });
+
+        function exportDashboardPdf() {
+            
+        }
     </script>
 }
