@@ -78,6 +78,7 @@
 
 <h1 class="page-heading">Clinical Manager's Reporting Dashboard</h1>
 
+<!-- Date filtering -->
 <form method="get" asp-controller="Reports" asp-action="Dashboard" class="row dashboard-filter report-section">
     <div class="col-md-4">
         <label>Start Date</label>
@@ -96,6 +97,7 @@
     </div>
 </form>
 
+<!-- Export pdf -->
 <div class="export-row">
     <button type="button" class="btn btn-primary" onclick="exportDashboardPdf()">
         <i class="fa-solid fa-file-pdf"></i>
@@ -107,6 +109,13 @@
 
 <div id="reportContent">
 
+    <!--PDF Title -->
+    <div class="pdf-report-title">
+        <h2>Clinic Manager Report</h2>
+        <p>From @startDate to @endDate</p>
+    </div>
+
+    <!-- Doctor Stats -->
     <div class="section-card report-section">
         <h5 class="card-title mb-4">Doctor Summary</h5>
 
@@ -155,6 +164,7 @@
         </div>
     </div>
 
+    <!-- Appointment Stats -->
     <div class="section-card report-section">
         <h5 class="card-title mb-4">Appointment Summary</h5>
 
@@ -201,10 +211,6 @@
             </div>
 
         </div>
-    </div>
-
-    <div class="section-card report-section">
-        <h5 class="card-title mb-4">Report Summary</h5>
 
         <div class="mini-card-row">
 
@@ -249,28 +255,23 @@
             </div>
 
         </div>
+
     </div>
 
-    <div class="chart-row-3">
+
+    <!-- Bar Charts -->
+    <div class="chart-row-2">
 
         <div class="card report-card">
             <div class="card-header">
-                <h5 class="card-title">Completed / Cancelled / No Show</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="appointmentBarChart" class="chart-large"></canvas>
-            </div>
-        </div>
-
-        <div class="card report-card">
-            <div class="card-header">
-                <h5 class="card-title">Appointments by Specialization</h5>
+                <h5 class="card-title">Appointments Per Specialization</h5>
             </div>
             <div class="card-body">
                 <canvas id="specializationChart" class="chart-large"></canvas>
             </div>
         </div>
 
+        <!-- Doctor Workload Distribution -->
         <div class="card report-card">
             <div class="card-header">
                 <h5 class="card-title">Doctor Workload Distribution</h5>
@@ -282,17 +283,20 @@
 
     </div>
 
+    <!-- Pie Charts-->
     <div class="chart-row-2">
 
+        <!-- Appointment status stats -->
         <div class="card report-card">
             <div class="card-header">
-                <h5 class="card-title">Appointment Status</h5>
+                <h5 class="card-title">Appointments Status</h5>
             </div>
             <div class="card-body">
                 <canvas id="appointmentStatusChart" class="chart-large"></canvas>
             </div>
         </div>
 
+        <!-- Doctor leave types -->
         <div class="card report-card">
             <div class="card-header">
                 <h5 class="card-title">Doctor Leave Types</h5>
@@ -304,30 +308,39 @@
 
     </div>
 
+    <!-- generation date -->
     <div class="report-generated-footer">
-    Generated on @DateTime.Now.ToString("dd MMM yyyy, hh:mm tt")
-</div>
+        Generated on @DateTime.Now.ToString("dd MMM yyyy, hh:mm tt")
+    </div>
 
 </div>
 
 @section Scripts {
+    <!-- importing JS charts library -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <script>
+        //getting data and saving them 
         const appointmentStats = @Html.Raw(appointmentStatsJson);
         const specializationStats = @Html.Raw(specializationJson);
         const workloadStats = @Html.Raw(workloadJson);
         const leaveStats = @Html.Raw(leaveJson);
+        const appointmentSummary = appointmentStats.summary || {};
 
+        Chart.register(ChartDataLabels);
+
+        //colors used in the charts
         const colors = ['#2F647F', '#4A8199', '#75A8BA', '#A9CDD9', '#DCEBF0'];
 
+        //options that are the same among overall charts
         const commonOptions = {
-            responsive: true,
+            responsive: true, //responsive
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    labels: {
+                    labels: { //labels options
                         color: '#52666f',
                         usePointStyle: true,
                         padding: 16
@@ -336,80 +349,60 @@
             }
         };
 
+        //bar charts grid
         const noGridScales = {
             x: {
                 grid: {
-                    display: false,
+                    display: false, //hide x axis grid
                     drawBorder: false
                 },
                 ticks: {
-                    color: '#52666f'
+                    color: '#52666f' //x axis label
                 }
             },
             y: {
-                beginAtZero: true,
+                beginAtZero: true, //starting from 0
                 grid: {
-                    display: false,
+                    display: false, //hide y axis grid
                     drawBorder: false
                 },
                 ticks: {
-                    color: '#52666f'
+                    color: '#52666f' //y axis label
                 }
             }
         };
 
-        const appointmentSummary = appointmentStats.summary || {};
-
-        new Chart(document.getElementById('appointmentBarChart'), {
-            type: 'bar',
-            data: {
-                labels: ['Completed', 'Cancelled', 'No Show'],
-                datasets: [{
-                    data: [
-                        appointmentSummary.completed || 0,
-                        appointmentSummary.cancelled || 0,
-                        appointmentSummary.noShow || 0
-                    ],
-                    backgroundColor: colors,
-                    borderRadius: 10,
-                    barThickness: 28
-                }]
-            },
-            options: {
-                ...commonOptions,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: noGridScales
-            }
-        });
-
+        //Spceialization Summary
+        //take specializationStats.bySpecialization, if does't exist --> empty 
         const specializations = specializationStats.bySpecialization || [];
 
-        new Chart(document.getElementById('specializationChart'), {
-            type: 'bar',
+        const specializationChart = new Chart(document.getElementById('specializationChart'), { // draw chart in div with id = specializationChart
+            type: 'bar', //Chart type
             data: {
-                labels: specializations.map(x => x.specializationName),
+                labels: specializations.map(x => x.specializationName), //labels 
                 datasets: [{
-                    data: specializations.map(x => x.totalAppointments),
-                    backgroundColor: '#2F647F',
+                    data: specializations.map(x => x.totalAppointments), //data used
+                    //bars config
+                    backgroundColor: '#A9CDD9',
                     borderRadius: 10,
                     barThickness: 24
                 }]
             },
+            //options config
             options: {
                 ...commonOptions,
                 indexAxis: 'y',
                 plugins: {
                     legend: {
+                        display: false //remove legned
+                    },
+                    datalabels: {
                         display: false
                     }
                 },
                 scales: {
                     x: {
-                        beginAtZero: true,
+                        beginAtZero: true, //start x axis from 0
                         grid: {
                             display: false,
                             drawBorder: false
@@ -431,23 +424,30 @@
             }
         });
 
+        //workloadStats
+        //take workloadStats.doctorWorkloads, if does't exist --> empty
         const doctorWorkloads = workloadStats.doctorWorkloads || [];
 
-        new Chart(document.getElementById('workloadChart'), {
-            type: 'bar',
+        const workloadChart = new Chart(document.getElementById('workloadChart'), { // draw chart in div with id = workloadChart
+            type: 'bar', //Chart type
             data: {
-                labels: doctorWorkloads.map(x => x.doctorName),
+                labels: doctorWorkloads.map(x => x.doctorName), //x axis labels
                 datasets: [{
-                    data: doctorWorkloads.map(x => x.totalAppointments),
-                    backgroundColor: '#4A8199',
+                    data: doctorWorkloads.map(x => x.totalAppointments), //data used
+                    //bars config
+                    backgroundColor: '#A9CDD9',
                     borderRadius: 10,
                     barThickness: 26
                 }]
             },
+            //options config
             options: {
                 ...commonOptions,
                 plugins: {
                     legend: {
+                        display: false
+                    },
+                    datalabels: {
                         display: false
                     }
                 },
@@ -455,67 +455,181 @@
             }
         });
 
-        new Chart(document.getElementById('appointmentStatusChart'), {
+        //Appointment Status
+        const appointmentStatusChart = new Chart(document.getElementById('appointmentStatusChart'), {// draw chart in div with id = appointmentStatusChart
             type: 'doughnut',
             data: {
-                labels: ['Completed', 'Cancelled', 'No Show'],
+                labels: ['Completed', 'Cancelled', 'No Show'], //labels
                 datasets: [{
-                    data: [
+                    data: [ //data used, if there is no data --> 0
                         appointmentSummary.completed || 0,
                         appointmentSummary.cancelled || 0,
                         appointmentSummary.noShow || 0
                     ],
+                    //chart config
                     backgroundColor: ['#2F647F', '#75A8BA', '#DCEBF0'],
                     borderColor: '#ffffff',
                     borderWidth: 3
                 }]
             },
+            //options config
             options: {
                 ...commonOptions,
-                cutout: '62%',
+                cutout: '62%', //center hole
                 plugins: {
                     legend: {
-                        position: 'bottom',
+                        position: 'bottom', //legend placement
                         labels: {
-                            color: '#52666f',
+                            color: '#52666f', //labels colors
                             usePointStyle: true,
                             padding: 18
+                        }
+                    },
+                    datalabels: {
+                        color: '#ffffff',
+                        font: {
+                            weight: 'bold',
+                            size: 12
+                        },
+                        formatter: function (value, context) {
+                            var data = context.chart.data.datasets[0].data;
+                            var total = data.reduce(function (sum, number) {
+                                return sum + number;
+                            }, 0);
+
+                            if (total === 0 || value === 0) {
+                                return '';
+                            }
+
+                            var percentage = (value / total * 100).toFixed(1);
+                            return percentage + '%';
                         }
                     }
                 }
             }
         });
 
+        //take leaveStats.summary, if does't exist --> empty
         const leaveTypeBreakdown = leaveStats.summary?.leaveTypeBreakdown || [];
 
-        new Chart(document.getElementById('leaveChart'), {
-            type: 'pie',
+        const leaveChart = new Chart(document.getElementById('leaveChart'), {// draw chart in div with id = leaveChart
+            type: 'doughnut', //chart type
             data: {
-                labels: leaveTypeBreakdown.map(x => x.leaveType),
+                labels: leaveTypeBreakdown.map(x => x.leaveType), //labels
                 datasets: [{
-                    data: leaveTypeBreakdown.map(x => x.count),
+                    data: leaveTypeBreakdown.map(x => x.count), //data used
+                    //chart config
                     backgroundColor: colors,
                     borderColor: '#ffffff',
                     borderWidth: 3
                 }]
             },
+            //options config
             options: {
                 ...commonOptions,
+                cutout: '62%',
+                //center hole
                 plugins: {
                     legend: {
-                        position: 'bottom',
+                        position: 'bottom', //legend placement
                         labels: {
-                            color: '#52666f',
+                            color: '#52666f', //labels colors
                             usePointStyle: true,
                             padding: 18
+                        }
+                    },
+                    datalabels: {
+                        color: '#ffffff',
+                        font: {
+                            weight: 'bold',
+                            size: 12
+                        },
+                        formatter: function (value, context) {
+                            var data = context.chart.data.datasets[0].data;
+                            var total = data.reduce(function (sum, number) {
+                                return sum + number;
+                            }, 0);
+
+                            if (total === 0 || value === 0) {
+                                return '';
+                            }
+
+                            var percentage = (value / total * 100).toFixed(1);
+                            return percentage + '%';
                         }
                     }
                 }
             }
         });
 
+        const allCharts = [
+            specializationChart,
+            workloadChart,
+            appointmentStatusChart,
+            leaveChart
+        ];
+
+        /*export pdf function*/
         function exportDashboardPdf() {
-            
+            var pdf = document.getElementById("reportContent");
+
+            //copy the report content
+            var pdfCopy = pdf.cloneNode(true);
+            pdfCopy.classList.add("pdf-exporting");
+
+            //create centered pdf page
+            var wrapper = document.createElement("div");
+            wrapper.className = "pdf-page-wrapper";
+            wrapper.appendChild(pdfCopy);
+
+            //get original charts and copied charts
+            var originalCharts = pdf.querySelectorAll("canvas");
+            var copiedCharts = pdfCopy.querySelectorAll("canvas");
+
+            //replace canvas charts with images
+            originalCharts.forEach(function (canvas, index) {
+                var image = document.createElement("img");
+
+                image.src = canvas.toDataURL("image/png");
+
+                if (canvas.id === "appointmentStatusChart" || canvas.id === "leaveChart") {
+                    image.className = "chart-image pie-chart-image";
+                }
+                else {
+                    image.className = "chart-image bar-chart-image";
+                }
+
+                copiedCharts[index].parentNode.replaceChild(image, copiedCharts[index]);
+            });
+
+            var opt = {
+                margin: 0.15,
+                filename: 'ClinicReport.pdf',
+                image: {
+                    type: 'jpeg',
+                    quality: 0.98
+                },
+                html2canvas: {
+                    scale: 2,
+                    scrollY: 0,
+                    useCORS: true,
+                    backgroundColor: '#ffffff'
+                },
+                jsPDF: {
+                    unit: 'in',
+                    format: 'a4',
+                    orientation: 'portrait'
+                },
+                pagebreak: {
+                    mode: ['avoid-all', 'css']
+                }
+            };
+
+            html2pdf()
+                .set(opt)
+                .from(wrapper)
+                .save();
         }
+
     </script>
 }
