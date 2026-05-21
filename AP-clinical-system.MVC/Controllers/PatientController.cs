@@ -1,4 +1,4 @@
-﻿using AP_clinical_system.Models.Entities;
+using AP_clinical_system.Models.Entities;
 using AP_clinical_system.Models.sql_Context;
 using AP_clinical_system.Models.Enums;
 using Microsoft.AspNetCore.Identity;
@@ -175,9 +175,7 @@ namespace AP_clinical_system.Controllers
                 time_slot = appt.appointment_time_slot,
                 status = appt.appointment_status,
                 reason = appt.appointment_reason,
-                doctor_name = doctorUser != null
-                                    ? $"Dr. {doctorUser.first_name} {doctorUser.last_name}".Trim()
-                                    : "—",
+                doctor_name = $"Dr. {Models.GeneralHelper.GetUserFullNameByID(_context, doctorUser.Id)}",
                 specialization = specialization?.specialization_name ?? "—"
             });
         }

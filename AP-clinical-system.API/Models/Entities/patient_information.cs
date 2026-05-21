@@ -10,6 +10,7 @@ namespace AP_clinical_system.Models.Entities
         public Guid? modifiedby { get; set;}
 
         public string? record_no { get; set; }
+        public List<string>? medical_conditions { get; set; }
         public Guid? system_user_ref { get; set; }
         public string? system_user_lookup_to { get; set; } = "system_user";
     }
