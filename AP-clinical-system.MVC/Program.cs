@@ -21,6 +21,12 @@ builder.Services.AddControllersWithViews()
             m.ApplicationParts.Remove(part);
     });
 
+builder.Services.AddHttpClient("api", client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7132/"); 
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
 // Register the DbContext with SQL Server
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AP_Context>(options =>

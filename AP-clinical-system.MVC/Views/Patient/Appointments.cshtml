@@ -1,7 +1,129 @@
+@using AP_clinical_system.Services
+@using AP_clinical_system.Models.sql_Context
+@using Microsoft.AspNetCore.Identity;
+@inject AP_Context _context;
+@using AP_clinical_system.Models.Entities
+@using AP_clinical_system.Models.Enums
+@inject UserManager<AP_clinical_system.Models.Entities.system_user> UserManager ;
+
+
 @{
     Layout = "_AppLayout";
     ViewData["Title"] = "Appointments";
     ViewData["ActivePage"] = "My Appointments";
+
+
+
+    ViewBag.DevRole = "Patient";
+
+    var currentUser = await UserManager.GetUserAsync(User);
+    string FirstName = currentUser.first_name;
+
+    
+    var appointments = ViewBag.Appointments as List<appointment> ?? new();
+    var prescriptions = ViewBag.Prescriptions as List<prescription> ?? new();
+    var myDoctors = ViewBag.MyDoctors;
+    var doctorMap = ViewBag.DoctorInfoToUser as Dictionary<Guid, AP_clinical_system.Models.Entities.system_user> ?? new();
+
+    // Status badge helper
+    static string StatusBadge(int? status) => status switch
+    {
+        (int)appointment_status.completed => "badge-success",
+        (int)appointment_status.cancelled => "badge-danger",
+        (int)appointment_status.no_show => "badge-danger",
+        (int)appointment_status.in_progress => "badge-warning",
+        (int)appointment_status.confirmed => "badge-info",
+        (int)appointment_status.checked_in => "badge-info",
+        _ => "badge-secondary"
+    };
+
+    static string StatusLabel(int? status) => status switch
+    {
+        (int)appointment_status.completed => "Completed",
+        (int)appointment_status.cancelled => "Cancelled",
+        (int)appointment_status.no_show => "No Show",
+        (int)appointment_status.in_progress => "In Progress",
+        (int)appointment_status.confirmed => "Confirmed",
+        (int)appointment_status.checked_in => "Checked In",
+        (int)appointment_status.requested => "Requested",
+        _ => "Unknown"
+    };
+
+    static string SlotToTime(int? slot)
+    {
+        if (slot == null) return "TBD";
+        int minutes = (slot.Value - 1000) * 30;
+        int hour = 8 + minutes / 60;
+        int min = minutes % 60;
+        return new DateTime(2000, 1, 1, hour, min, 0).ToString("hh:mm tt");
+    }
+
+    static string Initials(AP_clinical_system.Models.Entities.system_user? u)
+    {
+        if (u == null) return "??";
+        var f = u.first_name?.Length > 0 ? u.first_name[0].ToString() : "";
+        var l = u.last_name?.Length > 0 ? u.last_name[0].ToString() : "";
+        return (f + l).ToUpper();
+    }
 }
 
 <h1>Appointments</h1>
+
+
+<div class="card">
+    <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <h5 class="card-title mb-0">Your Appointments</h5>
+        <span class="badge bg-secondary">
+            @appointments.Count appointment@(appointments.Count == 1 ? "" : "s")
+        </span>
+    </div>
+    <div class="card-body">
+        <table id="appointmentsTable" class="table table-hover align-middle mb-0 ap-datatable" @* ← removed
+            table-striped *@ data-page-length="10" data-sort-col="2" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Appointment No.</th>
+                    <th>Doctor</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                    <th class="text-center dt-orderable-none">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var appt in appointments)
+                {
+                    AP_clinical_system.Models.Entities.system_user? apptDoctor = null;
+                    if (appt.doctor_ref.HasValue)
+                        doctorMap.TryGetValue(appt.doctor_ref.Value, out apptDoctor);
+
+                    string doctorName = apptDoctor != null
+                        ? $"Dr. {(apptDoctor.first_name ?? "").Replace("Dr.", "").Trim()} {apptDoctor.last_name}".Trim()
+                        : "—";
+
+                    string dateOrder = appt.date?.ToString("yyyy-MM-dd") ?? "";
+                    string dateDisplay = appt.date?.ToString("dd MMM yyyy") ?? "—";
+
+                    <tr>
+                        <td>@(appt.appointment_no ?? "—")</td>
+                        <td>@doctorName</td>
+                        <td data-order="@dateOrder">@dateDisplay</td>
+                        <td>@SlotToTime(appt.appointment_time_slot)</td>
+                        <td>
+                            @* TODO: stylize this!!! *@
+                            <span class="badge @StatusBadge(appt.appointment_status)">
+                                @StatusLabel(appt.appointment_status)
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-action="view-appointment"
+                                    data-appt-id="@appt.id">
+                                View
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

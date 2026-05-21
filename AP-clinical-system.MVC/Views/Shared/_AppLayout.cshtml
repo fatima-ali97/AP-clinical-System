@@ -3,55 +3,61 @@
 @using Microsoft.AspNetCore.Identity;
 @inject AP_Context _context;
 
-@inject UserManager<AP_clinical_system.Models.Entities.system_user> UserManager ; 
+@inject UserManager<AP_clinical_system.Models.Entities.system_user> UserManager ;
 
 @{
     ViewBag.DevRole = "Patient";
 
     string initials = "?";
 
-     if (User.Identity?.IsAuthenticated ?? false)
-     {
-         var currentUser = await UserManager.GetUserAsync(User);
+    if (User.Identity?.IsAuthenticated ?? false)
+    {
+        var currentUser = await UserManager.GetUserAsync(User);
 
-         if (currentUser != null)
-         {
-             var first = !string.IsNullOrEmpty(currentUser.first_name)
-                 ? currentUser.first_name.Substring(0, 1).ToUpper()
-                 : "";
+        if (currentUser != null)
+        {
+            var first = !string.IsNullOrEmpty(currentUser.first_name)
+                ? currentUser.first_name.Substring(0, 1).ToUpper()
+                : "";
 
-             var last = !string.IsNullOrEmpty(currentUser.last_name)
-                 ? currentUser.last_name.Substring(0, 1).ToUpper()
-                 : "";
+            var last = !string.IsNullOrEmpty(currentUser.last_name)
+                ? currentUser.last_name.Substring(0, 1).ToUpper()
+                : "";
 
-             initials = first + last;
+            initials = first + last;
 
-             if (string.IsNullOrEmpty(initials))
-             {
-                 initials = "?";
-             }
-         }
-     }
+            if (string.IsNullOrEmpty(initials))
+            {
+                initials = "?";
+            }
+        }
+    }
 }
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.5.1/moment.min.js"></script>
     <script src="https://kit.fontawesome.com/5544d11b5b.js" crossorigin="anonymous"></script>
-    
+
+  
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
     <!-- DataTables -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.bootstrap5.min.css">
     <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/2.0.8/js/dataTables.bootstrap5.min.js"></script>
-    
-    
+
     <link rel="stylesheet" href="~/css/app/AppLayout.css">
+    <link rel="stylesheet" href="~/css/app/app.css">
+    <link rel="stylesheet" href="~/css/components/datatable-custom.css">
 
     <title>@ViewData["Title"] - AdvancedHealth</title>
-    @RenderSection("Styles", required: false) ; 
+    @RenderSection("Styles", required: false)
 </head>
+
 <body>
 
 
@@ -69,16 +75,16 @@
 
             @await Html.PartialAsync("_Navigation")
 
-            <div class="logout-btn">
-                <form asp-controller="Account" asp-action="Logout" method="post" >
-                    @Html.AntiForgeryToken()
+            
+            <form asp-controller="Account" asp-action="Logout" method="post">
+                @Html.AntiForgeryToken()
 
-                    <button type="submit" class="sidebar-link logout-button border-0">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
-                    </button>
-                </form>
-            </div>
+                <button type="submit" class="logout-btn">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> <span style="margin: 5px;">Log Out</span>
+                </button>
+            </form>
 
+            
         </nav>
 
         <!-- ── MAIN AREA ── -->
@@ -102,7 +108,7 @@
                 *@
                     <a class="user-pill" href="#">
                         <div class="user-pill-avatar">
-                            @initials 
+                            @initials
                         </div>
                     </a>
                 </div>
@@ -127,53 +133,78 @@
 
     <script>
         (function () {
-            var sidebar  = document.getElementById('sidebar');
-            var mainArea = document.getElementById('mainArea');
-            var toggle   = document.getElementById('sidebarToggle');
-            var overlay  = document.getElementById('sidebarOverlay');
-            var isMobile = function () { return window.innerWidth < 992; };
+        var sidebar = document.getElementById('sidebar');
+        var mainArea = document.getElementById('mainArea');
+        var toggle = document.getElementById('sidebarToggle');
+        var overlay = document.getElementById('sidebarOverlay');
+        var isMobile = function () { return window.innerWidth < 992; };
 
-            function openSidebar() {
-                if (isMobile()) {
-                    sidebar.classList.add('open');
-                    overlay.classList.add('active');
-                } else {
-                    sidebar.classList.remove('collapsed');
-                    mainArea.classList.remove('expanded');
-                }
-            }
+        function openSidebar() {
+        if (isMobile()) {
+        sidebar.classList.add('open');
+        overlay.classList.add('active');
+        } else {
+        sidebar.classList.remove('collapsed');
+        mainArea.classList.remove('expanded');
+        }
+        }
 
-            function closeSidebar() {
-                if (isMobile()) {
-                    sidebar.classList.remove('open');
-                    overlay.classList.remove('active');
-                } else {
-                    sidebar.classList.add('collapsed');
-                    mainArea.classList.add('expanded');
-                }
-            }
+        function closeSidebar() {
+        if (isMobile()) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+        } else {
+        sidebar.classList.add('collapsed');
+        mainArea.classList.add('expanded');
+        }
+        }
 
-            function isOpen() {
-                return isMobile()
-                    ? sidebar.classList.contains('open')
-                    : !sidebar.classList.contains('collapsed');
-            }
+        function isOpen() {
+        return isMobile()
+        ? sidebar.classList.contains('open')
+        : !sidebar.classList.contains('collapsed');
+        }
 
-            toggle.addEventListener('click', function () {
-                isOpen() ? closeSidebar() : openSidebar();
-            });
+        toggle.addEventListener('click', function () {
+        isOpen() ? closeSidebar() : openSidebar();
+        });
 
-            overlay.addEventListener('click', closeSidebar);
+        overlay.addEventListener('click', closeSidebar);
 
-            window.addEventListener('resize', function () {
-                if (!isMobile()) {
-                    overlay.classList.remove('active');
-                    sidebar.classList.remove('open');
-                }
-            });
+        window.addEventListener('resize', function () {
+        if (!isMobile()) {
+        overlay.classList.remove('active');
+        sidebar.classList.remove('open');
+        }
+        });
         })();
     </script>
+    <script>
+        $(function () {
+        $('table.ap-datatable').each(function () {
+        var pageLen = parseInt($(this).data('page-length') || 10);
+        var sortCol = parseInt($(this).data('sort-col') ?? 0);
+
+        $(this).DataTable({
+        pageLength: pageLen,
+        order: [[sortCol, 'desc']],
+        language: {
+        search: "",
+        searchPlaceholder: "Search…",
+        lengthMenu: "Show _MENU_ entries",
+        info: "Showing _START_–_END_ of _TOTAL_",
+        paginate: { previous: "‹", next: "›" }
+        },
+        columnDefs: [
+        { orderable: false, targets: -1 }
+        ]
+        });
+        });
+        });
+    </script>
+
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
+
 </html>

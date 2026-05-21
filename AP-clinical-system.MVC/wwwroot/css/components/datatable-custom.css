@@ -1,0 +1,160 @@
+:root {
+  --light-grey-50: #f9fafb;
+  --light-grey-200: #e5e7eb;
+  --medium-grey-500: #6b7280;
+}
+
+.dt-container {
+  border-radius: 0.75rem;
+  border: 1px solid var(--light-grey-200);
+  overflow: hidden;
+  font-size: 0.875rem;
+}
+
+.dt-container > div:first-child,
+.dt-container > div:last-child {
+  padding: 0.65rem 1rem;
+  background: #fff;
+}
+
+table.dataTable {
+  width: 100% !important;
+  margin: 0 !important;
+  border-collapse: collapse;
+}
+
+table.dataTable thead > tr > th,
+table.dataTable thead > tr > td {
+  background: var(--light-grey-50);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--medium-grey-500);
+  border-top: 1px solid var(--light-grey-200);
+  border-bottom: 1px solid var(--light-grey-200);
+  padding: 0.75rem 1rem;
+  white-space: nowrap;
+}
+
+/* Body rows */
+table.dataTable tbody > tr > td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--light-grey-200);
+  vertical-align: middle;
+  color: #111827;
+}
+
+table.dataTable tbody > tr:last-child > td {
+  border-bottom: none;
+}
+
+table.dataTable.table-striped > tbody > tr:nth-of-type(odd) > * {
+  --bs-table-accent-bg: transparent;
+  background-color: transparent;
+}
+
+table.dataTable.table-hover > tbody > tr:hover > * {
+  --bs-table-accent-bg: var(--light-grey-50);
+  background-color: var(--light-grey-50);
+}
+
+table.dataTable thead > tr > th.dt-orderable-asc span.dt-column-order,
+table.dataTable thead > tr > th.dt-orderable-desc span.dt-column-order,
+table.dataTable thead > tr > th.dt-ordering-asc span.dt-column-order,
+table.dataTable thead > tr > th.dt-ordering-desc span.dt-column-order,
+table.dataTable thead > tr > th.dt-orderable-none span.dt-column-order {
+  position: static;
+  display: inline-flex;
+  flex-direction: column;
+  vertical-align: middle;
+  margin-left: 4px;
+  width: auto;
+  height: auto;
+}
+
+table.dataTable thead > tr > th span.dt-column-order::before,
+table.dataTable thead > tr > th span.dt-column-order::after {
+  position: static;
+  display: block;
+  font-size: 0.6rem;
+  line-height: 1;
+  opacity: 0.4;
+}
+
+table.dataTable thead > tr > th.dt-ordering-asc span.dt-column-order::before {
+  opacity: 1;
+}
+table.dataTable thead > tr > th.dt-ordering-desc span.dt-column-order::after {
+  opacity: 1;
+}
+
+div.dt-container div.dt-info {
+  padding-top: 0;
+  color: var(--medium-grey-500);
+  font-size: 0.8rem;
+}
+
+div.dt-container .dt-paging nav,
+div.dt-container .dt-paging ul,
+div.dt-container .dt-paging ol {
+  list-style: none !important;
+  padding-left: 0 !important;
+  margin: 0 !important;
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+div.dt-container .dt-paging li {
+  list-style: none !important;
+}
+
+div.dt-container .dt-paging .dt-paging-button {
+  list-style: none !important;
+  border-radius: 0.375rem;
+  border: 1px solid var(--light-grey-200);
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  background: #fff;
+  color: #374151;
+  line-height: 1.5;
+}
+
+div.dt-container .dt-paging .dt-paging-button:hover {
+  background: var(--light-grey-50);
+}
+
+div.dt-container .dt-paging .dt-paging-button.current {
+  background: var(--color-brand-primary);
+  color: #fff;
+  border-color: var(--color-brand-primary);
+  font-weight: 600;
+}
+
+div.dt-container .dt-paging .dt-paging-button.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+div.dt-container .dt-search input {
+  border: 1px solid var(--light-grey-200);
+  border-radius: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+div.dt-container .dt-search input:focus {
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 3px rgb(37, 85, 113, 0.12);
+}
+
+div.dt-container .dt-length select {
+  border: 1px solid var(--light-grey-200);
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}

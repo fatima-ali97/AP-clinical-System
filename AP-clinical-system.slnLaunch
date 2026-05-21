@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "AP-clinical-system.MVC\\AP-clinical-system.MVC.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "AP-clinical-system.API\\AP-clinical-system.API.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]
