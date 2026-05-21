@@ -1,0 +1,219 @@
+@model AP_clinical_system.Models.LookupRequest
+
+@{
+    ViewData["Title"] = "Appointment Lookup";
+    Layout = "_Layout";
+}
+
+<div class="container">
+    <h2 class="mb-2">Appointment Lookup</h2>
+    <p class="text-muted mb-4">
+        Enter your CPR or Record No. below
+    </p>
+    <div class="row justify-content-start">
+
+        <div class="col-12">
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger mb-4" role="alert">
+                    <div asp-validation-summary="All" class="small mb-0"></div>
+                </div>
+            }
+
+            <form asp-action="Lookup" asp-controller="Home">
+
+                <div class="mb-4">
+                    <label asp-for="Cpr" class="form-label fw-semibold">
+                        CPR Number
+                    </label>
+
+                    <input asp-for="Cpr" class="form-control form-control-lg rounded-3" />
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="RecordNo" class="form-label fw-semibold">
+                        Record Number
+                    </label>
+
+                    <input asp-for="RecordNo" class="form-control form-control-lg rounded-3" />
+                </div>
+
+                <button asp-action="Lookup" asp-controller="Home" 
+                        class="btn btn-primary btn-lg w-100 rounded-3 fw-bold">
+                    Lookup Records
+                </button>
+
+            </form>
+
+            @if (ViewBag.LookupResultJson != null)
+            {
+                var result = System.Text.Json.JsonDocument.Parse((string)ViewBag.LookupResultJson).RootElement;
+
+                System.Text.Json.JsonElement GetProp(System.Text.Json.JsonElement el, string name)
+                {
+                    if (el.ValueKind == System.Text.Json.JsonValueKind.Undefined || el.ValueKind == System.Text.Json.JsonValueKind.Null) return default;
+                    if (el.TryGetProperty(name, out var v)) return v;
+
+                    string camel = name.Length > 0 ? char.ToLower(name[0]) + name.Substring(1) : name;
+                    if (el.TryGetProperty(camel, out v)) return v;
+
+                    string pascal = name.Length > 0 ? char.ToUpper(name[0]) + name.Substring(1) : name;
+                    if (el.TryGetProperty(pascal, out v)) return v;
+
+                    return default;
+                }
+
+                string GetStr(System.Text.Json.JsonElement el, string name)
+                {
+                    var p = GetProp(el, name);
+                    if (p.ValueKind == System.Text.Json.JsonValueKind.String) return p.GetString() ?? "—";
+                    if (p.ValueKind == System.Text.Json.JsonValueKind.Number) return p.GetInt32().ToString();
+                    return "—";
+                }
+
+                var patient = GetProp(result, "patient");
+                var upcoming = GetProp(result, "upcomingAppointments");
+                var past = GetProp(result, "pastAppointments");
+
+                <div class="row mt-5 align-items-start">
+                    <div class="col-md-3 card-white-rounded">
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="lookup-icon-box">
+                                <i class="bi bi-person-badge-fill"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-0 lookup-card-title">Patient Profile</h4>
+                            </div>
+                        </div>
+
+                        <div class="row g-4">
+                            <div class="col-12">
+                                <small class="lookup-text-secondary-light">Name</small>
+                                <span class="patient-value fw-bold">@GetStr(patient, "firstName") @GetStr(patient, "lastName")</span>
+                            </div>
+                            <div class="col-12">
+                                <small class="lookup-text-secondary-light">CPR</small>
+                                <span class="patient-value fw-bold">@GetStr(patient, "CPR")</span>
+                            </div>
+                            <div class="col-12">
+                                <small class="lookup-text-secondary-light">Email</small>
+                                <span class="patient-value text-break">@GetStr(patient, "email")</span>
+                            </div>
+                            <div class="col-12">
+                                <small class="lookup-text-secondary-light">Phone</small>
+                                <span class="patient-value">@GetStr(patient, "phone")</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-9 d-flex flex-column gap-2">
+                        <div class="card-white-rounded">
+                            <div class="mb-3 d-flex align-items-center">
+                                <div class="lookup-icon-box me-3">
+                                    <i class="bi bi-calendar2-week-fill"></i>
+                                </div>
+                                <h4 class="lookup-card-title">Upcoming Appointments</h4>
+                                <span class="badge bg-success-light text-success ms-3 fs-6">
+                                    @(upcoming.ValueKind == System.Text.Json.JsonValueKind.Array ? upcoming.GetArrayLength() : 0)
+                                </span>
+                            </div>
+                            @if (upcoming.ValueKind == System.Text.Json.JsonValueKind.Undefined || upcoming.ValueKind == System.Text.Json.JsonValueKind.Null || upcoming.GetArrayLength() == 0)
+                            {
+                                <div class="alert alert-secondary">
+                                    No upcoming appointments found
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="rounded p-0 overflow-hidden">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0 loockup-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Appointment No.</th>
+                                                    <th>Date</th>
+                                                    <th>Time Slot</th>
+                                                    <th>Reason</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var appt in upcoming.EnumerateArray())
+                                                {
+                                                    <tr>
+                                                        <td class="fw-bold">@GetStr(appt, "appointment_no")</td>
+                                                        <td>
+                                                            <div class="d-flex align-items-center">
+                                                                <i class="bi bi-calendar-event me-2 text-secondary"></i>
+                                                                @(appt.TryGetProperty("date", out var d1) && d1.ValueKind != System.Text.Json.JsonValueKind.Null ? d1.GetDateTime().ToString("dd MMM yyyy") : "—")
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            Slot @GetStr(appt, "appointment_time_slot")
+                                                        </td>
+                                                        <td class="text-secondary text-truncate-custom">@GetStr(appt, "appointment_reason")</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <div class="card-white-rounded">
+                            <div class="mb-3 d-flex align-items-center">
+                                <div class="lookup-icon-box me-3">
+                                    <i class="bi bi-calendar2-check-fill"></i>
+                                </div>
+                                <h4 class="lookup-card-title">Past Appointments</h4>
+                                <span class="badge bg-success-light text-success ms-3 fs-6">
+                                    @(past.ValueKind == System.Text.Json.JsonValueKind.Array ? past.GetArrayLength() : 0)
+                                </span>
+                            </div>
+                            @if (past.ValueKind == System.Text.Json.JsonValueKind.Undefined || past.ValueKind == System.Text.Json.JsonValueKind.Null || past.GetArrayLength() == 0)
+                            {
+                                <div class="alert alert-secondary">
+                                    No past appointments found
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="card-white-rounded p-0 overflow-hidden">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0 custom-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Appointment No.</th>
+                                                    <th>Date</th>
+                                                    <th>Time Slot</th>
+                                                    <th>Reason</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var appt in past.EnumerateArray())
+                                                {
+                                                    <tr>
+                                                        <td class="fw-bold">@GetStr(appt, "appointment_no")</td>
+                                                        <td>
+                                                            <div class="d-flex align-items-center">
+                                                                <i class="bi bi-calendar-check me-2 text-secondary"></i>
+                                                                @(appt.TryGetProperty("date", out var d2) && d2.ValueKind != System.Text.Json.JsonValueKind.Null ? d2.GetDateTime().ToString("dd MMM yyyy") : "—")
+                                                            </div>
+                                                        </td>
+                                                        <td>Slot @GetStr(appt, "appointment_time_slot")
+                                                        </td>
+                                                        <td class="text-secondary text-truncate-custom">@GetStr(appt, "appointment_reason")</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+        </div>
+    </div>
+</div>
