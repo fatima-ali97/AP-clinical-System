@@ -40,12 +40,12 @@ namespace AP_clinical_system.Models
 
             var specializations = context.doctor_specializations
                 .Where(s => specializationIDs.Contains(s.id))
-                .Select(s => new
+                .Select(s => new doctor_specialization
                 {
-                  s.id,
-                  s.specialization_name
+                    id = s.id,
+                    specialization_name = s.specialization_name
                 })
-                .ToList<dynamic>();
+                .ToList();
 
             DoctorObject doctor = new DoctorObject()
             {
@@ -64,9 +64,25 @@ namespace AP_clinical_system.Models
             return doctor;
         }
 
-        // FIX THIS LATER
-        
+        public static List<DoctorObject> GetAllDoctors(AP_Context context)
+        {
+            var doctors = new List<DoctorObject>();
 
+            var doctorIDs = context.system_users
+                .Select(u => new { u.Id, u.user_role, u.inactive })
+                .Where(u => u.user_role == (int)user_role.doctor && u.inactive != true)
+                .ToList();
+
+            foreach (var doctor in doctorIDs)
+            {
+                var doctorObject = GetDoctorObjectByID(context, doctor.Id);
+                if (doctorObject.Success)
+                    doctors.Add(doctorObject);
+            }
+
+            return doctors;
+        }
+        
         public static PatientObject GetPatientObjectByID(AP_Context context, Guid patientId)
         {
             var patientUser = context.system_users.Where(s => s.Id == patientId).FirstOrDefault();
@@ -237,7 +253,7 @@ namespace AP_clinical_system.Models
             public string Email { get; set; }
             public string Phone { get; set; }
             public string JobTitle { get; set; }
-            public List<dynamic> Specializations { get; set; }
+            public List<doctor_specialization> Specializations { get; set; }
 
             // For error handling
             public bool Success { get; set; } = true;

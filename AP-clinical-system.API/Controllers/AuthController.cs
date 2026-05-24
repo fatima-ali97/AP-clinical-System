@@ -44,7 +44,7 @@ namespace AP_clinical_system.Controllers
             }
 
             // Find user by email
-            var user = _context.system_users.First(u => u.Email == model.Email);
+            var user = _context.system_users.FirstOrDefault(u => u.Email == model.Email);
             if (user == null || user.inactive == true)
             {
                 return Unauthorized(new { message = "Invalid credentials or account is inactive." });

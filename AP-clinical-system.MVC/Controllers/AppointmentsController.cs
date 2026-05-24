@@ -1,4 +1,4 @@
-﻿using AP_clinical_system.Models;
+using AP_clinical_system.Models;
 using AP_clinical_system.Models.Entities;
 using AP_clinical_system.Models.Enums;
 using AP_clinical_system.Models.sql_Context;
@@ -39,7 +39,7 @@ namespace AP_clinical_system.Controllers
         public async Task<IActionResult> GetDoctorsBySpecialization(Guid specializationId)
         {
             // get specialization
-            var specialization = context.doctor_specializations
+            var specialization = await context.doctor_specializations
                 .Where(s => s.id == specializationId && s.inactive != true)
                 .FirstOrDefaultAsync();
             
@@ -50,16 +50,16 @@ namespace AP_clinical_system.Controllers
             }
 
             // get all doctors who specialize in the specialization
-            //var result = GeneralHelper.GetAllDoctors(context)
-            //    .Where(d => d.Specializations.Any(s => s.id == specializationId))
-            //    .Select(d => new
-            //    {
-            //        d.id,
-            //        userId = d.id,
-            //        name = $"Dr. {GeneralHelper.GetUserFullNameByID(context, d.id)}"
-            //    });
+            var result = GeneralHelper.GetAllDoctors(context)
+                .Where(d => d.Specializations.Any(s => s.id == specializationId))
+                .Select(d => new
+                {
+                    d.id,
+                    userId = d.id,
+                    name = $"Dr. {GeneralHelper.GetUserFullNameByID(context, d.id)}"
+                });
 
-            return Json(specialization);
+            return Json(result);
         }
 
         // POST /Appointments/GetAvailableDatesAndTimesByDoctorID
