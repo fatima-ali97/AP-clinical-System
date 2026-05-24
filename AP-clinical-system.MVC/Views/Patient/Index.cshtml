@@ -99,7 +99,7 @@
                 @foreach (var doc in myDoctors)
                 {
                     var docUser = doc.User as AP_clinical_system.Models.Entities.system_user;
-                    string fullName = $"Dr. {AP_clinical_system.Models.GeneralHelper.GetUserFullNameByID(_context, doc.Id)}";
+                    string fullName = $"{docUser?.first_name} {docUser?.last_name}".Trim();
                     int visits = doc.TotalVisits;
 
                     <div class="event-card highlighted">
@@ -216,8 +216,10 @@
                     if (appt.doctor_ref.HasValue)
                         doctorMap.TryGetValue(appt.doctor_ref.Value, out apptDoctor);
 
-                    string doctorName = $"Dr. {AP_clinical_system.Models.GeneralHelper.GetUserFullNameByID(_context, apptDoctor.Id)}";
-
+                    string doctorName = $"{apptDoctor?.first_name} {apptDoctor?.last_name}".Trim();
+                    string dateOrder = appt.date?.ToString("yyyy-MM-dd") ?? "";
+                    string dateDisplay = appt.date?.ToString("dd MMM yyyy") ?? "—";
+                    
                     <tr>
                         <td>@(appt.appointment_no ?? "—")</td>
                         <td>@doctorName</td>

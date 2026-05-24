@@ -4,6 +4,7 @@ using AP_clinical_system.Models.Enums;
 using AP_clinical_system.Models.sql_Context;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using AP_clinical_system.Models;
 using static AP_clinical_system.Models.GeneralHelper;
 
 namespace AP_clinical_system.Controllers
@@ -49,16 +50,16 @@ namespace AP_clinical_system.Controllers
             }
 
             // get all doctors who specialize in the specialization
-            var result = GeneralHelper.GetAllDoctors(context)
-                .Where(d => d.Specializations.Any(s => s.id == specializationId))
-                .Select(d => new
-                {
-                    d.id,
-                    userId = d.id,
-                    name = $"Dr. {GeneralHelper.GetUserFullNameByID(context, d.id)}"
-                });
+            //var result = GeneralHelper.GetAllDoctors(context)
+            //    .Where(d => d.Specializations.Any(s => s.id == specializationId))
+            //    .Select(d => new
+            //    {
+            //        d.id,
+            //        userId = d.id,
+            //        name = $"Dr. {GeneralHelper.GetUserFullNameByID(context, d.id)}"
+            //    });
 
-            return Json(result);
+            return Json(specialization);
         }
 
         // POST /Appointments/GetAvailableDatesAndTimesByDoctorID

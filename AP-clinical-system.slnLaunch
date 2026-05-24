@@ -9,6 +9,10 @@
       {
         "Path": "AP-clinical-system.API\\AP-clinical-system.API.csproj",
         "Action": "Start"
+      },
+      {
+        "Path": "AP-clinical-system.Admin\\AP-clinical-system.Admin.csproj",
+        "Action": "Start"
       }
     ]
   }

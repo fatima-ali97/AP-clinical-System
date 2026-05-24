@@ -3,27 +3,26 @@
 @{
     ViewData["Title"] = "Login";
 }
+
 <partial name="_LoadingOverlay" />
 
-<h2>Login</h2>
+<div class="login-page">
+    <div class="login-card shadow">
+        <h2 class="text-center mb-4">AdvancedHealth Login</h2>
 
-<div class="row">
-    <div class="col-md-6">
         <form asp-action="Login" asp-controller="Account" method="post" id="loginForm">
 
             <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
 
-            <div asp-validation-summary="All" class="text-danger"></div>
-
             <div class="form-group mb-3">
                 <label asp-for="Email" class="control-label"></label>
-                <input asp-for="Email" class="form-control" />
+                <input asp-for="Email" class="form-control" placeholder="Enter your email" />
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
 
             <div class="form-group mb-3">
                 <label asp-for="Password" class="control-label"></label>
-                <input asp-for="Password" class="form-control" />
+                <input asp-for="Password" type="password" class="form-control" placeholder="Enter your password" />
                 <span asp-validation-for="Password" class="text-danger"></span>
             </div>
 
@@ -32,14 +31,21 @@
                 <label asp-for="RememberMe" class="form-check-label"></label>
             </div>
 
-            <button type="submit" class="btn btn-primary" id="btnSubmit">Login</button>
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
-            <a asp-action="Register" asp-controller="Account" class="btn btn-link">
-                Create new account
-            </a>
+            <button type="submit" class="btn btn-primary w-100 mt-2" id="btnSubmit">
+                Login
+            </button>
+
+            <div class="text-center mt-3">
+                <a asp-action="Register" asp-controller="Account" class="register-link">
+                    Create new account
+                </a>
+            </div>
         </form>
     </div>
 </div>
+
 
 @section Scripts {
     @{
