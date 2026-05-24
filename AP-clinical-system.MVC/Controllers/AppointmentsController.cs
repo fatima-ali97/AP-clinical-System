@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AP_clinical_system.Models;
 using static AP_clinical_system.Models.GeneralHelper;
+using static AP_clinical_system.Models.NotificationsHelper;
 
 namespace AP_clinical_system.Controllers
 {
@@ -181,13 +182,25 @@ namespace AP_clinical_system.Controllers
                 .FirstOrDefaultAsync(u => u.UserName == User.Identity!.Name);
 
             if (currentUser == null)
+            {
                 return Json(new { success = false, error = "User not found." });
+            }
 
             var patientInfo = await context.patient_informations
                 .FirstOrDefaultAsync(p => p.system_user_ref == currentUser.Id && p.inactive != true);
 
             if (patientInfo == null)
+            {
                 return Json(new { success = false, error = "Patient record not found." });
+            }
+
+            var doctorInfo = await context.doctor_informations
+                .FirstOrDefaultAsync(d => d.system_user_ref == doctor_ref && d.inactive != true);
+
+            if (doctorInfo == null)
+            {
+                return Json(new { success = false, error = "Doctor record not found." });
+            }
 
             bool slotTaken = await context.appointments.AnyAsync(a =>
                 a.doctor_ref == doctor_ref &&
@@ -221,6 +234,15 @@ namespace AP_clinical_system.Controllers
 
             context.appointments.Add(appt);
             await context.SaveChangesAsync();
+
+            var notificationIds = new List<Guid>();
+            notificationIds.Add((Guid)patientInfo.system_user_ref);
+            notificationIds.Add((Guid)doctorInfo.system_user_ref);
+
+            var notificationTitle = "New Appointment Booked";
+            var notificationMessage = $"Appointment {appt.appointment_no} has been booked at {date:yyyy-MM-dd} for {GeneralHelper.GetUserFullNameByID(context, (Guid)patientInfo.system_user_ref)} with Dr. {GeneralHelper.GetUserFullNameByID(context, doctor_ref)}.";
+
+            await NotificationsHelper.SendNotificationMultipleAsync(context, notificationIds, notificationTitle, notificationMessage);
 
             return Json(new { success = true, appointment_no = appt.appointment_no });
         }
