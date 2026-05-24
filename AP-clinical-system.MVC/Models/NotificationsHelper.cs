@@ -1,5 +1,6 @@
 using AP_clinical_system.Models.Entities;
 using AP_clinical_system.Models.sql_Context;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace AP_clinical_system.Models
@@ -82,5 +83,71 @@ namespace AP_clinical_system.Models
             context.notifications.Add(notification);
             await context.SaveChangesAsync();
         }
-    }
+
+        public static async Task MarkNotificationAsReadAsync(AP_Context context, Guid notificationId)
+        {
+            try
+            {
+                var notification = await context.notifications.FirstOrDefaultAsync(n =>n.id == notificationId && n.inactive != true);
+
+                if (notification == null)
+                {
+                    return;
+                }
+
+                notification.is_read = true;
+                notification.modifiedon = DateTime.UtcNow;
+
+                await context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to mark notification as read: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        public static async Task<JsonResult> GetUserNotificationsAsync(AP_Context context, Guid userId)
+        {
+                var notifications = await context.notifications
+                    .Where(n =>
+                        n.system_user_ref == userId &&
+                        n.inactive != true)
+                    .OrderByDescending(n => n.createdon)
+                    .ToListAsync();
+
+                var unreadNotifications = notifications
+                    .Where(n => n.is_read != true)
+                    .Select(n => new
+                    {
+                        n.id,
+                        n.notification_no,
+                        n.title,
+                        n.message,
+                        n.createdon,
+                        n.is_read
+                    })
+                    .ToList();
+
+                var readNotifications = notifications
+                    .Where(n => n.is_read == true)
+                    .Select(n => new
+                    {
+                        n.id,
+                        n.notification_no,
+                        n.title,
+                        n.message,
+                        n.createdon,
+                        n.is_read
+                    })
+                    .ToList();
+
+            return new JsonResult(new
+            {
+                success = true,
+                unread = unreadNotifications,
+                read = readNotifications
+            });
+        }
+     }
 }
