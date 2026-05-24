@@ -1,6 +1,5 @@
-﻿using AP_clinical_system.Models.Entities;
+using AP_clinical_system.Models.Entities;
 using AP_clinical_system.Models.sql_Context;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AP_clinical_system.Models
@@ -9,51 +8,71 @@ namespace AP_clinical_system.Models
     {
         public static async Task<IActionResult> SendNotificationSingleAsync(AP_Context context, Guid recepientId, string title, string message)
         {
-            var notification = new notification();
-
-            var user = context.system_users.FirstOrDefault(u => u.Id == recepientId && u.inactive != true);
-
-            if (user == null)
+            try
             {
-                return NotFound("User does not exist or is inactive");
+                var notification = new notification();
+
+                var user = context.system_users.FirstOrDefault(u => u.Id == recepientId && u.inactive != true);
+
+                if (user == null)
+                {
+                    return new NotFoundObjectResult("User does not exist or is inactive");
+                }
+                else
+                {
+                    await CreateNotification(context, user.Id, title, message, notification);
+                    return new OkObjectResult("Success");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                await CreateNotification(context, user.Id, title, message, notification);
-                return Ok("Success");
+                return new ObjectResult(new { success = false, message = "Failed to send notification.", error = ex.Message })
+                {
+                    StatusCode = 500
+                };
             }
         }
 
         public static async Task<IActionResult> SendNotificationMultipleAsync(AP_Context context, List<Guid> recepientIds, string title, string message)
         {
-            var notification = new notification();
-            var notFoundCount = 0;
-            var sentCount = 0;
-
-            foreach (var recepientId in recepientIds)
+            try
             {
-                var user = context.system_users.FirstOrDefault(u => u.Id == recepientId && u.inactive != true);
+                var notFoundCount = 0;
+                var sentCount = 0;
 
-                if (user == null)
+                foreach (var recepientId in recepientIds)
                 {
-                    notFoundCount++;
-                    continue;
+                    var user = context.system_users.FirstOrDefault(u => u.Id == recepientId && u.inactive != true);
+
+                    if (user == null)
+                    {
+                        notFoundCount++;
+                        continue;
+                    }
+                    else
+                    {
+                        var notification = new notification();
+                        await CreateNotification(context, user.Id, title, message, notification);
+                        sentCount++;
+                    }
                 }
-                else
+
+                return new OkObjectResult(new
                 {
-                    await CreateNotification(context, user.Id, title, message, notification);
-                    sentCount++;
-                }
+                    notFoundCount,
+                    sentCount
+                });
             }
-
-            return Ok(new
+            catch (Exception ex)
             {
-                notFoundCount,
-                sentCount
-            });
+                return new ObjectResult(new { success = false, message = "Failed to send notifications.", error = ex.Message })
+                {
+                    StatusCode = 500
+                };
+            }
         }
 
-        private async static void CreateNotification(AP_Context context, Guid recepientId, string title, string message, notification notification)
+        private static async Task CreateNotification(AP_Context context, Guid recepientId, string title, string message, notification notification)
         {
             // Initialize fields
             Guid systemGuid = Guid.Parse("b9c9f28d-19df-4c31-92f7-5ebd7e5dc8d1");
@@ -78,6 +97,9 @@ namespace AP_clinical_system.Models
             notification.title = title;
             notification.message = message;
             notification.is_read = false;
+
+            context.notifications.Add(notification);
+            await context.SaveChangesAsync();
         }
 
     }
