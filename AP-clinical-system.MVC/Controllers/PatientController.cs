@@ -1,9 +1,11 @@
+using AP_clinical_system.Models;
 using AP_clinical_system.Models.Entities;
-using AP_clinical_system.Models.sql_Context;
 using AP_clinical_system.Models.Enums;
+using AP_clinical_system.Models.sql_Context;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using static AP_clinical_system.Models.GeneralHelper;
 
 namespace AP_clinical_system.Controllers
 {
@@ -17,7 +19,24 @@ namespace AP_clinical_system.Controllers
             _context = context;
             _userManager = userManager;
         }
+        public static List<DoctorObject> GetAllDoctors(AP_Context context)
+        {
+            var doctors = new List<DoctorObject>();
 
+            var doctorIDs = context.system_users
+                .Select(u => new { u.Id, u.user_role, u.inactive })
+                .Where(u => u.user_role == (int)user_role.doctor && u.inactive != true)
+                .ToList();
+
+            foreach (var doctor in doctorIDs)
+            {
+                var doctorObject = GetDoctorObjectByID(context, doctor.Id);
+                if (doctorObject.Success)
+                    doctors.Add(doctorObject);
+            }
+
+            return doctors;
+        }
         public async Task<ActionResult> Index()
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -48,13 +67,18 @@ namespace AP_clinical_system.Controllers
                 .Select(d => d.system_user_ref!.Value)
                 .ToList();
 
-            var doctorUsers = await _context.Users
+            var doctorUsers = await _context.system_users
                 .Where(u => doctorUserIds.Contains(u.Id))
                 .ToDictionaryAsync(u => u.Id);
 
             var doctorInfoToUser = doctorInfos
                 .Where(d => d.system_user_ref.HasValue && doctorUsers.ContainsKey(d.system_user_ref!.Value))
                 .ToDictionary(d => d.id, d => doctorUsers[d.system_user_ref!.Value]);
+
+           // var allDoctors = GeneralHelper.GetAllDoctors(_context);
+
+            // var MyDoctors = allDoctors.Where(); 
+
 
             var myDoctors = appointments
                 .Where(a => a.doctor_ref.HasValue)

@@ -1,9 +1,11 @@
+using AP_clinical_system.Models.Entities;
+using AP_clinical_system.Models.Enums;
 using AP_clinical_system.Models.sql_Context;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using System.Net.NetworkInformation;
 using System.Security.Claims;
-using AP_clinical_system.Models.Enums;
 
 namespace AP_clinical_system.Models
 {
@@ -61,25 +63,9 @@ namespace AP_clinical_system.Models
 
             return doctor;
         }
+
+        // FIX THIS LATER
         
-        public static List<DoctorObject> GetAllDoctors(AP_Context context)
-        {
-            var doctors = new List<DoctorObject>();
-
-            var doctorIDs = context.system_users
-                .Select(u => new { u.Id, u.user_role, u.inactive })
-                .Where(u => u.user_role == (int)user_role.doctor && u.inactive != true)
-                .ToList();
-
-            foreach (var doctor in doctorIDs)
-            {
-                var doctorObject = GetDoctorObjectByID(context, doctor.Id);
-                if (doctorObject.Success)
-                    doctors.Add(doctorObject);
-            }
-
-            return doctors;
-        }
 
         public static PatientObject GetPatientObjectByID(AP_Context context, Guid patientId)
         {
