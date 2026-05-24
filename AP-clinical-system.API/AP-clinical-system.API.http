@@ -1,14 +1,73 @@
-@AP_clinical_system_HostAddress = http:/localhost:7293
+@AP_clinical_system.API_HostAddress = https://localhost:7132
 
-### Get Weather Forecast (Default Endpoint)
-GET {{AP_clinical_system_HostAddress}}/weatherforecast/
-Accept: application/json
+### 
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZmJlZWI4NC03NjFhLTRlZmItYjk5ZS1iMGU0ZjQ1ZGQ5ZTIiLCJlbWFpbCI6Im0xQGNsaW5pYy5jb20iLCJqdGkiOiIwZDg4MzE0NC0yZGM5LTQ1ODctODVhYy0wNzA4OWU1MDk4ZGQiLCJGaXJzdE5hbWUiOiJNZ3IxIiwiTGFzdE5hbWUiOiJMZWFkIiwiVXNlclJvbGUiOiIxMDAxIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiY2xpbmljX21hbmFnZXIiLCJleHAiOjE3Nzk0ODcwNDQsImlzcyI6IkFQQ2xpbmljYWxTeXN0ZW0iLCJhdWQiOiJBUENsaW5pY2FsVXNlcnMifQ.bVD5Gh4zRg-eJiiyWvm1LD23Vd0--jB3GFn4hr32Xec
+@startDate = 2024-01-01
+@endDate = 2026-12-31
 
-### Test AdvancedHealth Anonymous Patient Lookup
-GET {{AP_clinical_system_HostAddress}}/api/anon-lookup
+### Login Reporting App
+POST {{AP_clinical_system.API_HostAddress}}/api/Auth/ReportingAppLogin
 Content-Type: application/json
 
 {
-  "cpr": "980101125",
-  "record_no": "PAT-005"
+  "email": "m1@clinic.com",
+  "password": "123"
+}
+
+### Anonymous Appointment Lookup
+POST {{AP_clinical_system.API_HostAddress}}/api/AppointmentLookup/AnonAppLookup
+Content-Type: application/json
+
+{
+  "cpr": "980101121"
+}
+
+### Get Appointment Statistics
+GET {{AP_clinical_system.API_HostAddress}}/api/ReportingApp/AppointmentStatistics
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "startDate": "{{startDate}}",
+  "endDate": "{{endDate}}"
+}
+
+### Get Cancellation And No Show Rates
+GET {{AP_clinical_system.API_HostAddress}}/api/ReportingApp/CancellationAndNoShowRates
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "startDate": "{{startDate}}",
+  "endDate": "{{endDate}}"
+}
+
+### Get Appointments By Specialization
+GET {{AP_clinical_system.API_HostAddress}}/api/ReportingApp/AppointmentsBySpecialization
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "startDate": "{{startDate}}",
+  "endDate": "{{endDate}}"
+}
+
+### Get Doctor Workload Distribution
+GET {{AP_clinical_system.API_HostAddress}}/api/ReportingApp/DoctorWorkloadDistribution
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "startDate": "{{startDate}}",
+  "endDate": "{{endDate}}"
+}
+
+### Get Doctor Leave Summary
+GET {{AP_clinical_system.API_HostAddress}}/api/ReportingApp/DoctorLeaveSummary
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "startDate": "{{startDate}}",
+  "endDate": "{{endDate}}"
 }
