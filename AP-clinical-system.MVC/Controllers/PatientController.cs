@@ -19,6 +19,7 @@ namespace AP_clinical_system.Controllers
             _context = context;
             _userManager = userManager;
         }
+
         public static List<DoctorObject> GetAllDoctors(AP_Context context)
         {
             var doctors = new List<DoctorObject>();
@@ -37,6 +38,74 @@ namespace AP_clinical_system.Controllers
 
             return doctors;
         }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileViewModel model)
+        {
+            if (string.IsNullOrWhiteSpace(model.FirstName) || string.IsNullOrWhiteSpace(model.LastName))
+                return Json(new { success = false, error = "First and last name are required." });
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+                return Json(new { success = false, error = "User not found." });
+
+            currentUser.first_name = model.FirstName.Trim();
+            currentUser.last_name = model.LastName.Trim();
+            currentUser.PhoneNumber = model.Phone?.Trim();
+            currentUser.modifiedon = DateTime.UtcNow;
+
+            var result = await _userManager.UpdateAsync(currentUser);
+
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(" ", result.Errors.Select(e => e.Description));
+                return Json(new { success = false, error = errors });
+            }
+
+            return Json(new { success = true });
+        }
+        private static async Task<Dictionary<Guid, system_user>> BuildUnifiedDoctorMapAsync(
+            AP_Context context,
+            IEnumerable<Guid> appointmentDoctorRefs)
+        {
+            var refs = appointmentDoctorRefs.Distinct().ToList();
+            if (!refs.Any())
+                return new Dictionary<Guid, system_user>();
+
+            var doctorInfos = await context.doctor_informations
+                .Where(d => d.inactive != true &&
+                            (refs.Contains(d.id) || (d.system_user_ref.HasValue && refs.Contains(d.system_user_ref!.Value))))
+                .ToListAsync();
+
+            var userIds = doctorInfos
+                .Where(d => d.system_user_ref.HasValue)
+                .Select(d => d.system_user_ref!.Value)
+                .Distinct()
+                .ToList();
+
+            var usersById = await context.system_users
+                .Where(u => userIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id);
+
+            var map = new Dictionary<Guid, system_user>();
+
+            foreach (var d in doctorInfos.Where(d => d.system_user_ref.HasValue && usersById.ContainsKey(d.system_user_ref!.Value)))
+            {
+                var user = usersById[d.system_user_ref!.Value];
+                map[d.id] = user;
+                map[d.system_user_ref!.Value] = user;
+            }
+
+            foreach (var @ref in refs.Where(r => !map.ContainsKey(r) && usersById.ContainsKey(r)))
+            {
+                map[@ref] = usersById[@ref];
+            }
+
+            return map;
+        }
+
         public async Task<ActionResult> Index()
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -52,29 +121,12 @@ namespace AP_clinical_system.Controllers
                 .OrderByDescending(a => a.date)
                 .ToListAsync();
 
-            var doctorIds = appointments
+            var appointmentDoctorRefs = appointments
                 .Where(a => a.doctor_ref.HasValue)
                 .Select(a => a.doctor_ref!.Value)
-                .Distinct()
-                .ToList();
+                .Distinct();
 
-            var doctorInfos = await _context.doctor_informations
-                .Where(d => doctorIds.Contains(d.id) && d.inactive != true)
-                .ToListAsync();
-
-            var doctorUserIds = doctorInfos
-                .Where(d => d.system_user_ref.HasValue)
-                .Select(d => d.system_user_ref!.Value)
-                .ToList();
-
-            var doctorUsers = await _context.system_users
-                .Where(u => doctorUserIds.Contains(u.Id))
-                .ToDictionaryAsync(u => u.Id);
-
-            var doctorInfoToUser = doctorInfos
-                .Where(d => d.system_user_ref.HasValue && doctorUsers.ContainsKey(d.system_user_ref!.Value))
-                .ToDictionary(d => d.id, d => doctorUsers[d.system_user_ref!.Value]);
-
+            var doctorMap = await BuildUnifiedDoctorMapAsync(_context, appointmentDoctorRefs);
 
             var myDoctors = appointments
                 .Where(a => a.doctor_ref.HasValue)
@@ -83,7 +135,7 @@ namespace AP_clinical_system.Controllers
                 {
                     DoctorInfoId = g.Key,
                     TotalVisits = g.Count(a => a.appointment_status == (int)appointment_status.completed),
-                    User = doctorInfoToUser.ContainsKey(g.Key) ? doctorInfoToUser[g.Key] : null
+                    User = doctorMap.TryGetValue(g.Key, out var u) ? u : null
                 })
                 .Where(d => d.User != null)
                 .ToList();
@@ -93,34 +145,15 @@ namespace AP_clinical_system.Controllers
                 .OrderByDescending(p => p.createdon)
                 .ToListAsync();
 
-            var prescriptionDoctorIds = prescriptions
+            var prescriptionDoctorRefs = prescriptions
                 .Where(p => p.doctor_ref.HasValue)
                 .Select(p => p.doctor_ref!.Value)
                 .Distinct()
-                .Except(doctorIds)
-                .ToList();
+                .Where(r => !doctorMap.ContainsKey(r));
 
-            if (prescriptionDoctorIds.Any())
-            {
-                var extraDoctorInfos = await _context.doctor_informations
-                    .Where(d => prescriptionDoctorIds.Contains(d.id) && d.inactive != true)
-                    .ToListAsync();
-
-                var extraUserIds = extraDoctorInfos
-                    .Where(d => d.system_user_ref.HasValue)
-                    .Select(d => d.system_user_ref!.Value)
-                    .ToList();
-
-                var extraUsers = await _context.Users
-                    .Where(u => extraUserIds.Contains(u.Id))
-                    .ToDictionaryAsync(u => u.Id);
-
-                foreach (var d in extraDoctorInfos
-                    .Where(d => d.system_user_ref.HasValue && extraUsers.ContainsKey(d.system_user_ref!.Value)))
-                {
-                    doctorInfoToUser[d.id] = extraUsers[d.system_user_ref!.Value];
-                }
-            }
+            var extraMap = await BuildUnifiedDoctorMapAsync(_context, prescriptionDoctorRefs);
+            foreach (var kvp in extraMap)
+                doctorMap.TryAdd(kvp.Key, kvp.Value);
 
             var specializations = await _context.doctor_specializations
                 .Where(s => s.inactive != true)
@@ -141,7 +174,7 @@ namespace AP_clinical_system.Controllers
             ViewBag.PatientId = patientInfo.id;
             ViewBag.Appointments = appointments;
             ViewBag.Specializations = specializations;
-            ViewBag.DoctorInfoToUser = doctorInfoToUser;
+            ViewBag.DoctorInfoToUser = doctorMap;
             ViewBag.MyDoctors = myDoctors;
             ViewBag.Prescriptions = prescriptions;
             ViewBag.CalendarEventsJson = System.Text.Json.JsonSerializer.Serialize(calendarEvents);
@@ -149,10 +182,8 @@ namespace AP_clinical_system.Controllers
             return View(currentUser);
         }
 
-        public ActionResult Book() => View();
         public async Task<ActionResult> Appointments()
         {
-
             var currentUser = await _userManager.GetUserAsync(User);
 
             var patientInfo = _context.patient_informations
@@ -166,79 +197,42 @@ namespace AP_clinical_system.Controllers
                 .OrderByDescending(a => a.date)
                 .ToListAsync();
 
-            var doctorIds = appointments
+            var appointmentDoctorRefs = appointments
                 .Where(a => a.doctor_ref.HasValue)
                 .Select(a => a.doctor_ref!.Value)
-                .Distinct()
-                .ToList();
+                .Distinct();
 
-            var doctorInfos = await _context.doctor_informations
-                .Where(d => doctorIds.Contains(d.id) && d.inactive != true)
-                .ToListAsync();
-
-            var doctorUserIds = doctorInfos
-                .Where(d => d.system_user_ref.HasValue)
-                .Select(d => d.system_user_ref!.Value)
-                .ToList();
-
-            var doctorUsers = await _context.system_users
-                .Where(u => doctorUserIds.Contains(u.Id))
-                .ToDictionaryAsync(u => u.Id);
-
-            var doctorInfoToUser = doctorInfos
-                .Where(d => d.system_user_ref.HasValue && doctorUsers.ContainsKey(d.system_user_ref!.Value))
-                .ToDictionary(d => d.id, d => doctorUsers[d.system_user_ref!.Value]);
+            var doctorMap = await BuildUnifiedDoctorMapAsync(_context, appointmentDoctorRefs);
 
             var prescriptions = await _context.prescriptions
                 .Where(p => p.patient_ref == patientInfo.id && p.inactive != true)
                 .OrderByDescending(p => p.createdon)
                 .ToListAsync();
 
-            var prescriptionDoctorIds = prescriptions
+            var prescriptionDoctorRefs = prescriptions
                 .Where(p => p.doctor_ref.HasValue)
                 .Select(p => p.doctor_ref!.Value)
                 .Distinct()
-                .Except(doctorIds)
-                .ToList();
+                .Where(r => !doctorMap.ContainsKey(r));
 
-            if (prescriptionDoctorIds.Any())
-            {
-                var extraDoctorInfos = await _context.doctor_informations
-                    .Where(d => prescriptionDoctorIds.Contains(d.id) && d.inactive != true)
-                    .ToListAsync();
-
-                var extraUserIds = extraDoctorInfos
-                    .Where(d => d.system_user_ref.HasValue)
-                    .Select(d => d.system_user_ref!.Value)
-                    .ToList();
-
-                var extraUsers = await _context.Users
-                    .Where(u => extraUserIds.Contains(u.Id))
-                    .ToDictionaryAsync(u => u.Id);
-
-                foreach (var d in extraDoctorInfos
-                    .Where(d => d.system_user_ref.HasValue && extraUsers.ContainsKey(d.system_user_ref!.Value)))
-                {
-                    doctorInfoToUser[d.id] = extraUsers[d.system_user_ref!.Value];
-                }
-            }
+            var extraMap = await BuildUnifiedDoctorMapAsync(_context, prescriptionDoctorRefs);
+            foreach (var kvp in extraMap)
+                doctorMap.TryAdd(kvp.Key, kvp.Value);
 
             var specializations = await _context.doctor_specializations
                 .Where(s => s.inactive != true)
                 .Select(s => new { Id = s.id, Name = s.specialization_name })
                 .ToListAsync();
 
-
-
             ViewBag.PatientInfo = patientInfo;
             ViewBag.PatientId = patientInfo.id;
             ViewBag.Appointments = appointments;
             ViewBag.Specializations = specializations;
-            ViewBag.DoctorInfoToUser = doctorInfoToUser;
-
+            ViewBag.DoctorInfoToUser = doctorMap;
 
             return View(currentUser);
         }
+
         public async Task<ActionResult> Prescriptions()
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -248,46 +242,30 @@ namespace AP_clinical_system.Controllers
 
             if (patientInfo == null)
                 return NotFound();
-            var appointments = await _context.appointments
-                           .Where(a => a.patient_ref == patientInfo.id && a.inactive != true)
-                           .OrderByDescending(a => a.date)
-                           .ToListAsync();
+
             var prescriptions = await _context.prescriptions
-                           .Where(p => p.patient_ref == patientInfo.id && p.inactive != true)
-                           .OrderByDescending(p => p.createdon)
-                           .ToListAsync();
-            var doctorIds = appointments
-                           .Where(a => a.doctor_ref.HasValue)
-                           .Select(a => a.doctor_ref!.Value)
-                           .Distinct()
-                           .ToList();
-            var prescriptionDoctorIds = prescriptions
-                .Where(p => p.doctor_ref.HasValue)
-                .Select(p => p.doctor_ref!.Value)
-                .Distinct()
-                .Except(doctorIds)
-                .ToList();
+                .Where(p => p.patient_ref == patientInfo.id && p.inactive != true)
+                .OrderByDescending(p => p.createdon)
+                .ToListAsync();
 
             ViewBag.Prescriptions = prescriptions;
 
             return View(currentUser);
         }
+
         public ActionResult Notifications() => View();
         public ActionResult History() => View();
-
 
         [HttpPost]
         public async Task<IActionResult> GetAppointmentInfo(Guid apptID)
         {
             var currentUser = await _userManager.GetUserAsync(User);
 
-            // Get patient_information record
             var patientInfo = await _context.patient_informations
                 .FirstOrDefaultAsync(p => p.system_user_ref == currentUser!.Id && p.inactive != true);
 
             if (patientInfo == null) return NotFound();
 
-            // Check BOTH possible ways patient_ref was stored
             var appt = await _context.appointments
                 .FirstOrDefaultAsync(a => a.id == apptID
                                        && a.inactive != true
@@ -296,17 +274,33 @@ namespace AP_clinical_system.Controllers
 
             if (appt == null) return NotFound();
 
-            var doctor = appt.doctor_ref.HasValue
-                ? await _context.doctor_informations.FirstOrDefaultAsync(d => d.id == appt.doctor_ref)
-                : null;
+            system_user? doctorUser = null;
 
-            var doctorUser = doctor?.system_user_ref.HasValue == true
-                ? await _context.Users.FirstOrDefaultAsync(u => u.Id == doctor.system_user_ref)
-                : null;
+            if (appt.doctor_ref.HasValue)
+            {
+                var doctorInfo = await _context.doctor_informations
+                    .FirstOrDefaultAsync(d => d.id == appt.doctor_ref && d.inactive != true);
+
+                if (doctorInfo?.system_user_ref.HasValue == true)
+                {
+                    doctorUser = await _context.Users
+                        .FirstOrDefaultAsync(u => u.Id == doctorInfo.system_user_ref);
+                }
+                else
+                {
+                    doctorUser = await _context.Users
+                        .FirstOrDefaultAsync(u => u.Id == appt.doctor_ref);
+                }
+            }
 
             var specialization = appt.specialization_ref.HasValue
-                ? await _context.doctor_specializations.FirstOrDefaultAsync(s => s.id == appt.specialization_ref)
+                ? await _context.doctor_specializations
+                    .FirstOrDefaultAsync(s => s.id == appt.specialization_ref)
                 : null;
+
+            var doctorName = doctorUser != null
+                ? $"Dr. {Models.GeneralHelper.GetUserFullNameByID(_context, doctorUser.Id)}"
+                : "—";
 
             return Json(new
             {
@@ -315,10 +309,11 @@ namespace AP_clinical_system.Controllers
                 time_slot = appt.appointment_time_slot,
                 status = appt.appointment_status,
                 reason = appt.appointment_reason,
-                doctor_name = $"Dr. {Models.GeneralHelper.GetUserFullNameByID(_context, doctorUser.Id)}",
+                doctor_name = doctorName,
                 specialization = specialization?.specialization_name ?? "—"
             });
         }
+
         private static string SlotToTime(int? slot)
         {
             if (slot == null) return "TBD";

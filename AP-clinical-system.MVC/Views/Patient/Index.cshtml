@@ -15,33 +15,30 @@
     var currentUser = await UserManager.GetUserAsync(User);
     string FirstName = currentUser.first_name;
 
-    
     var appointments = ViewBag.Appointments as List<appointment> ?? new();
     var prescriptions = ViewBag.Prescriptions as List<prescription> ?? new();
-    var myDoctors = ViewBag.MyDoctors;
     var doctorMap = ViewBag.DoctorInfoToUser as Dictionary<Guid, AP_clinical_system.Models.Entities.system_user> ?? new();
 
-    // Status badge helper
     static string StatusBadge(int? status) => status switch
     {
-        (int)appointment_status.completed => "badge-success",
-        (int)appointment_status.cancelled => "badge-danger",
-        (int)appointment_status.no_show => "badge-danger",
+        (int)appointment_status.completed  => "badge-success",
+        (int)appointment_status.cancelled  => "badge-danger",
+        (int)appointment_status.no_show    => "badge-danger",
         (int)appointment_status.in_progress => "badge-warning",
-        (int)appointment_status.confirmed => "badge-info",
+        (int)appointment_status.confirmed  => "badge-info",
         (int)appointment_status.checked_in => "badge-info",
         _ => "badge-secondary"
     };
 
     static string StatusLabel(int? status) => status switch
     {
-        (int)appointment_status.completed => "Completed",
-        (int)appointment_status.cancelled => "Cancelled",
-        (int)appointment_status.no_show => "No Show",
+        (int)appointment_status.completed   => "Completed",
+        (int)appointment_status.cancelled   => "Cancelled",
+        (int)appointment_status.no_show     => "No Show",
         (int)appointment_status.in_progress => "In Progress",
-        (int)appointment_status.confirmed => "Confirmed",
-        (int)appointment_status.checked_in => "Checked In",
-        (int)appointment_status.requested => "Requested",
+        (int)appointment_status.confirmed   => "Confirmed",
+        (int)appointment_status.checked_in  => "Checked In",
+        (int)appointment_status.requested   => "Requested",
         _ => "Unknown"
     };
 
@@ -50,28 +47,23 @@
         if (slot == null) return "TBD";
         int minutes = (slot.Value - 1000) * 30;
         int hour = 8 + minutes / 60;
-        int min = minutes % 60;
+        int min  = minutes % 60;
         return new DateTime(2000, 1, 1, hour, min, 0).ToString("hh:mm tt");
     }
-
-    static string Initials(AP_clinical_system.Models.Entities.system_user? u)
-    {
-        if (u == null) return "??";
-        var f = u.first_name?.Length > 0 ? u.first_name[0].ToString() : "";
-        var l = u.last_name?.Length > 0 ? u.last_name[0].ToString() : "";
-        return (f + l).ToUpper();
-    }
 }
+
 @section Styles
 {
     <link href="~/css/app/app.css" rel="stylesheet" />
     <link href="~/css/app/Appointment-modalView.css" rel="stylesheet" />
     <link href="~/css/components/Forms.css" rel="stylesheet" />
+    <link href="~/css/components/ProfileCard.css" rel="stylesheet" />
 }
 
 @section scripts
 {
     <script src="~/js/custom-dataTable.js"></script>
+    <script src="~/js/ProfileCard.js"></script>
 }
 
 <div class="stat-grid patient">
@@ -90,41 +82,16 @@
 
     <div class="card">
         <div class="card-header">
-            <h5 class="card-title">My Doctors</h5>
+            <h5 class="card-title">My Profile</h5>
         </div>
         <div class="card-body">
-            @if (myDoctors != null)
-            {
-                @foreach (var doc in myDoctors)
-                {
-                    var docUser = doc.User as AP_clinical_system.Models.Entities.system_user;
-                    string fullName = $"{docUser?.first_name} {docUser?.last_name}".Trim();
-                    int visits = doc.TotalVisits;
-
-                    <div class="event-card highlighted">
-                        <div class="doc-avatars">
-                            <div class="doc-avatar">@Initials(docUser)</div>
-                        </div>
-                        <div class="event-info" style="margin-left: 20px;">
-                            <div class="event-name">@fullName</div>
-                            <div class="event-sub-text">@visits Visit@(visits == 1 ? "" : "s")</div>
-                        </div>
-                    </div>
-                }
-            }
-
-            @if (myDoctors == null || !((IEnumerable<dynamic>)myDoctors).Any())
-            {
-                <p style="color: var(--color-text-tertiary); font-size: 14px; text-align: center; padding: 16px;">
-                    No doctors yet.
-                </p>
-            }
+            @await Html.PartialAsync("_ProfileCard")
         </div>
     </div>
 
     <div class="card">
         <div class="card-header">
-            <h5 class="card-title">My perscription</h5>
+            <h5 class="card-title">My Prescription</h5>
         </div>
         <div class="card-body" style="min-height:220px;">
             <div class="prescription-entry">
@@ -149,35 +116,34 @@
                             <circle cx="12" cy="12" r="3" />
                         </svg>
                     </button>
-
                 </div>
             </div>
         </div>
     </div>
+
     <div class="card">
         <div class="card-header">
             <h5 class="card-title">Recent Notifications</h5>
         </div>
         <div class="card-body" style="min-height:220px;">
-
             <div class="container my-5">
                 <div class="row">
                     <div class="col-md-6 offset-md-3">
                         <ul class="timeline-3">
                             <li>
-                                <a href="#!">appointment Cancelled</a>
+                                <a href="#!">Appointment Cancelled</a>
                                 <a href="#!" class="float-end">21 March, 2026</a>
-                                <p class="mt-2">Click To see more </p>
+                                <p class="mt-2">Click to see more</p>
                             </li>
                             <li>
-                                <a href="#!">appointment Cancelled</a>
+                                <a href="#!">Appointment Cancelled</a>
                                 <a href="#!" class="float-end">21 March, 2026</a>
-                                <p class="mt-2">Click To see more </p>
+                                <p class="mt-2">Click to see more</p>
                             </li>
                             <li>
-                                <a href="#!">appointment Cancelled</a>
+                                <a href="#!">Appointment Cancelled</a>
                                 <a href="#!" class="float-end">21 March, 2026</a>
-                                <p class="mt-2">Click To see more </p>
+                                <p class="mt-2">Click to see more</p>
                             </li>
                         </ul>
                     </div>
@@ -187,7 +153,6 @@
     </div>
 </div>
 
-
 <div class="card">
     <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
         <h5 class="card-title mb-0">Your Appointments</h5>
@@ -196,8 +161,9 @@
         </span>
     </div>
     <div class="card-body">
-        <table id="appointmentsTable" class="table table-hover align-middle mb-0 ap-datatable" @* ← removed
-            table-striped *@ data-page-length="10" data-sort-col="2" style="width:100%">
+        <table id="appointmentsTable"
+               class="table table-hover align-middle mb-0 ap-datatable"
+               data-page-length="10" data-sort-col="2" style="width:100%">
             <thead>
                 <tr>
                     <th>Appointment No.</th>
@@ -215,8 +181,10 @@
                     if (appt.doctor_ref.HasValue)
                         doctorMap.TryGetValue(appt.doctor_ref.Value, out apptDoctor);
 
-                    string doctorName = $"{apptDoctor?.first_name} {apptDoctor?.last_name}".Trim();
-                    string dateOrder = appt.date?.ToString("yyyy-MM-dd") ?? "";
+                    string doctorName  = apptDoctor != null
+                        ? $"Dr. {apptDoctor.first_name} {apptDoctor.last_name}".Trim()
+                        : "—";
+                    string dateOrder   = appt.date?.ToString("yyyy-MM-dd") ?? "";
                     string dateDisplay = appt.date?.ToString("dd MMM yyyy") ?? "—";
 
                     <tr>
@@ -225,14 +193,13 @@
                         <td data-order="@dateOrder">@dateDisplay</td>
                         <td>@SlotToTime(appt.appointment_time_slot)</td>
                         <td>
-                            @* TODO: stylize this!!! *@
                             <span class="badge @StatusBadge(appt.appointment_status)">
                                 @StatusLabel(appt.appointment_status)
                             </span>
                         </td>
                         <td class="text-center">
-                            <button type="button" class="btn btn-sm btn-outline-primary" data-action="view-appointment"
-                                    data-appt-id="@appt.id">
+                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                    data-action="view-appointment" data-appt-id="@appt.id">
                                 View
                             </button>
                         </td>
@@ -242,6 +209,6 @@
         </table>
     </div>
 </div>
+
 @await Html.PartialAsync("_SingleAppointmentView")
 @await Html.PartialAsync("_BookAppointmentForm")
-
