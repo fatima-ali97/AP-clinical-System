@@ -90,7 +90,7 @@ namespace AP_clinical_system.Controllers
 
                     await _signInManager.SignInAsync(user, isPersistent: false);
 
-                    return RedirectToAction("Index", "Home"); 
+                    return RedirectToAction("Index", "Patient"); 
                 }
 
                 foreach (var error in result.Errors)
