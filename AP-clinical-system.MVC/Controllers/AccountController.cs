@@ -147,7 +147,7 @@ namespace AP_clinical_system.Controllers
                         user_role.patient => RedirectToAction("Index", "Patient"),
                         user_role.doctor => RedirectToAction("Index", "Doctor"),
                         user_role.receptionist => RedirectToAction("Index", "Receptionist"),
-                        user_role.clinic_manager => RedirectToAction("Index", "ClinicManager"),
+                        user_role.clinic_manager => RedirectToAction("Index", "Manager"),
                         user_role.system_admin => RedirectToAction("Index", "Admin"),
                         _ => RedirectToAction("Index", "Home")
                     };
