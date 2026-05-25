@@ -239,7 +239,39 @@ namespace AP_clinical_system.Controllers
 
             return View(currentUser);
         }
-        public ActionResult Prescriptions() => View();
+        public async Task<ActionResult> Prescriptions()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            var patientInfo = _context.patient_informations
+                .FirstOrDefault(p => p.system_user_ref == currentUser!.Id && p.inactive != true);
+
+            if (patientInfo == null)
+                return NotFound();
+            var appointments = await _context.appointments
+                           .Where(a => a.patient_ref == patientInfo.id && a.inactive != true)
+                           .OrderByDescending(a => a.date)
+                           .ToListAsync();
+            var prescriptions = await _context.prescriptions
+                           .Where(p => p.patient_ref == patientInfo.id && p.inactive != true)
+                           .OrderByDescending(p => p.createdon)
+                           .ToListAsync();
+            var doctorIds = appointments
+                           .Where(a => a.doctor_ref.HasValue)
+                           .Select(a => a.doctor_ref!.Value)
+                           .Distinct()
+                           .ToList();
+            var prescriptionDoctorIds = prescriptions
+                .Where(p => p.doctor_ref.HasValue)
+                .Select(p => p.doctor_ref!.Value)
+                .Distinct()
+                .Except(doctorIds)
+                .ToList();
+
+            ViewBag.Prescriptions = prescriptions;
+
+            return View(currentUser);
+        }
         public ActionResult Notifications() => View();
         public ActionResult History() => View();
 

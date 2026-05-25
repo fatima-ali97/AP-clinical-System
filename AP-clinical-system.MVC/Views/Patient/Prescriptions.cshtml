@@ -1,8 +1,106 @@
+@using AP_clinical_system.Services
+@using AP_clinical_system.Models.sql_Context
+@using Microsoft.AspNetCore.Identity;
+@inject AP_Context _context;
+@using AP_clinical_system.Models.Entities
+@using AP_clinical_system.Models.Enums
+@inject UserManager<AP_clinical_system.Models.Entities.system_user> UserManager ;
+
 @{
     Layout = "_AppLayout";
     ViewData["Title"] = "My Prescriptions";
     ViewData["ActivePage"] = "Prescriptions";
+
+    var currentUser = await UserManager.GetUserAsync(User);
+
+
+    List<prescription>? prescriptions = ViewBag.Prescriptions as List<prescription> ?? new();
+
+    var myDoctors = ViewBag.MyDoctors;
+    var doctorMap = ViewBag.DoctorInfoToUser as Dictionary<Guid, AP_clinical_system.Models.Entities.system_user> ?? new();
+
+    static string Initials(AP_clinical_system.Models.Entities.system_user? u)
+    {
+        if (u == null) return "??";
+        var f = u.first_name?.Length > 0 ? u.first_name[0].ToString() : "";
+        var l = u.last_name?.Length > 0 ? u.last_name[0].ToString() : "";
+        return (f + l).ToUpper();
+    }
 }
 
 
+@section Styles
+{
+    <link href="~/css/app/Appointment-modalView.css" rel="stylesheet" />
+    <link href="~/css/components/Forms.css" rel="stylesheet" />
+    <link href="~/css/app/prescriptions.css" rel="stylesheet" />
+
+}
+@section scripts
+{
+    <script src="~/js/custom-dataTable.js"></script>
+}
+
 <h1>Prescriptions</h1>
+
+<div id="prescriptions" class="container">
+    <div class="card">
+        <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <h5 class="card-title mb-0">Your Prescriptions</h5>
+            <span class="badge bg-secondary">
+                @prescriptions.Count appointment@(prescriptions.Count == 1 ? "" : "s")
+            </span>
+        </div>
+        <div class="card-body">
+            <table id="appointmentsTable" class="table table-hover align-middle mb-0 ap-datatable" @* ← removed
+            table-striped *@ data-page-length="10" data-sort-col="2" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Dosage</th>
+                        <th>Duration</th>
+                        @* <th>Time</th> *@
+                        <th>appointment</th>
+                        <th class="text-center dt-orderable-none">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (prescription prescription in prescriptions)
+                    {
+                        @* AP_clinical_system.Models.Entities.system_user? apptDoctor = null; *@
+                        @* if (prescription.doctor_ref.HasValue)
+                            doctorMap.TryGetValue(prescription.doctor_ref.Value, out apptDoctor); *@
+
+                        @* string doctorName = apptDoctor != null
+                            ? $"Dr. {(apptDoctor.first_name ?? "").Replace("Dr.", "").Trim()} {apptDoctor.last_name}".Trim()
+                            : "—"; *@
+
+                        @* string dateOrder = appt.date?.ToString("yyyy-MM-dd") ?? "";
+                        string dateDisplay = appt.date?.ToString("dd MMM yyyy") ?? "—"; *@
+
+                        <tr>
+                            <td>@prescription.medicine_name</td>
+                            <td>@prescription.medicine_dosage</td>
+                            <td>@prescription.medicine_frequency_duration</td>
+
+                            <td>
+
+                            </td>
+                            <td class="text-center">
+                                @* <button type="button" class="btn btn-sm btn-outline-primary"
+                            data-action="view-appointment"
+                                        data-pres-id="@appt.id"> *@
+                                <button type="button" class="btn btn-sm btn-outline-primary">
+                                    View
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+@* @await Html.PartialAsync("_BookAppointmentForm")
+@await Html.PartialAsync("_SingleAppointmentView") *@
