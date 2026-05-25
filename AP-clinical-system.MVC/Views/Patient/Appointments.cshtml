@@ -11,17 +11,11 @@
     Layout = "_AppLayout";
     ViewData["Title"] = "Appointments";
     ViewData["ActivePage"] = "My Appointments";
-
-
-
     ViewBag.DevRole = "Patient";
 
     var currentUser = await UserManager.GetUserAsync(User);
-    string FirstName = currentUser.first_name;
 
-    
     var appointments = ViewBag.Appointments as List<appointment> ?? new();
-    var prescriptions = ViewBag.Prescriptions as List<prescription> ?? new();
     var myDoctors = ViewBag.MyDoctors;
     var doctorMap = ViewBag.DoctorInfoToUser as Dictionary<Guid, AP_clinical_system.Models.Entities.system_user> ?? new();
 
@@ -67,63 +61,81 @@
     }
 }
 
-<h1>Appointments</h1>
 
+@section Styles
+{
+    <link href="~/css/app/Appointment-modalView.css" rel="stylesheet" />
+    <link href="~/css/components/Forms.css" rel="stylesheet" />
+    <link href="~/css/app/appointments.css" rel="stylesheet" />
 
-<div class="card">
-    <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
-        <h5 class="card-title mb-0">Your Appointments</h5>
-        <span class="badge bg-secondary">
-            @appointments.Count appointment@(appointments.Count == 1 ? "" : "s")
-        </span>
-    </div>
-    <div class="card-body">
-        <table id="appointmentsTable" class="table table-hover align-middle mb-0 ap-datatable" @* ← removed
-            table-striped *@ data-page-length="10" data-sort-col="2" style="width:100%">
-            <thead>
-                <tr>
-                    <th>Appointment No.</th>
-                    <th>Doctor</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Status</th>
-                    <th class="text-center dt-orderable-none">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var appt in appointments)
-                {
-                    AP_clinical_system.Models.Entities.system_user? apptDoctor = null;
-                    if (appt.doctor_ref.HasValue)
-                        doctorMap.TryGetValue(appt.doctor_ref.Value, out apptDoctor);
-
-                    string doctorName = apptDoctor != null
-                        ? $"Dr. {(apptDoctor.first_name ?? "").Replace("Dr.", "").Trim()} {apptDoctor.last_name}".Trim()
-                        : "—";
-
-                    string dateOrder = appt.date?.ToString("yyyy-MM-dd") ?? "";
-                    string dateDisplay = appt.date?.ToString("dd MMM yyyy") ?? "—";
-
-                    <tr>
-                        <td>@(appt.appointment_no ?? "—")</td>
-                        <td>@doctorName</td>
-                        <td data-order="@dateOrder">@dateDisplay</td>
-                        <td>@SlotToTime(appt.appointment_time_slot)</td>
-                        <td>
-                            @* TODO: stylize this!!! *@
-                            <span class="badge @StatusBadge(appt.appointment_status)">
-                                @StatusLabel(appt.appointment_status)
-                            </span>
-                        </td>
-                        <td class="text-center">
-                            <button type="button" class="btn btn-sm btn-outline-primary" data-action="view-appointment"
-                                    data-appt-id="@appt.id">
-                                View
-                            </button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+}
+@section scripts
+{
+    <script src="~/js/custom-dataTable.js"></script>
+}
+<div class="main-page-header">
+    <h1>Appointments</h1>
+    <button id="openModalBtn">+ New Appointment</button>
 </div>
+<div id="appointments" class="container">
+    <div class="card">
+        <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <h5 class="card-title mb-0">Your Appointments</h5>
+            <span class="badge bg-secondary">
+                @appointments.Count appointment@(appointments.Count == 1 ? "" : "s")
+            </span>
+        </div>
+        <div class="card-body">
+            <table id="appointmentsTable" class="table table-hover align-middle mb-0 ap-datatable" @* ← removed
+            table-striped *@ data-page-length="10" data-sort-col="2" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Appointment No.</th>
+                        <th>Doctor</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th class="text-center dt-orderable-none">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var appt in appointments)
+                    {
+                        AP_clinical_system.Models.Entities.system_user? apptDoctor = null;
+                        if (appt.doctor_ref.HasValue)
+                            doctorMap.TryGetValue(appt.doctor_ref.Value, out apptDoctor);
+
+                        string doctorName = apptDoctor != null
+                            ? $"Dr. {(apptDoctor.first_name ?? "").Replace("Dr.", "").Trim()} {apptDoctor.last_name}".Trim()
+                            : "—";
+
+                        string dateOrder = appt.date?.ToString("yyyy-MM-dd") ?? "";
+                        string dateDisplay = appt.date?.ToString("dd MMM yyyy") ?? "—";
+
+                        <tr>
+                            <td>@(appt.appointment_no ?? "—")</td>
+                            <td>@doctorName</td>
+                            <td data-order="@dateOrder">@dateDisplay</td>
+                            <td>@SlotToTime(appt.appointment_time_slot)</td>
+                            <td>
+                                @* TODO: stylize this!!! *@
+                                <span class="badge @StatusBadge(appt.appointment_status)">
+                                    @StatusLabel(appt.appointment_status)
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-action="view-appointment"
+                                        data-appt-id="@appt.id">
+                                    View
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+@await Html.PartialAsync("_BookAppointmentForm")
+@await Html.PartialAsync("_SingleAppointmentView")

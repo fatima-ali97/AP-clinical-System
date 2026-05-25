@@ -1,4 +1,4 @@
-using AP_clinical_system.Models;
+﻿using AP_clinical_system.Models;
 using AP_clinical_system.Models.Entities;
 using AP_clinical_system.Models.Enums;
 using AP_clinical_system.Models.sql_Context;
@@ -75,10 +75,6 @@ namespace AP_clinical_system.Controllers
                 .Where(d => d.system_user_ref.HasValue && doctorUsers.ContainsKey(d.system_user_ref!.Value))
                 .ToDictionary(d => d.id, d => doctorUsers[d.system_user_ref!.Value]);
 
-           // var allDoctors = GeneralHelper.GetAllDoctors(_context);
-
-            // var MyDoctors = allDoctors.Where(); 
-
 
             var myDoctors = appointments
                 .Where(a => a.doctor_ref.HasValue)
@@ -154,7 +150,95 @@ namespace AP_clinical_system.Controllers
         }
 
         public ActionResult Book() => View();
-        public ActionResult Appointments() => View();
+        public async Task<ActionResult> Appointments()
+        {
+
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            var patientInfo = _context.patient_informations
+                .FirstOrDefault(p => p.system_user_ref == currentUser!.Id && p.inactive != true);
+
+            if (patientInfo == null)
+                return NotFound();
+
+            var appointments = await _context.appointments
+                .Where(a => a.patient_ref == patientInfo.id && a.inactive != true)
+                .OrderByDescending(a => a.date)
+                .ToListAsync();
+
+            var doctorIds = appointments
+                .Where(a => a.doctor_ref.HasValue)
+                .Select(a => a.doctor_ref!.Value)
+                .Distinct()
+                .ToList();
+
+            var doctorInfos = await _context.doctor_informations
+                .Where(d => doctorIds.Contains(d.id) && d.inactive != true)
+                .ToListAsync();
+
+            var doctorUserIds = doctorInfos
+                .Where(d => d.system_user_ref.HasValue)
+                .Select(d => d.system_user_ref!.Value)
+                .ToList();
+
+            var doctorUsers = await _context.system_users
+                .Where(u => doctorUserIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id);
+
+            var doctorInfoToUser = doctorInfos
+                .Where(d => d.system_user_ref.HasValue && doctorUsers.ContainsKey(d.system_user_ref!.Value))
+                .ToDictionary(d => d.id, d => doctorUsers[d.system_user_ref!.Value]);
+
+            var prescriptions = await _context.prescriptions
+                .Where(p => p.patient_ref == patientInfo.id && p.inactive != true)
+                .OrderByDescending(p => p.createdon)
+                .ToListAsync();
+
+            var prescriptionDoctorIds = prescriptions
+                .Where(p => p.doctor_ref.HasValue)
+                .Select(p => p.doctor_ref!.Value)
+                .Distinct()
+                .Except(doctorIds)
+                .ToList();
+
+            if (prescriptionDoctorIds.Any())
+            {
+                var extraDoctorInfos = await _context.doctor_informations
+                    .Where(d => prescriptionDoctorIds.Contains(d.id) && d.inactive != true)
+                    .ToListAsync();
+
+                var extraUserIds = extraDoctorInfos
+                    .Where(d => d.system_user_ref.HasValue)
+                    .Select(d => d.system_user_ref!.Value)
+                    .ToList();
+
+                var extraUsers = await _context.Users
+                    .Where(u => extraUserIds.Contains(u.Id))
+                    .ToDictionaryAsync(u => u.Id);
+
+                foreach (var d in extraDoctorInfos
+                    .Where(d => d.system_user_ref.HasValue && extraUsers.ContainsKey(d.system_user_ref!.Value)))
+                {
+                    doctorInfoToUser[d.id] = extraUsers[d.system_user_ref!.Value];
+                }
+            }
+
+            var specializations = await _context.doctor_specializations
+                .Where(s => s.inactive != true)
+                .Select(s => new { Id = s.id, Name = s.specialization_name })
+                .ToListAsync();
+
+
+
+            ViewBag.PatientInfo = patientInfo;
+            ViewBag.PatientId = patientInfo.id;
+            ViewBag.Appointments = appointments;
+            ViewBag.Specializations = specializations;
+            ViewBag.DoctorInfoToUser = doctorInfoToUser;
+
+
+            return View(currentUser);
+        }
         public ActionResult Prescriptions() => View();
         public ActionResult Notifications() => View();
         public ActionResult History() => View();

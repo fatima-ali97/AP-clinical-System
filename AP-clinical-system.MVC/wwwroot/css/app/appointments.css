@@ -1,0 +1,26 @@
+#appointments.container {
+  margin-top: 30px;
+}
+.main-page-header {
+  display: flex;
+  justify-content: stretch;
+}
+
+.main-page-header h1 {
+  flex-grow: 1;
+}
+.main-page-header button {
+  border-radius: 8px;
+  border: none;
+  color: white;
+  font-size: 18px;
+  flex-grow: 1;
+  padding: 20px 5px;
+  cursor: pointer;
+  background-color: var(--color-brand-primary);
+  transition: 0.2s ease-in background-color;
+}
+
+.main-page-header button:hover {
+  background-color: var(--color-brand-hover);
+}
