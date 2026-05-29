@@ -15,10 +15,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const displayName  = document.getElementById('mp-display-name');
     const displayPhone = document.getElementById('mp-display-phone');
 
-    // Guard: if profile card is not on this page, do nothing
     if (!editBtn || !backdrop) return;
 
-    // ── open / close ──────────────────────────────────────────────────────
     editBtn.addEventListener('click',   () => backdrop.classList.add('open'));
     closeBtn.addEventListener('click',  closeModal);
     cancelBtn.addEventListener('click', closeModal);
@@ -28,7 +26,6 @@ document.addEventListener('DOMContentLoaded', function () {
         backdrop.classList.remove('open');
     }
 
-    // ── save ──────────────────────────────────────────────────────────────
     saveBtn.addEventListener('click', async () => {
         const firstName = inputFirst.value.trim();
         const lastName  = inputLast.value.trim();
@@ -57,11 +54,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = await res.json();
 
             if (data.success) {
-                // update display values inline — no page reload needed
                 displayName.textContent  = `${firstName} ${lastName}`.trim();
                 displayPhone.textContent = phone || '—';
 
-                // update avatar initials
                 const avatarEl = document.querySelector('.mp-avatar');
                 if (avatarEl) {
                     avatarEl.textContent = ((firstName[0] ?? '') + (lastName[0] ?? '')).toUpperCase();
@@ -80,7 +75,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // ── toast helper ──────────────────────────────────────────────────────
     function showToast(msg, type) {
         toast.textContent   = msg;
         toast.className     = `mp-toast ${type}`;
