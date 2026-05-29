@@ -119,6 +119,7 @@
 }
 
 .mp-modal-backdrop.open {
+  cursor: pointer;
   display: flex;
 }
 

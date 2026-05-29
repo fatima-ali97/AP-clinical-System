@@ -18,6 +18,7 @@
     var appointments = ViewBag.Appointments as List<appointment> ?? new();
     var prescriptions = ViewBag.Prescriptions as List<prescription> ?? new();
     var doctorMap = ViewBag.DoctorInfoToUser as Dictionary<Guid, AP_clinical_system.Models.Entities.system_user> ?? new();
+    //var prescriptions = ViewBag.prescriptions as List<prescription> ?? new();
 
     static string StatusBadge(int? status) => status switch
     {
@@ -56,6 +57,7 @@
 {
     <link href="~/css/app/app.css" rel="stylesheet" />
     <link href="~/css/app/Appointment-modalView.css" rel="stylesheet" />
+    <link href="~/css/app/Prescription-modalView.css" rel="stylesheet" />
     <link href="~/css/components/Forms.css" rel="stylesheet" />
     <link href="~/css/app/ProfileCard.css" rel="stylesheet" />
 }
@@ -90,10 +92,19 @@
     </div>
 
     <div class="card">
-        <div class="card-header">
-            <h5 class="card-title">My Prescription</h5>
-        </div>
-        <div class="card-body" style="min-height:220px;">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <h5 class="card-title mb-0">My Prescriptions</h5>
+    </div>
+    <div class="card-body" style="min-height:220px;">
+        @{
+            var latestPrescriptions = prescriptions.Take(3).ToList();
+        }
+        @if (!latestPrescriptions.Any())
+        {
+            <p class="text-muted" style="font-size:14px;">No prescriptions yet.</p>
+        }
+        @foreach (var pres in latestPrescriptions)
+        {
             <div class="prescription-entry">
                 <div class="prescription-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
@@ -105,11 +116,13 @@
                     </svg>
                 </div>
                 <div class="prescription-info">
-                    <span class="prescription-title">Cardiology Prescription</span>
-                    <span class="prescription-date">20 Apr 2025</span>
+                    <span class="prescription-title">@pres.medicine_name</span>
+                    <span class="prescription-date">@(pres.createdon.ToString("dd MMM yyyy"))</span>
                 </div>
                 <div class="prescription-actions">
-                    <button class="action-btn" title="View">
+                    <button class="action-btn" title="View"
+                            data-action="view-prescription"
+                            data-pres-id="@pres.id">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                              stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -118,8 +131,17 @@
                     </button>
                 </div>
             </div>
-        </div>
+        }
     </div>
+    @if (prescriptions.Count > 3)
+    {
+        <div class="card-footer text-end" style="background:transparent; border-top:1px solid #f0f0f0; padding: 10px 16px;">
+            <a href="/Patient/Prescriptions" style="font-size:13px; font-weight:600; color:var(--color-brand-primary); text-decoration:none;">
+                View All (@prescriptions.Count) →
+            </a>
+        </div>
+    }
+</div>
 
     <div class="card">
         <div class="card-header">
@@ -212,3 +234,4 @@
 
 @await Html.PartialAsync("_SingleAppointmentView")
 @await Html.PartialAsync("_BookAppointmentForm")
+@await Html.PartialAsync("_PrescriptionCard")

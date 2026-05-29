@@ -314,6 +314,71 @@ namespace AP_clinical_system.Controllers
             });
         }
 
+
+
+
+        [HttpPost]
+        public async Task<IActionResult> GetPrescriptionInfo(Guid presID)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            var patientInfo = await _context.patient_informations
+                .FirstOrDefaultAsync(p => p.system_user_ref == currentUser!.Id && p.inactive != true);
+
+            if (patientInfo == null) return NotFound();
+
+            var pres = await _context.prescriptions
+                .FirstOrDefaultAsync(p => p.id == presID
+                                       && p.inactive != true
+                                       && p.patient_ref == patientInfo.id);
+
+            if (pres == null) return NotFound();
+
+            system_user? doctorUser = null;
+
+            if (pres.doctor_ref.HasValue)
+            {
+                var doctorInfo = await _context.doctor_informations
+                    .FirstOrDefaultAsync(d => d.id == pres.doctor_ref && d.inactive != true);
+
+                if (doctorInfo?.system_user_ref.HasValue == true)
+                {
+                    doctorUser = await _context.Users
+                        .FirstOrDefaultAsync(u => u.Id == doctorInfo.system_user_ref);
+                }
+                else
+                {
+                    doctorUser = await _context.Users
+                        .FirstOrDefaultAsync(u => u.Id == pres.doctor_ref);
+                }
+            }
+
+            if (pres.appointment_ref.HasValue)
+            {
+                var appt = await _context.doctor_informations
+                    .FirstOrDefaultAsync(d => d.id == pres.doctor_ref && d.inactive != true);
+            }
+
+
+
+            var doctorName = doctorUser != null
+                ? $"{Models.GeneralHelper.GetUserFullNameByID(_context, doctorUser.Id)}"
+                : "—";
+
+            return Json(new
+            {
+                prescription_no = pres.prescription_no,
+                // date = pres.date?.ToString("dd MMM yyyy"),
+                // time_slot = pres.appointment_time_slot,
+                // status = pres.appointment_status,
+                // reason = pres.appointment_reason,
+                appointment_no = pres.appointment_ref,
+                doctor_name = doctorName,
+                // specialization = specialization?.specialization_name ?? "—"
+            });
+        }
+
+
         private static string SlotToTime(int? slot)
         {
             if (slot == null) return "TBD";
