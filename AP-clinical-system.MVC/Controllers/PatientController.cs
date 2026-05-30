@@ -254,7 +254,61 @@ namespace AP_clinical_system.Controllers
         }
 
         public ActionResult Notifications() => View();
-        public ActionResult History() => View();
+
+
+
+
+
+        public async Task<IActionResult> History()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            var patientInfo = _context.patient_informations
+                .FirstOrDefault(p => p.system_user_ref == currentUser!.Id && p.inactive != true);
+
+            if (patientInfo == null)
+                return NotFound();
+
+            var appointments = await _context.appointments //&& (a.appointment_status.Equals(appointment_status.completed) || a.appointment_status.Equals(appointment_status.completed))
+                .Where(a => a.patient_ref == patientInfo.id && a.inactive != true && (a.appointment_status == 1004 || a.appointment_status == 1005))
+                .OrderByDescending(a => a.date)
+                .ToListAsync();
+
+            var appointmentDoctorRefs = appointments
+                .Where(a => a.doctor_ref.HasValue)
+                .Select(a => a.doctor_ref!.Value)
+                .Distinct();
+
+            var doctorMap = await BuildUnifiedDoctorMapAsync(_context, appointmentDoctorRefs);
+
+            var prescriptions = await _context.prescriptions
+                .Where(p => p.patient_ref == patientInfo.id && p.inactive != true)
+                .OrderByDescending(p => p.createdon)
+                .ToListAsync();
+
+            var prescriptionDoctorRefs = prescriptions
+                .Where(p => p.doctor_ref.HasValue)
+                .Select(p => p.doctor_ref!.Value)
+                .Distinct()
+                .Where(r => !doctorMap.ContainsKey(r));
+
+            var extraMap = await BuildUnifiedDoctorMapAsync(_context, prescriptionDoctorRefs);
+            foreach (var kvp in extraMap)
+                doctorMap.TryAdd(kvp.Key, kvp.Value);
+
+            var specializations = await _context.doctor_specializations
+                .Where(s => s.inactive != true)
+                .Select(s => new { Id = s.id, Name = s.specialization_name })
+                .ToListAsync();
+
+            ViewBag.PatientInfo = patientInfo;
+            ViewBag.PatientId = patientInfo.id;
+            ViewBag.Appointments = appointments;
+            ViewBag.Specializations = specializations;
+            ViewBag.DoctorInfoToUser = doctorMap;
+
+            return View(currentUser);
+        }
 
         [HttpPost]
         public async Task<IActionResult> GetAppointmentInfo(Guid apptID)
