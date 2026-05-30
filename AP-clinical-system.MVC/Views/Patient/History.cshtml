@@ -51,14 +51,6 @@
         int min = minutes % 60;
         return new DateTime(2000, 1, 1, hour, min, 0).ToString("hh:mm tt");
     }
-
-    static string Initials(AP_clinical_system.Models.Entities.system_user? u)
-    {
-        if (u == null) return "??";
-        var f = u.first_name?.Length > 0 ? u.first_name[0].ToString() : "";
-        var l = u.last_name?.Length > 0 ? u.last_name[0].ToString() : "";
-        return (f + l).ToUpper();
-    }
 }
 
 

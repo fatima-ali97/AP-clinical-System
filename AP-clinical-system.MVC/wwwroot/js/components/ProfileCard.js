@@ -63,9 +63,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 closeModal();
-                showToast('Profile updated successfully.', 'success');
+                Swal.fire({
+    icon: 'success',
+    title: 'Profile Updated',
+    text: 'Your profile has been saved successfully.',
+    confirmButtonColor: '#38789e',
+    timer: 2000,
+    timerProgressBar: true,
+    showConfirmButton: false
+});
+
             } else {
-                showToast(data.error ?? 'Update failed.', 'error');
+                Swal.fire({
+    icon: 'error',
+    title: 'Save Failed',
+    text: 'Could not update your profile. Please try again.',
+    confirmButtonColor: '#38789e'
+});
             }
         } catch {
             showToast('Unexpected error. Please try again.', 'error');
