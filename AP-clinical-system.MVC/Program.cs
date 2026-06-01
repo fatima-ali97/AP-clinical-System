@@ -65,6 +65,7 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
