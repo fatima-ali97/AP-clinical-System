@@ -128,7 +128,16 @@
                                         data-appt-id="@appt.id">
                                     View
                                 </button>
+                                @if (appt.appointment_status == (int)appointment_status.requested
+      || appt.appointment_status == (int)appointment_status.confirmed)
+                                {
+                                    <a href="/Appointments/Reschedule/@appt.id" class="btn btn-sm btn-outline-secondary ms-1">
+                                        Reschedule
+                                    </a>
+                                }
+
                             </td>
+
                         </tr>
                     }
                 </tbody>
