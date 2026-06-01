@@ -23,6 +23,56 @@ namespace AP_clinical_system.Controllers
             hubContext = _hubContext;
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Cancel(Guid appointment_id)
+        {
+            var currentUser = await context.Users
+                .FirstOrDefaultAsync(u => u.UserName == User.Identity!.Name);
+
+            if (currentUser == null)
+                return Json(new { success = false, error = "Unauthorized." });
+
+            var patientInfo = await context.patient_informations
+                .FirstOrDefaultAsync(p => p.system_user_ref == currentUser.Id && p.inactive != true);
+
+            if (patientInfo == null)
+                return Json(new { success = false, error = "Patient record not found." });
+
+            var appt = await context.appointments
+                .FirstOrDefaultAsync(a => a.id == appointment_id
+                                        && a.patient_ref == patientInfo.id
+                                        && a.inactive != true);
+
+            if (appt == null)
+                return Json(new { success = false, error = "Appointment not found." });
+
+            if (appt.appointment_status != (int)appointment_status.requested
+             && appt.appointment_status != (int)appointment_status.confirmed)
+                return Json(new { success = false, error = "Only requested or confirmed appointments can be cancelled." });
+
+            appt.appointment_status = (int)appointment_status.cancelled;
+            appt.modifiedon = DateTime.UtcNow;
+            appt.modifiedby = currentUser.Id;
+
+            await context.SaveChangesAsync();
+
+            // Notify patient + doctor
+            var doctorInfo = appt.doctor_ref.HasValue
+                ? await context.doctor_informations
+                    .FirstOrDefaultAsync(d => d.system_user_ref == appt.doctor_ref && d.inactive != true)
+                : null;
+
+            var recipientIds = new List<Guid> { (Guid)patientInfo.system_user_ref! };
+            if (doctorInfo?.system_user_ref != null)
+                recipientIds.Add((Guid)doctorInfo.system_user_ref);
+
+            var msg = $"Appointment {appt.appointment_no} has been cancelled.";
+            await NotificationsHelper.SendNotificationMultipleAsync(context, recipientIds, "Appointment Cancelled", msg);
+
+            return Json(new { success = true });
+        }
+
         [HttpGet]
         public async Task<IActionResult> Reschedule(Guid id)
         {
