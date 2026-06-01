@@ -9,10 +9,6 @@
       {
         "Path": "AP-clinical-system.MVC\\AP-clinical-system.MVC.csproj",
         "Action": "Start"
-      },
-      {
-        "Path": "AP-clinical-system.Admin\\AP-clinical-system.Admin.csproj",
-        "Action": "Start"
       }
     ]
   }

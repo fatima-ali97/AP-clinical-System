@@ -10,33 +10,58 @@
 <div class="stat-grid admin">
 
     <div class="card stat-card">
-
-       
-        <div class="card-body" style=" background: #7a97b8;">
+        <div class="card-body" style="background: #7a97b8;">
             <span class="tri-bl"></span>
             <div class="stat-card-inner">
                 <div>
-                    <div class="stat-label">Doctors</div>
-                    <div class="stat-value">67</div>
+                    <div class="stat-label">Requested</div>
+                    <div class="stat-value" id="requested">-</div>
                 </div>
                 <div class="stat-icon" style="background: #c8d9eb;">
-                    <i class="fa-solid fa-stethoscope" style="color: #3a5f8a;"></i>
+                    <i class="fa-solid fa-clock" style="color: #3a5f8a;"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card  stat-card">
+    <div class="card stat-card">
         <div class="card-body" style="background: #5e9fa8;">
             <span class="tri-bl"></span>
             <div class="stat-card-inner">
                 <div>
-                    <div class="stat-label">Patients</div>
-                    <div class="stat-value">1600</div>
-                    
+                    <div class="stat-label">Confirmed</div>
+                    <div class="stat-value" id="confirmed">-</div>
                 </div>
                 <div class="stat-icon" style="background-color: #b0d8de;">
-                    <i class="fa-solid fa-hospital-user" style="color: #205a64;"></i>
+                    <i class="fa-solid fa-circle-check" style="color: #205a64;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="card-body" style="background: #6a8f6a;">
+            <div class="stat-card-inner">
+                <div>
+                    <div class="stat-label">Checked In</div>
+                    <div class="stat-value" id="checked_in">-</div>
+                </div>
+                <div class="stat-icon" style="background-color: #b8d4b8;">
+                    <i class="fa-solid fa-right-to-bracket" style="color: #2a5a2a;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="card-body" style="background: #c4975a;">
+            <div class="stat-card-inner">
+                <div>
+                    <div class="stat-label">In Progress</div>
+                    <div class="stat-value" id="in_progress">-</div>
+                </div>
+                <div class="stat-icon" style="background-color: #e8d0a8;">
+                    <i class="fa-solid fa-spinner" style="color: #7a5020;"></i>
                 </div>
             </div>
         </div>
@@ -46,8 +71,8 @@
         <div class="card-body" style="background: #9080b8;">
             <div class="stat-card-inner">
                 <div>
-                    <div class="stat-label">Completed Appointments</div>
-                    <div class="stat-value">1200</div>
+                    <div class="stat-label">Completed</div>
+                    <div class="stat-value" id="completed">-</div>
                 </div>
                 <div class="stat-icon" style="background-color: #ccc0e0;">
                     <i class="fa-solid fa-calendar-check" style="color: #4a3480;"></i>
@@ -57,20 +82,57 @@
     </div>
 
     <div class="card stat-card">
-        <div class="card-body" style="background-color: #c4975a;">
+        <div class="card-body" style="background: #b85a5a;">
             <div class="stat-card-inner">
                 <div>
-                    <div class="stat-label">Appointments Today</div>
-                    <div class="stat-value">10</div>
+                    <div class="stat-label">Cancelled</div>
+                    <div class="stat-value" id="cancelled">-</div>
                 </div>
-                <div class="stat-icon" style="background-color: #e8d0a8;">
-                    <i class="fa-solid fa-calendar" style="color: #7a5020;"></i>
+                <div class="stat-icon" style="background-color: #e0a8a8;">
+                    <i class="fa-solid fa-circle-xmark" style="color: #7a1a1a;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="card-body" style="background: #8a8a8a;">
+            <div class="stat-card-inner">
+                <div>
+                    <div class="stat-label">No Show</div>
+                    <div class="stat-value" id="no_show">-</div>
+                </div>
+                <div class="stat-icon" style="background-color: #c8c8c8;">
+                    <i class="fa-solid fa-user-slash" style="color: #3a3a3a;"></i>
                 </div>
             </div>
         </div>
     </div>
 
 </div>
+
+<!-- SignalR -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/9.0.6/signalr.min.js"></script>
+<script>
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/hubs/appointmentsWatcher")
+        .withAutomaticReconnect()
+        .build();
+
+    connection.on("UpdateStatuses", (data) => {
+        document.getElementById("requested").innerText   = data.requested;
+        document.getElementById("confirmed").innerText   = data.confirmed;
+        document.getElementById("checked_in").innerText  = data.checked_in;
+        document.getElementById("in_progress").innerText = data.in_progress;
+        document.getElementById("completed").innerText   = data.completed;
+        document.getElementById("cancelled").innerText   = data.cancelled;
+        document.getElementById("no_show").innerText     = data.no_show;
+    });
+
+    connection.start()
+        .then(() => console.log("SignalR connected"))
+        .catch(err => console.error("SignalR error:", err));
+</script>
 
 <!-- ── CALENDAR + REAL-TIME GRAPH── -->
 <div class="bottom-grid">

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AP_clinical_system.Models.sql_Context;
+using AP_clinical_system.Models.Entities;
 using System.Reflection;
 using System.Text.Json;
 
@@ -352,14 +353,57 @@ namespace AP_clinical_system.Controllers
                     }
                 }
 
-                _context.Add(entity);
+                if (entityName == "system_user")
+                {
+                    var userManager = HttpContext.RequestServices.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<system_user>>();
+                    var user = (system_user)entity;
+                    
+                    if (string.IsNullOrEmpty(user.UserName)) user.UserName = user.Email;
+                    
+                    var password = user.PasswordHash; // Plain text password from UI
+                    user.PasswordHash = null; // Clear it for CreateAsync
+
+                    var identityResult = await userManager.CreateAsync(user, string.IsNullOrEmpty(password) ? "Default@123" : password);
+                    if (!identityResult.Succeeded)
+                    {
+                        return BadRequest(new { success = false, message = string.Join(", ", identityResult.Errors.Select(e => e.Description)) });
+                    }
+                }
+                else
+                {
+                    _context.Add(entity);
+                }
             }
             else
             {
-                _context.Update(entity);
+                if (entityName == "system_user")
+                {
+                    var userManager = HttpContext.RequestServices.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<system_user>>();
+                    var user = (system_user)entity;
+                    
+                    if (string.IsNullOrEmpty(user.UserName)) user.UserName = user.Email;
+                    
+                    // Only re-hash if it changed and doesn't look like an existing hash
+                    if (!string.IsNullOrEmpty(user.PasswordHash) && !user.PasswordHash.StartsWith("AQAAAA"))
+                    {
+                        user.PasswordHash = userManager.PasswordHasher.HashPassword(user, user.PasswordHash);
+                    }
+                    
+                    user.NormalizedEmail = userManager.NormalizeEmail(user.Email);
+                    user.NormalizedUserName = userManager.NormalizeName(user.UserName);
+
+                    await userManager.UpdateAsync(user);
+                }
+                else
+                {
+                    _context.Update(entity);
+                }
             }
 
-            await _context.SaveChangesAsync();
+            if (entityName != "system_user")
+            {
+                await _context.SaveChangesAsync();
+            }
 
             // Return the saved entity's id
             var savedId = entityType.GetProperty("id")?.GetValue(entity);
