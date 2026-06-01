@@ -1,8 +1,9 @@
+using AP_clinical_system.Hubs;
+using AP_clinical_system.Models.Entities;
+using AP_clinical_system.Models.sql_Context;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
-using AP_clinical_system.Models.sql_Context;
-using AP_clinical_system.Models.Entities;
-using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -85,9 +86,6 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Fix existing users missing Identity fields
-await AP_clinical_system.MVC.Models.DataFixer.FixExistingUsersAsync(app.Services);
-
 // Configure the HTTP request pipeline. --  i edited thit
 if (app.Environment.IsDevelopment())
 {
@@ -112,7 +110,7 @@ app.UseAuthorization();
 
 app.MapStaticAssets();
 
-
+app.MapHub<AppointmentsWatcher>("/hubs/appointmentsWatcher");
 
 app.MapControllerRoute(
     name: "default",

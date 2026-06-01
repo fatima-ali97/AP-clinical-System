@@ -1,10 +1,12 @@
+using AP_clinical_system.Hubs;
+using AP_clinical_system.Models;
 using AP_clinical_system.Models;
 using AP_clinical_system.Models.Entities;
 using AP_clinical_system.Models.Enums;
 using AP_clinical_system.Models.sql_Context;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using AP_clinical_system.Models;
 using static AP_clinical_system.Models.GeneralHelper;
 using static AP_clinical_system.Models.NotificationsHelper;
 
@@ -13,10 +15,12 @@ namespace AP_clinical_system.Controllers
     public class AppointmentsController : Controller
     {
         private readonly AP_Context context;
+        private readonly IHubContext<AppointmentsWatcher> hubContext;
 
-        public AppointmentsController(AP_Context _context)
+        public AppointmentsController(AP_Context _context, IHubContext<AppointmentsWatcher> _hubContext)
         {
             context = _context;
+            hubContext = _hubContext;
         }
 
         // GET /Appointments/getAllSpecializations
@@ -234,6 +238,12 @@ namespace AP_clinical_system.Controllers
 
             context.appointments.Add(appt);
             await context.SaveChangesAsync();
+
+            var watcher = new AppointmentsWatcher(context);
+
+            var counts = watcher.CalculateCounts();
+
+            await hubContext.Clients.All.SendAsync("UpdateStatuses", counts);
 
             var notificationIds = new List<Guid>();
             notificationIds.Add((Guid)patientInfo.system_user_ref);

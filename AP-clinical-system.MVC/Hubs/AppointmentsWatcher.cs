@@ -20,7 +20,7 @@ namespace AP_clinical_system.Hubs
                 await base.OnConnectedAsync();
             }
 
-            private object CalculateCounts()
+            public object CalculateCounts()
             {
                 return new
                 {
