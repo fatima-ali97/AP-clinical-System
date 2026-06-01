@@ -73,7 +73,7 @@ using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
 
-    string[] roles = { "Patient", "Doctor", "Receptionist", "ClinicManager" };
+    string[] roles = { "Patient", "Doctor", "Receptionist", "ClinicManager", "SystemAdmin" };
 
     foreach (var role in roles)
     {
@@ -83,6 +83,9 @@ using (var scope = app.Services.CreateScope())
         }
     }
 }
+
+// Fix existing users missing Identity fields
+await AP_clinical_system.MVC.Models.DataFixer.FixExistingUsersAsync(app.Services);
 
 // Configure the HTTP request pipeline. --  i edited thit
 if (app.Environment.IsDevelopment())
