@@ -22,8 +22,7 @@ namespace AP_clinical_system.Controllers
         // GET: Manager/Doctors
         public ActionResult Doctors() => View();
 
-        // GET: Manager/Users
-        public ActionResult Users() => View();
+
 
         // GET: Manager/Appointments
         public ActionResult Appointments() => View();
@@ -425,5 +424,96 @@ namespace AP_clinical_system.Controllers
             int min = minutes % 60;
             return new DateTime(2000, 1, 1, hour, min, 0).ToString("hh:mm tt");
         }
+
+
+
+        // GET: Manager/Users
+        public async Task<ActionResult> Users()
+        {
+            var users = await _context.system_users
+                .Where(u => u.inactive != true)
+                .OrderBy(u => u.user_role)
+                .ThenBy(u => u.first_name)
+                .Select(u => new Models.UserListViewModel
+                {
+                    Id = u.Id,
+                    FullName = (u.first_name + " " + u.last_name).Trim(),
+                    Email = u.Email ?? "—",
+                    Phone = u.PhoneNumber ?? "—",
+                    CPR = u.cpr ?? "—",
+                    UserNo = u.user_no ?? "—",
+                    UserRole = u.user_role ?? 0,
+                    CreatedOn = u.createdon
+                })
+                .ToListAsync();
+
+            return View(users);
+        }
+
+        // GET: Manager/GetUserDetails?userId=...
+        [HttpGet]
+        public async Task<IActionResult> GetUserDetails(Guid userId)
+        {
+            var user = await _context.system_users
+                .Where(u => u.Id == userId && u.inactive != true)
+                .FirstOrDefaultAsync();
+
+            if (user == null)
+                return NotFound();
+
+            var role = (user_role?)user.user_role;
+            string? jobTitle = null;
+            List<string>? specializations = null;
+
+            // Pull role-specific extra info
+            if (role == user_role.doctor)
+            {
+                var info = await _context.doctor_informations
+                    .FirstOrDefaultAsync(d => d.system_user_ref == userId && d.inactive != true);
+                jobTitle = info?.job_title;
+
+                if (info != null)
+                {
+                    var specIds = await _context.doctor_information_specialization_mtms
+                        .Where(m => m.doctor_information_ref == info.id)
+                        .Select(m => m.doctor_specialization_ref)
+                        .ToListAsync();
+
+                    specializations = await _context.doctor_specializations
+                        .Where(s => specIds.Contains(s.id) && s.inactive != true)
+                        .Select(s => s.specialization_name ?? "")
+                        .ToListAsync();
+                }
+            }
+            else if (role == user_role.receptionist)
+            {
+                var info = await _context.receptionist_informations
+                    .FirstOrDefaultAsync(r => r.system_user_ref == userId && r.inactive != true);
+                jobTitle = info?.job_title;
+            }
+            else if (role == user_role.clinic_manager)
+            {
+                var info = await _context.clinic_manager_informations
+                    .FirstOrDefaultAsync(m => m.system_user_ref == userId && m.inactive != true);
+                jobTitle = info?.job_title;
+            }
+
+            return Json(new
+            {
+                id = user.Id,
+                fullName = $"{user.first_name} {user.last_name}".Trim(),
+                email = user.Email ?? "—",
+                phone = user.PhoneNumber ?? "—",
+                cpr = user.cpr ?? "—",
+                userNo = user.user_no ?? "—",
+                userRole = user.user_role,
+                roleLabel = role?.ToString()?.Replace("_", " ") ?? "Unknown",
+                jobTitle = jobTitle ?? "—",
+                specializations = specializations ?? new List<string>(),
+                createdOn = user.createdon.ToString("dd MMM yyyy")
+            });
+        }
     }
+
+
 }
