@@ -1,7 +1,479 @@
+@using System.Text.Json
+
 @{
     Layout = "_AppLayout";
-    ViewData["Title"] = "Reports";
+    ViewData["Title"] = "Manager Reports";
     ViewData["ActivePage"] = "Reports";
+
+    var startDate = ViewBag.StartDate as string ?? DateTime.Now.AddMonths(-1).ToString("yyyy-MM-dd");
+    var endDate = ViewBag.EndDate as string ?? DateTime.Now.ToString("yyyy-MM-dd");
+
+    var appointmentStatsJson = ViewBag.AppointmentStatistics as string ?? "{}";
+    var cancellationJson = ViewBag.CancellationAndNoShowRates as string ?? "{}";
+    var specializationJson = ViewBag.AppointmentsBySpecialization as string ?? "{}";
+    var workloadJson = ViewBag.DoctorWorkloadDistribution as string ?? "{}";
+    var leaveJson = ViewBag.DoctorLeaveSummary as string ?? "{}";
+
+    // ── Parse summary values for server-side mini-cards ──────────────
+    int totalAppointments = 0;
+    int completedAppointments = 0;
+    int cancelledAppointments = 0;
+    int noShowAppointments = 0;
+    double cancellationRate = 0;
+    double noShowRate = 0;
+    double combinedRate = 0;
+    int totalDoctors = 0;
+    int activeDoctors = 0;
+    double avgAppointmentsPerDoctor = 0;
+    int totalLeaveRecords = 0;
+    int doctorsOnLeave = 0;
+
+    try
+    {
+        var doc = JsonDocument.Parse(appointmentStatsJson);
+        var summary = doc.RootElement.GetProperty("summary");
+        totalAppointments = summary.GetProperty("total").GetInt32();
+        completedAppointments = summary.GetProperty("completed").GetInt32();
+        cancelledAppointments = summary.GetProperty("cancelled").GetInt32();
+        noShowAppointments = summary.GetProperty("noShow").GetInt32();
+    }
+    catch { }
+
+    try
+    {
+        var doc = JsonDocument.Parse(cancellationJson);
+        var overall = doc.RootElement.GetProperty("overall");
+        cancellationRate = overall.GetProperty("cancellationRate").GetDouble();
+        noShowRate = overall.GetProperty("noShowRate").GetDouble();
+        combinedRate = overall.GetProperty("combinedRate").GetDouble();
+    }
+    catch { }
+
+    try
+    {
+        var doc = JsonDocument.Parse(workloadJson);
+        var summary = doc.RootElement.GetProperty("summary");
+        totalDoctors = summary.GetProperty("totalDoctors").GetInt32();
+        activeDoctors = summary.GetProperty("activeDoctors").GetInt32();
+        avgAppointmentsPerDoctor = summary.GetProperty("avgAppointmentsPerActiveDoctor").GetDouble();
+    }
+    catch { }
+
+    try
+    {
+        var doc = JsonDocument.Parse(leaveJson);
+        var summary = doc.RootElement.GetProperty("summary");
+        totalLeaveRecords = summary.GetProperty("totalLeaveRecords").GetInt32();
+        doctorsOnLeave = summary.GetProperty("doctorsOnLeave").GetInt32();
+    }
+    catch { }
 }
 
-<h1 class="page-heading">Reports</h1>
+<h1 class="page-heading">Clinical Manager's Reporting Dashboard</h1>
+
+<!-- ── Date filter ───────────────────────────────────────────────── -->
+<form method="get" asp-controller="Manager" asp-action="Reports" class="row dashboard-filter report-section">
+    <div class="col-md-4">
+        <label>Start Date</label>
+        <input type="date" name="startDate" value="@startDate" class="form-control" />
+    </div>
+    <div class="col-md-4">
+        <label>End Date</label>
+        <input type="date" name="endDate" value="@endDate" class="form-control" />
+    </div>
+    <div class="col-md-4 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100">Load Reports</button>
+    </div>
+</form>
+
+<!-- ── PDF export ────────────────────────────────────────────────── -->
+<div class="export-row">
+    <button type="button" class="btn btn-primary" onclick="exportDashboardPdf()">
+        <i class="fa-solid fa-file-pdf"></i>
+        Export PDF
+    </button>
+</div>
+
+<div id="reportContent">
+
+    <!-- PDF title (hidden in browser, visible only inside pdf export) -->
+    <div class="pdf-report-title">
+        <h2>Clinic Manager Report</h2>
+        <p>From @startDate to @endDate</p>
+    </div>
+
+    <!-- ── Doctor Summary ──────────────────────────────────────────── -->
+    <div class="section-card report-section">
+        <h5 class="card-title mb-4">Doctor Summary</h5>
+        <div class="mini-card-row">
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon"><i class="fa-solid fa-stethoscope"></i></div>
+                    <div class="mini-card-label">Total Doctors</div>
+                </div>
+                <div class="mini-card-value">@totalDoctors</div>
+            </div>
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon"><i class="fa-solid fa-user-doctor"></i></div>
+                    <div class="mini-card-label">Active Doctors</div>
+                </div>
+                <div class="mini-card-value">@activeDoctors</div>
+            </div>
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon"><i class="fa-solid fa-plane-departure"></i></div>
+                    <div class="mini-card-label">Doctors on Leave</div>
+                </div>
+                <div class="mini-card-value">@doctorsOnLeave</div>
+            </div>
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon"><i class="fa-solid fa-file-medical"></i></div>
+                    <div class="mini-card-label">Leave Records</div>
+                </div>
+                <div class="mini-card-value">@totalLeaveRecords</div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ── Appointment Summary ────────────────────────────────────── -->
+    <div class="section-card report-section">
+        <h5 class="card-title mb-4">Appointment Summary</h5>
+
+        <div class="mini-card-row">
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon"><i class="fa-solid fa-calendar-days"></i></div>
+                    <div class="mini-card-label">Total Appointments</div>
+                </div>
+                <div class="mini-card-value">@totalAppointments</div>
+            </div>
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                    <div class="mini-card-label">Completed</div>
+                </div>
+                <div class="mini-card-value">@completedAppointments</div>
+            </div>
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon"><i class="fa-solid fa-calendar-xmark"></i></div>
+                    <div class="mini-card-label">Cancelled</div>
+                </div>
+                <div class="mini-card-value">@cancelledAppointments</div>
+            </div>
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon"><i class="fa-solid fa-user-clock"></i></div>
+                    <div class="mini-card-label">No Show</div>
+                </div>
+                <div class="mini-card-value">@noShowAppointments</div>
+            </div>
+
+        </div>
+
+        <div class="mini-card-row">
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon"><i class="fa-solid fa-percent"></i></div>
+                    <div class="mini-card-label">Cancellation Rate</div>
+                </div>
+                <div class="mini-card-value">@cancellationRate%</div>
+            </div>
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon"><i class="fa-solid fa-user-slash"></i></div>
+                    <div class="mini-card-label">No Show Rate</div>
+                </div>
+                <div class="mini-card-value">@noShowRate%</div>
+            </div>
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon"><i class="fa-solid fa-chart-simple"></i></div>
+                    <div class="mini-card-label">Combined Rate</div>
+                </div>
+                <div class="mini-card-value">@combinedRate%</div>
+            </div>
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon"><i class="fa-solid fa-chart-line"></i></div>
+                    <div class="mini-card-label">Avg. Appointments / Doctor</div>
+                </div>
+                <div class="mini-card-value">@avgAppointmentsPerDoctor</div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ── Bar Charts ─────────────────────────────────────────────── -->
+    <div class="chart-row-2">
+
+        <div class="card report-card">
+            <div class="card-header">
+                <h5 class="card-title">Appointments Per Specialization</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="specializationChart" class="chart-large"></canvas>
+            </div>
+        </div>
+
+        <div class="card report-card">
+            <div class="card-header">
+                <h5 class="card-title">Doctor Workload Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="workloadChart" class="chart-large"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ── Doughnut Charts ────────────────────────────────────────── -->
+    <div class="chart-row-2">
+
+        <div class="card report-card">
+            <div class="card-header">
+                <h5 class="card-title">Appointments Status</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="appointmentStatusChart" class="chart-large"></canvas>
+            </div>
+        </div>
+
+        <div class="card report-card">
+            <div class="card-header">
+                <h5 class="card-title">Doctor Leave Types</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="leaveChart" class="chart-large"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ── Footer ────────────────────────────────────────────────── -->
+    <div class="report-generated-footer">
+        Generated on @DateTime.Now.ToString("dd MMM yyyy, hh:mm tt")
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+        // ── Data injected from server ──────────────────────────────────
+        const appointmentStats = @Html.Raw(appointmentStatsJson);
+        const specializationStats = @Html.Raw(specializationJson);
+        const workloadStats = @Html.Raw(workloadJson);
+        const leaveStats = @Html.Raw(leaveJson);
+        const appointmentSummary = appointmentStats.summary || {};
+
+        Chart.register(ChartDataLabels);
+
+        const colors = ['#2F647F', '#4A8199', '#75A8BA', '#A9CDD9', '#DCEBF0'];
+
+        const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+        legend: {
+        labels: { color: '#52666f', usePointStyle: true, padding: 16 }
+        }
+        }
+        };
+
+        const noGridScales = {
+        x: {
+        grid: { display: false, drawBorder: false },
+        ticks: { color: '#52666f' }
+        },
+        y: {
+        beginAtZero: true,
+        grid: { display: false, drawBorder: false },
+        ticks: { color: '#52666f' }
+        }
+        };
+
+        // ── 1. Appointments per Specialization (horizontal bar) ────────
+        const specializations = specializationStats.bySpecialization || [];
+
+        new Chart(document.getElementById('specializationChart'), {
+        type: 'bar',
+        data: {
+        labels: specializations.map(x => x.specializationName),
+        datasets: [{
+        data: specializations.map(x => x.totalAppointments),
+        backgroundColor: '#A9CDD9',
+        borderRadius: 10,
+        barThickness: 24
+        }]
+        },
+        options: {
+        ...commonOptions,
+        indexAxis: 'y',
+        plugins: {
+        legend: { display: false },
+        datalabels: { display: false }
+        },
+        scales: {
+        x: {
+        beginAtZero: true,
+        grid: { display: false, drawBorder: false },
+        ticks: { color: '#52666f' }
+        },
+        y: {
+        grid: { display: false, drawBorder: false },
+        ticks: { color: '#52666f' }
+        }
+        }
+        }
+        });
+
+        // ── 2. Doctor Workload (vertical bar) ─────────────────────────
+        const doctorWorkloads = workloadStats.doctorWorkloads || [];
+
+        new Chart(document.getElementById('workloadChart'), {
+        type: 'bar',
+        data: {
+        labels: doctorWorkloads.map(x => x.doctorName),
+        datasets: [{
+        data: doctorWorkloads.map(x => x.totalAppointments),
+        backgroundColor: '#A9CDD9',
+        borderRadius: 10,
+        barThickness: 26
+        }]
+        },
+        options: {
+        ...commonOptions,
+        plugins: {
+        legend: { display: false },
+        datalabels: { display: false }
+        },
+        scales: noGridScales
+        }
+        });
+
+        // ── 3. Appointment Status (doughnut) ──────────────────────────
+        new Chart(document.getElementById('appointmentStatusChart'), {
+        type: 'doughnut',
+        data: {
+        labels: ['Completed', 'Cancelled', 'No Show'],
+        datasets: [{
+        data: [
+        appointmentSummary.completed || 0,
+        appointmentSummary.cancelled || 0,
+        appointmentSummary.noShow || 0
+        ],
+        backgroundColor: ['#2F647F', '#75A8BA', '#DCEBF0'],
+        borderColor: '#ffffff',
+        borderWidth: 3
+        }]
+        },
+        options: {
+        ...commonOptions,
+        cutout: '62%',
+        plugins: {
+        legend: {
+        position: 'bottom',
+        labels: { color: '#52666f', usePointStyle: true, padding: 18 }
+        },
+        datalabels: {
+        color: '#ffffff',
+        font: { weight: 'bold', size: 12 },
+        formatter(value, ctx) {
+        const total = ctx.chart.data.datasets[0].data.reduce((s, n) => s + n, 0);
+        return total === 0 || value === 0
+        ? ''
+        : (value / total * 100).toFixed(1) + '%';
+        }
+        }
+        }
+        }
+        });
+
+        // ── 4. Doctor Leave Types (doughnut) ──────────────────────────
+        const leaveTypeBreakdown = leaveStats.summary?.leaveTypeBreakdown || [];
+
+        new Chart(document.getElementById('leaveChart'), {
+        type: 'doughnut',
+        data: {
+        labels: leaveTypeBreakdown.map(x => x.leaveType),
+        datasets: [{
+        data: leaveTypeBreakdown.map(x => x.count),
+        backgroundColor: colors,
+        borderColor: '#ffffff',
+        borderWidth: 3
+        }]
+        },
+        options: {
+        ...commonOptions,
+        cutout: '62%',
+        plugins: {
+        legend: {
+        position: 'bottom',
+        labels: { color: '#52666f', usePointStyle: true, padding: 18 }
+        },
+        datalabels: {
+        color: '#ffffff',
+        font: { weight: 'bold', size: 12 },
+        formatter(value, ctx) {
+        const total = ctx.chart.data.datasets[0].data.reduce((s, n) => s + n, 0);
+        return total === 0 || value === 0
+        ? ''
+        : (value / total * 100).toFixed(1) + '%';
+        }
+        }
+        }
+        }
+        });
+
+        // ── PDF Export ────────────────────────────────────────────────
+        function exportDashboardPdf() {
+        const pdf = document.getElementById('reportContent');
+        const pdfCopy = pdf.cloneNode(true);
+        pdfCopy.classList.add('pdf-exporting');
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'pdf-page-wrapper';
+        wrapper.appendChild(pdfCopy);
+
+        const originalCanvases = pdf.querySelectorAll('canvas');
+        const copiedCanvases = pdfCopy.querySelectorAll('canvas');
+
+        originalCanvases.forEach((canvas, i) => {
+        const img = document.createElement('img');
+        img.src = canvas.toDataURL('image/png');
+        img.className = ['appointmentStatusChart', 'leaveChart'].includes(canvas.id)
+        ? 'chart-image pie-chart-image'
+        : 'chart-image bar-chart-image';
+        copiedCanvases[i].parentNode.replaceChild(img, copiedCanvases[i]);
+        });
+
+        html2pdf().set({
+        margin: 0.15,
+        filename: 'ClinicReport.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, scrollY: 0, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css'] }
+        }).from(wrapper).save();
+        }
+    </script>
+}

@@ -115,255 +115,353 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/9.0.6/signalr.min.js"></script>
 <script>
     const connection = new signalR.HubConnectionBuilder()
-        .withUrl("/hubs/appointmentsWatcher")
-        .withAutomaticReconnect()
-        .build();
+    .withUrl("/hubs/appointmentsWatcher")
+    .withAutomaticReconnect()
+    .build();
 
     connection.on("UpdateStatuses", (data) => {
-        document.getElementById("requested").innerText   = data.requested;
-        document.getElementById("confirmed").innerText   = data.confirmed;
-        document.getElementById("checked_in").innerText  = data.checked_in;
-        document.getElementById("in_progress").innerText = data.in_progress;
-        document.getElementById("completed").innerText   = data.completed;
-        document.getElementById("cancelled").innerText   = data.cancelled;
-        document.getElementById("no_show").innerText     = data.no_show;
+    document.getElementById("requested").innerText = data.requested;
+    document.getElementById("confirmed").innerText = data.confirmed;
+    document.getElementById("checked_in").innerText = data.checked_in;
+    document.getElementById("in_progress").innerText = data.in_progress;
+    document.getElementById("completed").innerText = data.completed;
+    document.getElementById("cancelled").innerText = data.cancelled;
+    document.getElementById("no_show").innerText = data.no_show;
     });
 
     connection.start()
-        .then(() => console.log("SignalR connected"))
-        .catch(err => console.error("SignalR error:", err));
+    .then(() => console.log("SignalR connected"))
+    .catch(err => console.error("SignalR error:", err));
 </script>
 
-<!-- ── CALENDAR + REAL-TIME GRAPH── -->
+<!-- ── CHARTS ROW ── -->
 <div class="bottom-grid">
 
+    <!-- Bar chart: Appointments by Day of Week -->
     <div class="card">
         <div class="card-header">
-            <h5 class="card-title">Appointments</h5>
+            <h5 class="card-title">Appointments by Day of Week</h5>
+            <span class="card-subtitle">Last 90 days</span>
         </div>
-        <div class="card-body">
-            <div class="cal-wrap">
-                <div class="cal-header">
-                    <button class="nav-btn" onclick="changeMonth(-1)"><i class="fa-solid fa-angle-left"></i></button>
-                    <h1 id="month-title"></h1>
-                    <button class="nav-btn" onclick="changeMonth(1)"><i class="fa-solid fa-angle-right"></i></button>
-                </div>
-                <div class="dow-row">
-                    <div class="dow-cell">Sun</div>
-                    <div class="dow-cell">Mon</div>
-                    <div class="dow-cell">Tue</div>
-                    <div class="dow-cell">Wed</div>
-                    <div class="dow-cell">Thu</div>
-                    <div class="dow-cell">Fri</div>
-                    <div class="dow-cell">Sat</div>
-                </div>
-                <div class="days-grid" id="days-grid"></div>
-                <div class="divider"></div>
-                <div class="section-title" id="events-label">Appointments</div>
-                <div class="events-list" id="events-list"></div>
-            </div>
+        <div class="card-body" style="min-height: 260px; display:flex; align-items:center; justify-content:center;">
+            <canvas id="dowChart" style="width:100%; max-height:240px;"></canvas>
         </div>
     </div>
 
+    <!-- Line chart: 30-day appointment trend -->
     <div class="card">
         <div class="card-header">
-            <h5 class="card-title">Real-Time</h5>
+            <h5 class="card-title">30-Day Appointment Trend</h5>
+            <span class="card-subtitle">Total · Completed · Cancelled</span>
         </div>
-        <div class="card-body" style="min-height:220px;">
-            <div id="world_map" style="height:100%; min-height:180px;"></div>
+        <div class="card-body" style="min-height: 260px; display:flex; align-items:center; justify-content:center;">
+            <canvas id="trendChart" style="width:100%; max-height:240px;"></canvas>
         </div>
     </div>
 
 </div>
 
-
+<!-- ── TODAY'S APPOINTMENTS TABLE ── -->
 <div class="card">
     <div class="card-header">
         <h5 class="card-title">Today's Appointments</h5>
     </div>
     <div style="overflow-x: auto;">
-        <table class="data-table">
+        <table class="data-table" id="todayTable">
             <thead>
                 <tr>
-                    <th>Doctor</th>
-                    <th class="d-none-xs">Start Date</th>
-                    <th class="d-none-xs">End Date</th>
+                    <th>Appt #</th>
+                    <th>Time</th>
+                    <th>Patient</th>
+                    <th class="d-none-xs">Doctor</th>
                     <th>Status</th>
-                    <th class="d-none-sm">Assignee</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="todayTableBody">
                 <tr>
-                    <td>Project Apollo</td>
-                    <td class="d-none-xs">01/01/2023</td>
-                    <td class="d-none-xs">31/06/2023</td>
-                    <td><span class="badge badge-success">Done</span></td>
-                    <td class="d-none-sm">Vanessa Tucker</td>
-                </tr>
-                <tr>
-                    <td>Project Fireball</td>
-                    <td class="d-none-xs">01/01/2023</td>
-                    <td class="d-none-xs">31/06/2023</td>
-                    <td><span class="badge badge-danger">Cancelled</span></td>
-                    <td class="d-none-sm">William Harris</td>
-                </tr>
-                <tr>
-                    <td>Project Hades</td>
-                    <td class="d-none-xs">01/01/2023</td>
-                    <td class="d-none-xs">31/06/2023</td>
-                    <td><span class="badge badge-success">Done</span></td>
-                    <td class="d-none-sm">Sharon Lessman</td>
-                </tr>
-                <tr>
-                    <td>Project Nitro</td>
-                    <td class="d-none-xs">01/01/2023</td>
-                    <td class="d-none-xs">31/06/2023</td>
-                    <td><span class="badge badge-warning">In progress</span></td>
-                    <td class="d-none-sm">Vanessa Tucker</td>
-                </tr>
-                <tr>
-                    <td>Project Phoenix</td>
-                    <td class="d-none-xs">01/01/2023</td>
-                    <td class="d-none-xs">31/06/2023</td>
-                    <td><span class="badge badge-success">Done</span></td>
-                    <td class="d-none-sm">William Harris</td>
-                </tr>
-                <tr>
-                    <td>Project X</td>
-                    <td class="d-none-xs">01/01/2023</td>
-                    <td class="d-none-xs">31/06/2023</td>
-                    <td><span class="badge badge-success">Done</span></td>
-                    <td class="d-none-sm">Sharon Lessman</td>
-                </tr>
-                <tr>
-                    <td>Project Romeo</td>
-                    <td class="d-none-xs">01/01/2023</td>
-                    <td class="d-none-xs">31/06/2023</td>
-                    <td><span class="badge badge-success">Done</span></td>
-                    <td class="d-none-sm">Christina Mason</td>
-                </tr>
-                <tr>
-                    <td>Project Wombat</td>
-                    <td class="d-none-xs">01/01/2023</td>
-                    <td class="d-none-xs">31/06/2023</td>
-                    <td><span class="badge badge-warning">In progress</span></td>
-                    <td class="d-none-sm">William Harris</td>
+                    <td colspan="5" style="text-align:center; color:#9ca3af; padding:24px;">
+                        Loading…
+                    </td>
                 </tr>
             </tbody>
         </table>
     </div>
 </div>
 
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+    .card-subtitle {
+    font-size: 12px;
+    color: var(--color-slate-400, #94a3b8);
+    margin-left: 8px;
+    font-weight: 400;
+    }
+
+    .status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    }
+
+    .status-requested {
+    background: #e0e7ff;
+    color: #3730a3;
+    }
+
+    .status-confirmed {
+    background: #d1fae5;
+    color: #065f46;
+    }
+
+    .status-checked_in {
+    background: #bfdbfe;
+    color: #1e40af;
+    }
+
+    .status-in_progress {
+    background: #fef3c7;
+    color: #92400e;
+    }
+
+    .status-completed {
+    background: #d1fae5;
+    color: #065f46;
+    }
+
+    .status-cancelled {
+    background: #fee2e2;
+    color: #991b1b;
+    }
+
+    .status-no_show {
+    background: #f3f4f6;
+    color: #374151;
+    }
+
+    .status-unknown {
+    background: #f3f4f6;
+    color: #6b7280;
+    }
+</style>
 
 <script>
-    // TODO: change this to fetch data or recieve them from C# handler or whatever
-    const events = [
-        { date: '2026-04-05', name: 'General Visit', time: '10:00 AM' },
-        { date: '2026-04-05', name: 'General Visit', time: '04:10 PM' },
-        { date: '2026-04-05', name: 'General Visit', time: '06:30 PM' },
-        { date: '2026-04-12', name: 'Follow-up Visit', time: '09:00 AM' },
-        { date: '2026-04-18', name: 'Lab Results Review', time: '02:30 PM' },
-        { date: '2026-04-24', name: 'Specialist Consult', time: '11:00 AM' },
-    ];
+    // ── Status label → CSS class mapping
+    const statusClassMap = {
+    "Requested": "status-requested",
+    "Confirmed": "status-confirmed",
+    "Checked In": "status-checked_in",
+    "In Progress": "status-in_progress",
+    "Completed": "status-completed",
+    "Cancelled": "status-cancelled",
+    "No Show": "status-no_show",
+    };
 
-    let current = new Date(2026, 3, 1);
-    let selectedDate = '2026-04-16';
+    // ── Chart.js shared defaults
+    Chart.defaults.font.family = "'Urbanist', 'Segoe UI', sans-serif";
+    Chart.defaults.color = "#64748b";
 
-    function formatKey(d) {
-        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    // ── 1. Appointments by Day of Week (Bar)
+    async function loadDowChart() {
+    try {
+    const res = await fetch('/Manager/GetAppointmentsByDayOfWeek');
+    if (!res.ok) return;
+    const data = await res.json();
+
+    const labels = data.map(d => d.day);
+    const counts = data.map(d => d.count);
+    const maxCount = Math.max(...counts, 1);
+
+    // Gradient fill per bar using brand color
+    const ctx = document.getElementById('dowChart').getContext('2d');
+    const grad = ctx.createLinearGradient(0, 0, 0, 240);
+    grad.addColorStop(0, 'rgba(56,120,158,0.85)');
+    grad.addColorStop(1, 'rgba(57,155,158,0.55)');
+
+    new Chart(ctx, {
+    type: 'bar',
+    data: {
+    labels,
+    datasets: [{
+    label: 'Appointments',
+    data: counts,
+    backgroundColor: grad,
+    borderRadius: 8,
+    borderSkipped: false,
+    borderWidth: 0,
+    }]
+    },
+    options: {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+    legend: { display: false },
+    tooltip: {
+    backgroundColor: '#1e293b',
+    padding: 10,
+    cornerRadius: 8,
+    callbacks: {
+    label: ctx => ` ${ctx.parsed.y} appointments`
+    }
+    }
+    },
+    scales: {
+    x: {
+    grid: { display: false },
+    border: { display: false },
+    ticks: { font: { size: 13, weight: '600' } }
+    },
+    y: {
+    grid: { color: 'rgba(0,0,0,0.05)' },
+    border: { display: false, dash: [4, 4] },
+    ticks: {
+    stepSize: Math.ceil(maxCount / 5) || 1,
+    font: { size: 12 }
+    },
+    beginAtZero: true
+    }
+    }
+    }
+    });
+    } catch (e) {
+    console.error('DOW chart error:', e);
+    }
     }
 
-    function changeMonth(dir) {
-        current = new Date(current.getFullYear(), current.getMonth() + dir, 1);
-        render();
+    // ── 2. 30-day Trend (Line)
+    async function loadTrendChart() {
+    try {
+    const res = await fetch('/Manager/GetAppointmentTrend?days=30');
+    if (!res.ok) return;
+    const data = await res.json();
+
+    // Show every 5th label to avoid crowding
+    const labels = data.map((d, i) => i % 5 === 0 ? d.date : '');
+
+    const ctx = document.getElementById('trendChart').getContext('2d');
+
+    const totalGrad = ctx.createLinearGradient(0, 0, 0, 220);
+    totalGrad.addColorStop(0, 'rgba(56,120,158,0.18)');
+    totalGrad.addColorStop(1, 'rgba(56,120,158,0)');
+
+    new Chart(ctx, {
+    type: 'line',
+    data: {
+    labels,
+    datasets: [
+    {
+    label: 'Total',
+    data: data.map(d => d.total),
+    borderColor: '#38789e',
+    backgroundColor: totalGrad,
+    borderWidth: 2.5,
+    pointRadius: 0,
+    pointHoverRadius: 5,
+    tension: 0.4,
+    fill: true,
+    },
+    {
+    label: 'Completed',
+    data: data.map(d => d.completed),
+    borderColor: '#3db670',
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    pointRadius: 0,
+    pointHoverRadius: 5,
+    tension: 0.4,
+    borderDash: [],
+    },
+    {
+    label: 'Cancelled',
+    data: data.map(d => d.cancelled),
+    borderColor: '#e54848',
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    pointRadius: 0,
+    pointHoverRadius: 5,
+    tension: 0.4,
+    borderDash: [5, 4],
+    }
+    ]
+    },
+    options: {
+    responsive: true,
+    maintainAspectRatio: true,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+    legend: {
+    position: 'bottom',
+    labels: {
+    boxWidth: 12,
+    boxHeight: 12,
+    borderRadius: 3,
+    useBorderRadius: true,
+    padding: 16,
+    font: { size: 12 }
+    }
+    },
+    tooltip: {
+    backgroundColor: '#1e293b',
+    padding: 10,
+    cornerRadius: 8,
+    }
+    },
+    scales: {
+    x: {
+    grid: { display: false },
+    border: { display: false },
+    ticks: { font: { size: 11 } }
+    },
+    y: {
+    grid: { color: 'rgba(0,0,0,0.05)' },
+    border: { display: false },
+    ticks: { font: { size: 12 } },
+    beginAtZero: true
+    }
+    }
+    }
+    });
+    } catch (e) {
+    console.error('Trend chart error:', e);
+    }
     }
 
-    function selectDay(key) {
-        selectedDate = key;
-        render();
+    // ── 3. Today's Appointments Table
+    async function loadTodaysTable() {
+    const tbody = document.getElementById('todayTableBody');
+    try {
+    const res = await fetch('/Manager/GetTodaysAppointments');
+    if (!res.ok) throw new Error(res.statusText);
+    const rows = await res.json();
+
+    if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#9ca3af; padding:24px;">No appointments today</td></tr>`;
+    return;
     }
 
-    function render() {
-        const year = current.getFullYear();
-        const month = current.getMonth();
-        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-        document.getElementById('month-title').textContent = months[month] + ' ' + year;
-
-        const grid = document.getElementById('days-grid');
-        grid.innerHTML = '';
-
-        const today = formatKey(new Date());
-        const firstDay = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const prevDays = new Date(year, month, 0).getDate();
-
-        const eventMap = {};
-        events.forEach(ev => {
-            if (!eventMap[ev.date]) eventMap[ev.date] = [];
-            eventMap[ev.date].push(ev);
-        });
-
-        for (let i = 0; i < firstDay; i++) {
-            const d = prevDays - firstDay + 1 + i;
-            const cell = document.createElement('div');
-            cell.className = 'day-cell other';
-            cell.innerHTML = `<span class="day-num">${d}</span>`;
-            grid.appendChild(cell);
-        }
-
-        for (let d = 1; d <= daysInMonth; d++) {
-            const key = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
-            const cell = document.createElement('div');
-            let cls = 'day-cell';
-            if (key === today) cls += ' today';
-            else if (key === selectedDate) cls += ' selected';
-            cell.className = cls;
-            const dots = eventMap[key] ? `<div class="dot-row">${eventMap[key].slice(0, 3).map((_, i) => `<div class="dot ${['blue', 'green', 'purple'][i % 3]}"></div>`).join('')}</div>` : '';
-            cell.innerHTML = `<span class="day-num">${d}</span>${dots}`;
-            cell.onclick = () => selectDay(key);
-            grid.appendChild(cell);
-        }
-
-        const totalCells = firstDay + daysInMonth;
-        const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
-        for (let i = 1; i <= remaining; i++) {
-            const cell = document.createElement('div');
-            cell.className = 'day-cell other';
-            cell.innerHTML = `<span class="day-num">${i}</span>`;
-            grid.appendChild(cell);
-        }
-
-        const dayEvents = events.filter(ev => ev.date === selectedDate);
-        const list = document.getElementById('events-list');
-        const label = document.getElementById('events-label');
-
-        if (selectedDate) {
-            const [y, m, dd] = selectedDate.split('-');
-            const dateObj = new Date(+y, +m - 1, +dd);
-            const opts = { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' };
-            label.textContent = dayEvents.length ? `Appointments — ${dateObj.toLocaleDateString('en-GB', opts)}` : 'No appointments';
-        }
-
-        list.innerHTML = '';
-        if (!dayEvents.length) {
-            list.innerHTML = '<div style="color: var(--color-text-tertiary); font-size: 14px; text-align:center; padding: 16px;">No appointments on this day</div>';
-            return;
-        }
-
-        dayEvents.sort((a, b) => a.time.localeCompare(b.time));
-        dayEvents.forEach((ev, idx) => {
-            const card = document.createElement('div');
-            card.className = 'event-card' + (idx === 0 ? ' highlighted' : '');
-            card.innerHTML = `
-      <div class="event-name">${ev.name}</div>
-      <div class="event-time">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date(...selectedDate.split('-').map((v, i) => i === 1 ? +v - 1 : +v)).getDay()]}, ${selectedDate.split('-')[2]} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][+selectedDate.split('-')[1] - 1]} ${selectedDate.split('-')[0]}, ${ev.time}
-      </div>
-    `;
-            list.appendChild(card);
-        });
+    tbody.innerHTML = rows.map(r => {
+    const cls = statusClassMap[r.status] ?? 'status-unknown';
+    return `
+    <tr>
+    <td><code style="font-size:12px;">${r.appointment_no ?? '—'}</code></td>
+    <td>${r.time}</td>
+    <td>${r.patient}</td>
+    <td class="d-none-xs">${r.doctor}</td>
+    <td><span class="status-badge ${cls}">${r.status}</span></td>
+    </tr>`;
+    }).join('');
+    } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#e54848; padding:24px;">Failed to load appointments</td></tr>`;
+    console.error('Today table error:', e);
+    }
     }
 
-    render();
+    // ── Init all
+    loadDowChart();
+    loadTrendChart();
+    loadTodaysTable();
 </script>
