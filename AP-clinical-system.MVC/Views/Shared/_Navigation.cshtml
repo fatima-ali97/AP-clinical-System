@@ -3,8 +3,18 @@
 @inject UserManager<system_user> UserManager
 @using AP_clinical_system.Services
 @{
-    @* TODO: ask hoor ab this! *@
+    @* Dynamically determine navigation based on user role or current controller context *@
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
     var role = "Patient";
+    
+    if (User.IsInRole("Receptionist") || currentController == "Receptionist")
+    {
+        role = "Receptionist";
+    }
+    else if (User.IsInRole("Doctor") || currentController == "Doctor")
+    {
+        role = "Doctor";
+    }
     var items = NavigationService.GetNavForRole(role);
     var activePage = ViewData["ActivePage"]?.ToString();
 }
