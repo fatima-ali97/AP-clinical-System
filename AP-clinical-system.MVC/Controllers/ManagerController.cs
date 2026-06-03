@@ -1,19 +1,24 @@
-﻿using AP_clinical_system.Models.Entities;
+using AP_clinical_system.Models.Entities;
 using AP_clinical_system.Models.Enums;
 using AP_clinical_system.Models.sql_Context;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
+using Microsoft.AspNetCore.Identity;
+using AP_clinical_system.Models;
+using System.Security.Claims;
 
 namespace AP_clinical_system.Controllers
 {
     public class ManagerController : Controller
     {
         private readonly AP_Context _context;
+        private readonly UserManager<system_user> _userManager;
 
-        public ManagerController(AP_Context context)
+        public ManagerController(AP_Context context, UserManager<system_user> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: Manager/Index
@@ -442,6 +447,10 @@ namespace AP_clinical_system.Controllers
                 })
                 .ToListAsync();
 
+            ViewBag.Specializations = await _context.doctor_specializations
+                .Where(s => s.inactive != true)
+                .ToListAsync();
+
             return View(users);
         }
 
@@ -507,6 +516,117 @@ namespace AP_clinical_system.Controllers
                 specializations = specializations ?? new List<string>(),
                 createdOn = user.createdon.ToString("dd MMM yyyy")
             });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddDoctor(string Name, string Email, string Phone, Guid Specialty, string Password)
+        {
+            var parts = Name.Split(' ');
+            var firstName = parts[0];
+            var lastName = parts.Length > 1 ? string.Join(" ", parts.Skip(1)) : "";
+
+            var userNo = await GeneralHelper.GetAutonumber(_context, "system_user");
+
+            var user = new system_user
+            {
+                UserName = Email,
+                Email = Email,
+                PhoneNumber = Phone,
+                first_name = firstName,
+                last_name = lastName,
+                createdon = DateTime.Now,
+                inactive = false,
+                user_role = (int)user_role.doctor,
+                user_no = userNo
+            };
+
+            var result = await _userManager.CreateAsync(user, Password);
+            if (result.Succeeded)
+            {
+                var docInfo = new doctor_information
+                {
+                    id = Guid.NewGuid(),
+                    inactive = false,
+                    createdon = DateTime.Now,
+                    createdby = user.Id,
+                    system_user_ref = user.Id,
+                    job_title = "Doctor"
+                };
+                _context.doctor_informations.Add(docInfo);
+                await _context.SaveChangesAsync();
+
+                var docSpec = new doctor_information_specialization_mtm
+                {
+                    id = Guid.NewGuid(),
+                    doctor_information_ref = docInfo.id,
+                    doctor_specialization_ref = Specialty
+                };
+                _context.doctor_information_specialization_mtms.Add(docSpec);
+                await _context.SaveChangesAsync();
+
+                await _userManager.AddClaimAsync(user, new Claim("FirstName", firstName));
+                await _userManager.AddClaimAsync(user, new Claim("LastName", lastName));
+                await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Role, "doctor"));
+                
+                TempData["Success"] = "Doctor added successfully.";
+            }
+            else
+            {
+                TempData["Error"] = "Failed to add doctor: " + string.Join(", ", result.Errors.Select(e => e.Description));
+            }
+
+            return RedirectToAction("Users");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddReceptionist(string Name, string Email, string Phone, string Password)
+        {
+            var parts = Name.Split(' ');
+            var firstName = parts[0];
+            var lastName = parts.Length > 1 ? string.Join(" ", parts.Skip(1)) : "";
+
+            var userNo = await GeneralHelper.GetAutonumber(_context, "system_user");
+
+            var user = new system_user
+            {
+                UserName = Email,
+                Email = Email,
+                PhoneNumber = Phone,
+                first_name = firstName,
+                last_name = lastName,
+                createdon = DateTime.Now,
+                inactive = false,
+                user_role = (int)user_role.receptionist,
+                user_no = userNo
+            };
+
+            var result = await _userManager.CreateAsync(user, Password);
+            if (result.Succeeded)
+            {
+                var recInfo = new receptionist_information
+                {
+                    id = Guid.NewGuid(),
+                    inactive = false,
+                    createdon = DateTime.Now,
+                    createdby = user.Id,
+                    system_user_ref = user.Id,
+                    job_title = "Receptionist"
+                };
+                _context.receptionist_informations.Add(recInfo);
+                await _context.SaveChangesAsync();
+
+                await _userManager.AddClaimAsync(user, new Claim("FirstName", firstName));
+                await _userManager.AddClaimAsync(user, new Claim("LastName", lastName));
+                await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Role, "receptionist"));
+                
+                TempData["Success"] = "Receptionist added successfully.";
+            }
+            else
+            {
+                TempData["Error"] = "Failed to add receptionist: " + string.Join(", ", result.Errors.Select(e => e.Description));
+            }
+
+            return RedirectToAction("Users");
         }
     }
 
