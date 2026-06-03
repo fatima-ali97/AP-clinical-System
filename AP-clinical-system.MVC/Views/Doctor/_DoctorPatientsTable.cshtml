@@ -1,0 +1,42 @@
+@using AP_clinical_system.Models.Entities
+@using AP_clinical_system.Models.Enums
+@{
+    Layout = "~/Views/Shared/_DataTable.cshtml";
+    var patients = ViewBag.Patients as List<patient_information> ?? new();
+    var patientUserMap = ViewBag.PatientUserMap as Dictionary<Guid, system_user> ?? new();
+}
+
+@section DT_Head {
+    <thead>
+        <tr>
+            <th>Patient Name</th>
+            <th>Contact</th>
+            <th>Registered Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+}
+
+@section DT_Body {
+    <tbody>
+        @foreach (var patient in patients)
+        {
+            system_user? user = null;
+            if (patient.system_user_ref.HasValue)
+                patientUserMap.TryGetValue(patient.system_user_ref.Value, out user);
+
+            var name = user != null ? $"{user.first_name} {user.last_name}" : "Unknown";
+            var contact = user != null ? user.PhoneNumber : "—";
+            var dateDisplay = patient.createdon.ToString("dd MMM yyyy");
+
+            <tr>
+                <td>@name</td>
+                <td>@contact</td>
+                <td>@dateDisplay</td>
+                <td>
+                    <a href="@Url.Action("PatientDetails", "Doctor", new { id = patient.id })" class="btn btn-sm btn-primary">View Details</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+}

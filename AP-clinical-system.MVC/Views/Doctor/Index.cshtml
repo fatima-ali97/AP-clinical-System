@@ -5,6 +5,13 @@
     ViewData["Title"] = "Doctor Dashboard";
     ViewData["ActivePage"] = "Dashboard";
 }
+
+@section Styles
+{
+    <link href="~/css/app/app.css" rel="stylesheet" />
+    <link href="~/css/components/Forms.css" rel="stylesheet" />
+    <link href="~/css/app/ProfileCard.css" rel="stylesheet" />
+}
 @functions {
     static string StatusBadge(int? status) => status switch
     {
@@ -66,16 +73,7 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header">
-            <h5 class="card-title">My Prescription</h5>
-        </div>
-        <div class="card-body" style="min-height:220px;">
-            <div id="world_map" style="height:100%; min-height:180px;"></div>
-        </div>
-    </div>
-
-    <div class="card">
+    <div class="card w-100">
         <div class="card-header">
             <h5 class="card-title">Recent Notifications</h5>
         </div>
@@ -90,52 +88,14 @@
     <div class="card-header">
         <h5 class="card-title">Your Appointments</h5>
     </div>
-    <div style="overflow-x: auto;">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Patient Name</th>
-                    <th class="d-none-xs">Date &amp; Time</th>
-                    <th>Reason</th>
-                    <th>Status</th>
-                    <th class="d-none-sm">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @{
-                    var appointments = ViewBag.Appointments as List<appointment> ?? new();
-                    var doctorMap = ViewBag.DoctorInfoToUser as Dictionary<Guid, system_user> ?? new();
-                    var patientMap = ViewBag.PatientUserMap as Dictionary<Guid, system_user> ?? new();
-                }
-                @foreach (var appt in appointments)
-                {
-                    system_user? patientUser = null;
-                    if (appt.patient_ref.HasValue)
-                        patientMap.TryGetValue(appt.patient_ref.Value, out patientUser);
-
-                    var patientName = patientUser != null
-                    ? $"{patientUser.first_name} {patientUser.last_name}".Trim()
-                    : "—";
-                    var dateDisplay = appt.date?.ToString("dd MMM yyyy") ?? "—";
-
-                    <tr>
-                        <td>@patientName</td>
-                        <td class="d-none-xs">@dateDisplay</td>
-                        <td>@SlotToTime(appt.appointment_time_slot)</td>
-                        <td>
-                            <span class="badge @StatusBadge(appt.appointment_status)">@StatusLabel(appt.appointment_status)</span>
-                        </td>
-                        <td class="d-none-sm text-center">
-                            <button type="button" class="btn btn-sm btn-outline-primary view-appt-btn" data-appt-id="@appt.id">
-                                <i class="bi bi-eye"></i> View
-                            </button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+    <div class="card-body p-0">
+        @await Html.PartialAsync("_DoctorIndexAppointments", null, new ViewDataDictionary(ViewData) { { "DT_TableId", "indexApptTable" }, { "DT_Title", "" } })
     </div>
 </div>
+
+@await Html.PartialAsync("_ChangeAppointmentStatusModal")
+@await Html.PartialAsync("_AddVisitRecordModal")
+@await Html.PartialAsync("_AddPrescriptionModal")
 
 <script>
     const events = [

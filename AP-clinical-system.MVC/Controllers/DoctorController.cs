@@ -4,7 +4,10 @@ using AP_clinical_system.Models.Enums;
 using AP_clinical_system.Models.sql_Context;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using AP_clinical_system.Hubs;
 using Microsoft.EntityFrameworkCore;
+
 using static AP_clinical_system.Models.GeneralHelper;
 
 namespace AP_clinical_system.Controllers
@@ -12,6 +15,9 @@ namespace AP_clinical_system.Controllers
     public class DoctorController : Controller
     {
         private readonly AP_Context _context;
+
+
+
         private readonly UserManager<system_user> _userManager;
 
         public DoctorController(AP_Context context, UserManager<system_user> userManager)
@@ -67,67 +73,27 @@ namespace AP_clinical_system.Controllers
             return map;
         }
 
-        // GET: /Doctor/Schedule  (patient's upcoming / confirmed appointments)
+        // GET: /Doctor/Schedule
         public async Task<IActionResult> Schedule()
         {
             var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return NotFound();
 
-            var patientInfo = _context.patient_informations
-                .FirstOrDefault(p => p.system_user_ref == currentUser!.Id && p.inactive != true);
+            var doctorInfo = await _context.doctor_informations
+                .FirstOrDefaultAsync(d => d.system_user_ref == currentUser.Id && d.inactive != true);
 
-            if (patientInfo == null)
-                return NotFound();
+            doctor_schedule docSchedule = null;
+            if (doctorInfo != null)
+            {
+                docSchedule = await _context.doctor_schedules
+                    .FirstOrDefaultAsync(ds => ds.doctor_information_ref == doctorInfo.id && ds.inactive != true);
+            }
 
-            var appointments = await _context.appointments
-                .Where(a => a.patient_ref == patientInfo.id &&
-                            a.inactive != true &&
-                            (a.appointment_status == 1004 || a.appointment_status == 1005))
-                .OrderByDescending(a => a.date)
-                .ToListAsync();
-
-            var appointmentDoctorRefs = appointments
-                .Where(a => a.doctor_ref.HasValue)
-                .Select(a => a.doctor_ref!.Value)
-                .Distinct();
-
-            var doctorMap = await BuildUnifiedDoctorMapAsync(_context, appointmentDoctorRefs);
-
-            var prescriptions = await _context.prescriptions
-                .Where(p => p.patient_ref == patientInfo.id && p.inactive != true)
-                .OrderByDescending(p => p.createdon)
-                .ToListAsync();
-
-            var prescriptionDoctorRefs = prescriptions
-                .Where(p => p.doctor_ref.HasValue)
-                .Select(p => p.doctor_ref!.Value)
-                .Distinct()
-                .Where(r => !doctorMap.ContainsKey(r));
-
-            var extraMap = await BuildUnifiedDoctorMapAsync(_context, prescriptionDoctorRefs);
-            foreach (var kvp in extraMap)
-                doctorMap.TryAdd(kvp.Key, kvp.Value);
-
-            var specializations = await _context.doctor_specializations
-                .Where(s => s.inactive != true)
-                .Select(s => new { Id = s.id, Name = s.specialization_name })
-                .ToListAsync();
-
-            ViewBag.PatientInfo = patientInfo;
-            ViewBag.PatientId = patientInfo.id;
-            ViewBag.Appointments = appointments;
-            ViewBag.Specializations = specializations;
-            ViewBag.DoctorInfoToUser = doctorMap;
-
-            return View(currentUser);
-        }
-
-        public ActionResult Prescriptions()
-        {
+            ViewBag.DoctorSchedule = docSchedule;
             return View();
         }
 
-        // GET: /Doctor/MyAppointments
-        public async Task<IActionResult> MyAppointments()
+        public async Task<IActionResult> Prescriptions()
         {
             var currentUser = await _userManager.GetUserAsync(User);
             if (currentUser == null) return NotFound();
@@ -136,10 +102,46 @@ namespace AP_clinical_system.Controllers
                 .FirstOrDefaultAsync(d => d.system_user_ref == currentUser.Id && d.inactive != true);
             if (doctorInfo == null) return NotFound();
 
-            var appointments = await _context.appointments
-                .Where(a => a.doctor_ref == doctorInfo.id &&
-                            a.inactive != true &&
-                            (a.appointment_status == 1004 || a.appointment_status == 1005))
+            var prescriptions = await _context.prescriptions
+                .Where(p => p.doctor_ref == doctorInfo.id && p.inactive != true)
+                .OrderByDescending(p => p.createdon)
+                .ToListAsync();
+
+            ViewBag.Prescriptions = prescriptions;
+            return View();
+        }
+
+        // GET: /Doctor/MyAppointments
+        public async Task<IActionResult> MyAppointments(string filter = null)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return NotFound();
+
+            var doctorInfo = await _context.doctor_informations
+                .FirstOrDefaultAsync(d => d.system_user_ref == currentUser.Id && d.inactive != true);
+            if (doctorInfo == null) return NotFound();
+
+            // Base query for appointments belonging to this doctor
+            var appointmentsQuery = _context.appointments
+                .Where(a => a.doctor_ref == doctorInfo.id && a.inactive != true);
+
+            // Apply filter based on the requested tab
+            var filterLower = (filter ?? "all").ToLowerInvariant();
+            if (filterLower == "upcoming")
+            {
+                // Upcoming: not completed, cancelled, nor no-show
+                appointmentsQuery = appointmentsQuery.Where(a =>
+                    a.appointment_status != (int)appointment_status.completed &&
+                    a.appointment_status != (int)appointment_status.cancelled &&
+                    a.appointment_status != (int)appointment_status.no_show);
+            }
+            else if (filterLower == "completed")
+            {
+                appointmentsQuery = appointmentsQuery.Where(a => a.appointment_status == (int)appointment_status.completed);
+            }
+            // else "all" – no additional filtering
+
+            var appointments = await appointmentsQuery
                 .OrderByDescending(a => a.date)
                 .ToListAsync();
 
@@ -181,6 +183,7 @@ namespace AP_clinical_system.Controllers
             ViewBag.DoctorInfoToUser = await BuildUnifiedDoctorMapAsync(
                 _context,
                 appointments.Where(a => a.doctor_ref.HasValue).Select(a => a.doctor_ref!.Value).Distinct());
+            ViewBag.Filter = filterLower; // expose current filter to view
 
             return View();
         }
@@ -191,8 +194,19 @@ namespace AP_clinical_system.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             if (currentUser == null) return NotFound();
 
+            var doctorInfo = await _context.doctor_informations
+                .FirstOrDefaultAsync(d => d.system_user_ref == currentUser.Id && d.inactive != true);
+            if (doctorInfo == null) return NotFound();
+
+            // Get patients that have an appointment with this doctor
+            var patientIds = await _context.appointments
+                .Where(a => a.doctor_ref == doctorInfo.id && a.inactive != true && a.patient_ref.HasValue)
+                .Select(a => a.patient_ref!.Value)
+                .Distinct()
+                .ToListAsync();
+
             var patients = await _context.patient_informations
-                .Where(p => p.inactive != true)
+                .Where(p => patientIds.Contains(p.id) && p.inactive != true)
                 .ToListAsync();
 
             // Build patient_information.system_user_ref → system_user map for name display
@@ -222,7 +236,7 @@ namespace AP_clinical_system.Controllers
                 .FirstOrDefaultAsync(p => p.id == id && p.inactive != true);
             if (patientInfo == null) return NotFound();
 
-            var patientSystemUser = patientInfo.system_user_ref.HasValue 
+            var patientSystemUser = patientInfo.system_user_ref.HasValue
                 ? await _userManager.FindByIdAsync(patientInfo.system_user_ref.Value.ToString())
                 : null;
 
@@ -239,14 +253,16 @@ namespace AP_clinical_system.Controllers
             // Setup mapping for appointments table
             var doctorRefs = appointments.Where(a => a.doctor_ref.HasValue).Select(a => a.doctor_ref!.Value).Distinct();
             var doctorUserMap = await BuildUnifiedDoctorMapAsync(_context, doctorRefs);
-            
+
             var patientUserMap = new Dictionary<Guid, system_user>();
-            if (patientSystemUser != null) {
+            if (patientSystemUser != null)
+            {
                 patientUserMap[patientInfo.id] = patientSystemUser;
             }
 
             var doctorToUserMapping = new Dictionary<Guid, Guid>();
-            foreach(var kvp in doctorUserMap) {
+            foreach (var kvp in doctorUserMap)
+            {
                 doctorToUserMapping[kvp.Key] = kvp.Value.Id;
             }
 
@@ -255,7 +271,8 @@ namespace AP_clinical_system.Controllers
                 .FirstOrDefaultAsync(d => d.system_user_ref == currentUser.Id && d.inactive != true);
 
             doctor_schedule docSchedule = null;
-            if (doctorInfo != null) {
+            if (doctorInfo != null)
+            {
                 docSchedule = await _context.doctor_schedules
                     .FirstOrDefaultAsync(ds => ds.doctor_information_ref == doctorInfo.id && ds.inactive != true);
             }
@@ -271,5 +288,294 @@ namespace AP_clinical_system.Controllers
 
             return View();
         }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileViewModel model)
+        {
+            if (string.IsNullOrWhiteSpace(model.FirstName) || string.IsNullOrWhiteSpace(model.LastName))
+                return Json(new { success = false, error = "First and last name are required." });
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+                return Json(new { success = false, error = "User not found." });
+
+            currentUser.first_name = model.FirstName.Trim();
+            currentUser.last_name = model.LastName.Trim();
+            currentUser.PhoneNumber = model.Phone?.Trim();
+            currentUser.modifiedon = DateTime.UtcNow;
+
+            var result = await _userManager.UpdateAsync(currentUser);
+
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(" ", result.Errors.Select(e => e.Description));
+                return Json(new { success = false, error = errors });
+            }
+
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateSchedule(doctor_schedule model)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return NotFound();
+
+            var doctorInfo = await _context.doctor_informations
+                .FirstOrDefaultAsync(d => d.system_user_ref == currentUser.Id && d.inactive != true);
+            if (doctorInfo == null) return NotFound();
+
+            var existingSchedule = await _context.doctor_schedules
+                .FirstOrDefaultAsync(ds => ds.doctor_information_ref == doctorInfo.id && ds.inactive != true);
+
+            if (existingSchedule != null)
+            {
+                existingSchedule.monday_start = model.monday_start;
+                existingSchedule.monday_end = model.monday_end;
+                existingSchedule.tuesday_start = model.tuesday_start;
+                existingSchedule.tuesday_end = model.tuesday_end;
+                existingSchedule.wednesday_start = model.wednesday_start;
+                existingSchedule.wednesday_end = model.wednesday_end;
+                existingSchedule.thursday_start = model.thursday_start;
+                existingSchedule.thursday_end = model.thursday_end;
+                existingSchedule.friday_start = model.friday_start;
+                existingSchedule.friday_end = model.friday_end;
+                existingSchedule.saturday_start = model.saturday_start;
+                existingSchedule.saturday_end = model.saturday_end;
+                existingSchedule.sunday_start = model.sunday_start;
+                existingSchedule.sunday_end = model.sunday_end;
+                existingSchedule.modifiedon = DateTime.UtcNow;
+                existingSchedule.modifiedby = currentUser.Id;
+            }
+            else
+            {
+                model.id = Guid.NewGuid();
+                model.doctor_information_ref = doctorInfo.id;
+                model.createdon = DateTime.UtcNow;
+                model.createdby = currentUser.Id;
+                _context.doctor_schedules.Add(model);
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Schedule");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetAppointmentInfo(Guid apptID)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var doctorInfo = await _context.doctor_informations
+                .FirstOrDefaultAsync(d => d.system_user_ref == currentUser!.Id && d.inactive != true);
+
+            if (doctorInfo == null) return NotFound();
+
+            var appt = await _context.appointments
+                .FirstOrDefaultAsync(a => a.id == apptID
+                                       && a.inactive != true
+                                       && a.doctor_ref == doctorInfo.id);
+
+            if (appt == null) return NotFound();
+
+            system_user? patientUser = null;
+
+            if (appt.patient_ref.HasValue)
+            {
+                var patientInfo = await _context.patient_informations
+                    .FirstOrDefaultAsync(p => p.id == appt.patient_ref && p.inactive != true);
+
+                if (patientInfo?.system_user_ref.HasValue == true)
+                {
+                    patientUser = await _context.Users
+                        .FirstOrDefaultAsync(u => u.Id == patientInfo.system_user_ref);
+                }
+            }
+
+            var specialization = appt.specialization_ref.HasValue
+                ? await _context.doctor_specializations
+                    .FirstOrDefaultAsync(s => s.id == appt.specialization_ref)
+                : null;
+
+            var patientName = patientUser != null
+                ? $"{Models.GeneralHelper.GetUserFullNameByID(_context, patientUser.Id)}"
+                : "—";
+
+            return Json(new
+            {
+                appointment_no = appt.appointment_no,
+                date = appt.date?.ToString("dd MMM yyyy"),
+                time_slot = appt.appointment_time_slot,
+                status = appt.appointment_status,
+                reason = appt.appointment_reason,
+                patient_name = patientName,
+                specialization = specialization?.specialization_name ?? "—"
+            });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateAppointmentStatus(Guid apptId, int status)
+        {
+            var appt = await _context.appointments.FindAsync(apptId);
+            if (appt == null) return Json(new { success = false, message = "Appointment not found." });
+
+            appt.appointment_status = status;
+            appt.modifiedon = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddVisitRecord(visit_record model)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return Json(new { success = false, message = "Unauthorized" });
+
+            model.id = Guid.NewGuid();
+            model.createdon = DateTime.UtcNow;
+            model.createdby = currentUser.Id;
+            model.inactive = false;
+
+            _context.visit_records.Add(model);
+
+            // Also mark appointment as completed if it was in progress
+            var appt = await _context.appointments.FindAsync(model.appointment_ref);
+            if (appt != null)
+            {
+                appt.appointment_status = (int)appointment_status.completed;
+                appt.modifiedon = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true });
+        }
+
+        // GET: /Doctor/PrescriptionDetails/{id}
+        [HttpGet]
+        public async Task<IActionResult> PrescriptionDetails(Guid id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return NotFound();
+
+            var doctorInfo = await _context.doctor_informations
+                .FirstOrDefaultAsync(d => d.system_user_ref == currentUser.Id && d.inactive != true);
+            if (doctorInfo == null) return NotFound();
+
+            var prescription = await _context.prescriptions
+                .FirstOrDefaultAsync(p => p.id == id && p.inactive != true && p.doctor_ref == doctorInfo.id);
+            if (prescription == null) return NotFound();
+
+            return PartialView("_PrescriptionDetails", prescription);
+        }
+
+        // POST: /Doctor/AddPrescription
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddPrescription(prescription model)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return Json(new { success = false, message = "Unauthorized" });
+
+            var doctorInfo = await _context.doctor_informations
+                .FirstOrDefaultAsync(d => d.system_user_ref == currentUser.Id && d.inactive != true);
+
+            model.id = Guid.NewGuid();
+            model.createdon = DateTime.UtcNow;
+            model.createdby = currentUser.Id;
+            model.doctor_ref = doctorInfo?.id;
+            model.inactive = false;
+
+            _context.prescriptions.Add(model);
+            await _context.SaveChangesAsync();
+            return Json(new { success = true });
+        }
+        private async Task<IActionResult> UpdateStatus(Guid id, appointment_status status)
+        {
+            try
+            {
+                var appt = await _context.appointments.FindAsync(id);
+                if (appt == null || appt.inactive == true)
+                    return Json(new { success = false, error = "Appointment not found or inactive." });
+
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null)
+                    return Json(new { success = false, error = "Unauthorized." });
+
+                // verify user is a doctor
+                if (!GeneralHelper.VerifyUserType(_context, user.Id, (int)user_role.doctor))
+                    return Json(new { success = false, error = "User is not a doctor." });
+
+                // verify doctor owns the appointment
+                var doctorInfo = await _context.doctor_informations
+                    .FirstOrDefaultAsync(d => d.system_user_ref == user.Id && d.inactive != true);
+
+                if (doctorInfo == null || appt.doctor_ref != doctorInfo.id)
+                    return Json(new { success = false, error = "Not authorized to modify this appointment." });
+
+                appt.appointment_status = (int)status;
+                appt.modifiedon = DateTime.UtcNow;
+                appt.modifiedby = user.Id;
+
+                await _context.SaveChangesAsync();
+                var watcher = new AppointmentsWatcher(_context);
+                var counts = watcher.CalculateCounts();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, error = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ConfirmAppointment(Guid appointment_id)
+            => await UpdateStatus(appointment_id, appointment_status.confirmed);
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelAppointment(Guid appointment_id)
+            => await UpdateStatus(appointment_id, appointment_status.cancelled);
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RescheduleAppointment(Guid appointment_id, AP_clinical_system.ViewModels.BookAppointmentViewModel model)
+        {
+            var appt = await _context.appointments.FindAsync(appointment_id);
+            if (appt == null) return NotFound("Appointment not found");
+
+            var doctor = await _userManager.GetUserAsync(User);
+            if (doctor == null) return Unauthorized();
+
+            if (!GeneralHelper.VerifyUserType(_context, doctor.Id, (int)user_role.doctor))
+                return Json(new { success = false, error = "User is not a doctor." });
+
+            var doctorInfo = await _context.doctor_informations
+                .FirstOrDefaultAsync(d => d.system_user_ref == doctor.Id && d.inactive != true);
+
+            if (doctorInfo == null || appt.doctor_ref != doctorInfo.id)
+                return Json(new { success = false, error = "Not authorized to reschedule this appointment." });
+
+            DateOnly? targetDate = model.date.HasValue ? DateOnly.FromDateTime(model.date.Value) : null;
+
+            appt.date = targetDate;
+            appt.appointment_time_slot = model.appointment_time_slot;
+            appt.modifiedon = DateTime.UtcNow;
+            appt.modifiedby = doctor.Id;
+
+            await _context.SaveChangesAsync();
+    
+
+            TempData["Success"] = $"Appointment {appt.appointment_no} rescheduled successfully!";
+
+            var referer = Request.Headers["Referer"].ToString();
+            if (!string.IsNullOrEmpty(referer))
+                return Redirect(referer);
+
+            return RedirectToAction(nameof(MyAppointments));
+        }
+
     }
 }

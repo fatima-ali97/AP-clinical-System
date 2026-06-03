@@ -2,6 +2,64 @@
     Layout = "_AppLayout";
     ViewData["Title"] = "My Schedule";
     ViewData["ActivePage"] = "My Schedule";
+    var schedule = ViewBag.DoctorSchedule as AP_clinical_system.Models.Entities.doctor_schedule ?? new AP_clinical_system.Models.Entities.doctor_schedule();
 }
 
 <h1 class="page-heading">My Schedule</h1>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title">Update Your Schedule</h5>
+    </div>
+    <div class="card-body">
+        <form asp-controller="Doctor" asp-action="UpdateSchedule" method="post">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Day</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Sunday</td>
+                        <td><input type="time" class="form-control" name="sunday_start" value="@schedule.sunday_start" /></td>
+                        <td><input type="time" class="form-control" name="sunday_end" value="@schedule.sunday_end" /></td>
+                    </tr>
+                    <tr>
+                        <td>Monday</td>
+                        <td><input type="time" class="form-control" name="monday_start" value="@schedule.monday_start" /></td>
+                        <td><input type="time" class="form-control" name="monday_end" value="@schedule.monday_end" /></td>
+                    </tr>
+                    <tr>
+                        <td>Tuesday</td>
+                        <td><input type="time" class="form-control" name="tuesday_start" value="@schedule.tuesday_start" /></td>
+                        <td><input type="time" class="form-control" name="tuesday_end" value="@schedule.tuesday_end" /></td>
+                    </tr>
+                    <tr>
+                        <td>Wednesday</td>
+                        <td><input type="time" class="form-control" name="wednesday_start" value="@schedule.wednesday_start" /></td>
+                        <td><input type="time" class="form-control" name="wednesday_end" value="@schedule.wednesday_end" /></td>
+                    </tr>
+                    <tr>
+                        <td>Thursday</td>
+                        <td><input type="time" class="form-control" name="thursday_start" value="@schedule.thursday_start" /></td>
+                        <td><input type="time" class="form-control" name="thursday_end" value="@schedule.thursday_end" /></td>
+                    </tr>
+                    <tr>
+                        <td>Friday</td>
+                        <td><input type="time" class="form-control" name="friday_start" value="@schedule.friday_start" /></td>
+                        <td><input type="time" class="form-control" name="friday_end" value="@schedule.friday_end" /></td>
+                    </tr>
+                    <tr>
+                        <td>Saturday</td>
+                        <td><input type="time" class="form-control" name="saturday_start" value="@schedule.saturday_start" /></td>
+                        <td><input type="time" class="form-control" name="saturday_end" value="@schedule.saturday_end" /></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button type="submit" class="btn btn-primary mt-3">Save Schedule</button>
+        </form>
+    </div>
+</div>

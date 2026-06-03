@@ -1,0 +1,95 @@
+@using AP_clinical_system.Models.Entities
+@using AP_clinical_system.Models.Enums
+@{
+    Layout = "~/Views/Shared/_DataTable.cshtml";
+    var appointments = ViewBag.Appointments as List<appointment> ?? new();
+    var doctorMap = ViewBag.DoctorInfoToUser as Dictionary<Guid, system_user> ?? new();
+    var patientMap = ViewBag.PatientUserMap as Dictionary<Guid, system_user> ?? new();
+}
+
+@functions {
+    string StatusBadge(int? status) => status switch
+    {
+        (int)appointment_status.completed => "badge-success",
+        (int)appointment_status.cancelled => "badge-danger",
+        (int)appointment_status.no_show => "badge-danger",
+        (int)appointment_status.in_progress => "badge-warning",
+        (int)appointment_status.confirmed => "badge-info",
+        (int)appointment_status.checked_in => "badge-info",
+        _ => "badge-secondary"
+    };
+
+    string StatusLabel(int? status) => status switch
+    {
+        (int)appointment_status.completed => "Completed",
+        (int)appointment_status.cancelled => "Cancelled",
+        (int)appointment_status.no_show => "No Show",
+        (int)appointment_status.in_progress => "In Progress",
+        (int)appointment_status.confirmed => "Confirmed",
+        (int)appointment_status.checked_in => "Checked In",
+        (int)appointment_status.requested => "Requested",
+        _ => "Unknown"
+    };
+
+    string SlotToTime(int? slot)
+    {
+        if (slot == null) return "TBD";
+        int minutes = (slot.Value - 1000) * 30;
+        if (minutes < 0) return $"Invalid ({slot})";
+        int hour = 8 + (minutes / 60);
+        int min = minutes % 60;
+        if (hour >= 24) return $"Invalid ({slot})";
+        return new DateTime(2000, 1, 1, hour, min, 0).ToString("hh:mm tt");
+    }
+}
+
+@section DT_Head {
+    <thead>
+        <tr>
+            <th>Patient Name</th>
+            <th>Date &amp; Time</th>
+            <th>Reason</th>
+            <th>Status</th>
+            <th class="d-none-sm">Actions</th>
+        </tr>
+    </thead>
+}
+
+@section DT_Body {
+    <tbody>
+        @foreach (var appt in appointments)
+        {
+            system_user? patientUser = null;
+            if (appt.patient_ref.HasValue)
+                patientMap.TryGetValue(appt.patient_ref.Value, out patientUser);
+
+            var patientName = patientUser != null
+            ? $"{patientUser.first_name} {patientUser.last_name}".Trim()
+            : "—";
+            var dateDisplay = appt.date?.ToString("dd MMM yyyy") ?? "—";
+
+            <tr>
+                <td><a href="@Url.Action("PatientDetails", "Doctor", new { id = appt.patient_ref })" class="text-decoration-none">@patientName</a></td>
+                <td>@dateDisplay @SlotToTime(appt.appointment_time_slot)</td>
+                <td>@appt.appointment_reason</td>
+                <td>
+                    <span class="badge @StatusBadge(appt.appointment_status)">@StatusLabel(appt.appointment_status)</span>
+                </td>
+                <td class="d-none-sm text-center">
+                    <button type="button" class="btn btn-sm btn-outline-primary view-appt-btn" data-appt-id="@appt.id">
+                        <i class="bi bi-eye"></i> View
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#changeStatusModal" data-appt-id="@appt.id">
+                        Status
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#addVisitRecordModal" data-appt-id="@appt.id">
+                        Record
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#addPrescriptionModal" data-appt-id="@appt.id" data-patient-id="@appt.patient_ref">
+                        Prescribe
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+}

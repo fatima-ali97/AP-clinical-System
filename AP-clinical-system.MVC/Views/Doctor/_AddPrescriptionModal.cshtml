@@ -1,0 +1,71 @@
+@model AP_clinical_system.Models.Entities.prescription
+
+<div class="appt-backdrop" id="addPrescriptionModalBackdrop">
+    <div class="appt-modal" id="addPrescriptionModal" role="dialog" aria-modal="true" aria-labelledby="addPrescriptionModalLabel">
+        <div class="appt-modal-header" style="background-color: var(--color-slate-100, #f1f5f9); color: var(--color-slate-800, #1e293b); border-bottom: 1px solid var(--color-slate-200, #e2e8f0);">
+            <h5 id="addPrescriptionModalLabel">Add Prescription</h5>
+            <button type="button" class="appt-close-btn" id="addPrescriptionCloseBtn" style="color: var(--color-slate-800, #1e293b);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+        </div>
+        <div class="appt-modal-body py-4 px-3">
+            <form asp-action="AddPrescription" asp-controller="Doctor" method="post">
+                <input type="hidden" id="prescApptId" name="appointment_ref" />
+                <input type="hidden" id="prescPatientId" name="patient_ref" />
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Medicine Name</label>
+                    <input type="text" class="form-control" name="medicine_name" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Dosage</label>
+                    <input type="text" class="form-control" name="medicine_dosage" required />
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Frequency / Duration</label>
+                    <input type="text" class="form-control" name="medicine_frequency_duration" required />
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-outline-secondary fw-bold" id="addPrescriptionCancelBtn">Close</button>
+                    <button type="submit" class="btn btn-primary fw-bold">Add Prescription</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const backdrop = document.getElementById('addPrescriptionModalBackdrop');
+        const closeBtn = document.getElementById('addPrescriptionCloseBtn');
+        const cancelBtn = document.getElementById('addPrescriptionCancelBtn');
+
+        function openModal(apptId, patientId) {
+            document.getElementById('prescApptId').value = apptId;
+            document.getElementById('prescPatientId').value = patientId;
+            backdrop.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            backdrop.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+        if (backdrop) backdrop.addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('[data-bs-target="#addPrescriptionModal"]');
+            if (btn) {
+                e.preventDefault();
+                openModal(btn.getAttribute('data-appt-id'), btn.getAttribute('data-patient-id'));
+            }
+        });
+    });
+</script>

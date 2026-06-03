@@ -4,5 +4,6 @@
     ViewData["ActivePage"] = "Prescriptions";
 }
 
+<h1 class="page-heading">Prescriptions</h1>
 
-<h1>Prescriptions</h1>
+@await Html.PartialAsync("_DoctorPrescriptionsTable", null, new ViewDataDictionary(ViewData) { { "DT_TableId", "prescTable" }, { "DT_Title", "Prescriptions" } })

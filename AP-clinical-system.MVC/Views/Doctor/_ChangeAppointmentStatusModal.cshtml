@@ -1,0 +1,88 @@
+<div class="appt-backdrop" id="changeStatusModalBackdrop">
+    <div class="appt-modal" id="changeStatusModal" role="dialog" aria-modal="true" aria-labelledby="changeStatusModalLabel">
+        <div class="appt-modal-header" style="background-color: var(--color-slate-100, #f1f5f9); color: var(--color-slate-800, #1e293b); border-bottom: 1px solid var(--color-slate-200, #e2e8f0);">
+            <h5 id="changeStatusModalLabel">Change Appointment Status</h5>
+            <button type="button" class="appt-close-btn" id="changeStatusCloseBtn" style="color: var(--color-slate-800, #1e293b);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+        </div>
+        <div class="appt-modal-body py-4 px-3">
+            <form id="changeStatusForm">
+                <input type="hidden" id="statusApptId" name="apptId" />
+                <div class="mb-4">
+                    <label class="form-label fw-bold">New Status</label>
+                    <select class="form-select" id="newStatus" name="status">
+                        <option value="1003">In Progress</option>
+                        <option value="1004">Completed</option>
+                        <option value="1005">No Show</option>
+                    </select>
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-outline-secondary fw-bold" id="changeStatusCancelBtn">Close</button>
+                    <button type="button" class="btn btn-primary fw-bold" id="saveStatusBtn">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const backdrop = document.getElementById('changeStatusModalBackdrop');
+        const closeBtn = document.getElementById('changeStatusCloseBtn');
+        const cancelBtn = document.getElementById('changeStatusCancelBtn');
+        const saveBtn = document.getElementById('saveStatusBtn');
+
+        function openModal(apptId) {
+            document.getElementById('statusApptId').value = apptId;
+            backdrop.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            backdrop.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+        if (backdrop) backdrop.addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('[data-bs-target="#changeStatusModal"]');
+            if (btn) {
+                e.preventDefault();
+                openModal(btn.getAttribute('data-appt-id'));
+            }
+        });
+
+        if (saveBtn) {
+            saveBtn.addEventListener('click', function () {
+                const form = document.getElementById('changeStatusForm');
+                const formData = new FormData(form);
+                
+                fetch('/Doctor/UpdateAppointmentStatus', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error updating status');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error updating status');
+                });
+            });
+        }
+    });
+</script>

@@ -74,43 +74,9 @@
                 <h5 class="card-title">Patient Profile</h5>
             </div>
             <div class="card-body">
-                @await Html.PartialAsync("_ProfileCard")
+                @await Html.PartialAsync("_ProfileCard", null, new ViewDataDictionary(ViewData) { { "HideEditProfile", true } })
             </div>
         </div>
-
-        @if (doctorSchedule != null)
-        {
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="card-title">My Schedule</h5>
-            </div>
-            <div class="card-body">
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Sunday <span>@(doctorSchedule.sunday_start ?? "Off") - @(doctorSchedule.sunday_end ?? "Off")</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Monday <span>@(doctorSchedule.monday_start ?? "Off") - @(doctorSchedule.monday_end ?? "Off")</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Tuesday <span>@(doctorSchedule.tuesday_start ?? "Off") - @(doctorSchedule.tuesday_end ?? "Off")</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Wednesday <span>@(doctorSchedule.wednesday_start ?? "Off") - @(doctorSchedule.wednesday_end ?? "Off")</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Thursday <span>@(doctorSchedule.thursday_start ?? "Off") - @(doctorSchedule.thursday_end ?? "Off")</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Friday <span>@(doctorSchedule.friday_start ?? "Off") - @(doctorSchedule.friday_end ?? "Off")</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Saturday <span>@(doctorSchedule.saturday_start ?? "Off") - @(doctorSchedule.saturday_end ?? "Off")</span>
-                    </li>
-                </ul>
-            </div>
-        </div>
-        }
     </div>
 
     <div class="col-md-8">
@@ -148,74 +114,14 @@
             <div class="card-body p-0">
                 <div class="appt-card">
                     <div style="overflow-x: auto;">
-                        <table class="data-table table table-hover align-middle mb-0 ap-datatable Custom-dataTable" style="width:100%">
-                            <thead>
-                                <tr>
-                                    <th>Appt No</th>
-                                    <th>Patient Identification</th>
-                                    <th>Assigned Doctor</th>
-                                    <th>Schedule Window</th>
-                                    <th>Current Status</th>
-                                    <th style="text-align: right; padding-right: 24px;">Management Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var appt in appointments)
-                                {
-                                    var pName = appt.patient_ref.HasValue && patientUserMap.ContainsKey(appt.patient_ref.Value)
-                                    ? $"{patientUserMap[appt.patient_ref.Value].first_name} {patientUserMap[appt.patient_ref.Value].last_name}"
-                                    : "Unknown Patient";
-
-                                    var dName = appt.doctor_ref.HasValue && doctorUserMap.ContainsKey(appt.doctor_ref.Value)
-                                    ? $"Dr. {doctorUserMap[appt.doctor_ref.Value].first_name} {doctorUserMap[appt.doctor_ref.Value].last_name}"
-                                    : "Unknown Doctor";
-
-                                    var docGuidString = appt.doctor_ref.HasValue && doctorToUserMapping.ContainsKey(appt.doctor_ref.Value)
-                                    ? doctorToUserMapping[appt.doctor_ref.Value].ToString()
-                                    : "";
-
-                                    <tr>
-                                        <td><strong>@appt.appointment_no</strong></td>
-                                        <td>@pName</td>
-                                        <td>@dName</td>
-                                        <td>
-                                            <div style="font-weight: 500;">@appt.date?.ToString("yyyy-MM-dd")</div>
-                                            <div style="font-size: 12px; color: var(--color-text-muted);">@SlotToTime(appt.appointment_time_slot)</div>
-                                        </td>
-                                        <td>
-                                            <span class="appt-badge @StatusBadge(appt.appointment_status)">@StatusLabel(appt.appointment_status)</span>
-                                        </td>
-                                        <td style="text-align: right; padding-right: 24px;">
-                                            <div class="appt-btn-group">
-                                                @if (CanConfirm(appt.appointment_status))
-                                                {
-                                                    <button type="button" class="appt-action-btn btn-confirm-outline action-trigger-btn" data-appt-id="@appt.id" data-action-type="confirm">Confirm</button>
-                                                }
-                                                @if (CanCheckIn(appt.appointment_status))
-                                                {
-                                                    <button type="button" class="appt-action-btn btn-checkin-outline action-trigger-btn" data-appt-id="@appt.id" data-action-type="checkin">Check-In</button>
-                                                }
-                                                @if (CanReschedule(appt.appointment_status))
-                                                {
-                                                    <button type="button" class="appt-action-btn btn-resched-outline reschedule-trigger-btn" data-appt-id="@appt.id" data-doctor-user-id="@docGuidString">Reschedule</button>
-                                                }
-                                                @if (CanNoShow(appt.appointment_status))
-                                                {
-                                                    <button type="button" class="appt-action-btn btn-noshow-outline action-trigger-btn" data-appt-id="@appt.id" data-action-type="noshow">No Show</button>
-                                                }
-                                                @if (CanCancel(appt.appointment_status))
-                                                {
-                                                    <button type="button" class="appt-action-btn btn-cancel-outline action-trigger-btn" data-appt-id="@appt.id" data-action-type="cancel">Cancel</button>
-                                                }
-                                            </div>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+                        @await Html.PartialAsync("_DoctorPatientDetailsAppointmentsTable", null, new ViewDataDictionary(ViewData) { { "DT_TableId", "pdApptTable" }, { "DT_Title", "" } })
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@await Html.PartialAsync("_ChangeAppointmentStatusModal")
+@await Html.PartialAsync("_AddVisitRecordModal")
+@await Html.PartialAsync("_AddPrescriptionModal")

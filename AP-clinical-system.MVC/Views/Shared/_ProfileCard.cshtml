@@ -80,14 +80,17 @@
     </div>
 
     <div class="mp-actions">
-        <button class="mp-btn-edit" id="mpEditBtn" type="button">
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-            </svg>
-            Edit Profile
-        </button>
+        @if (ViewData["HideEditProfile"] as bool? != true)
+        {
+            <button class="mp-btn-edit" id="mpEditBtn" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+                Edit Profile
+            </button>
+        }
     </div>
 
 </div>
@@ -141,4 +144,96 @@
 
 <div class="mp-toast" id="mpToast"></div>
 
-@* <script src="~/js/app/profile-card.js" defer></script> *@
+<form id="mpAntiForgeryForm" style="display:none;">@Html.AntiForgeryToken()</form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const editBtn = document.getElementById('mpEditBtn');
+        const modalBackdrop = document.getElementById('mpModalBackdrop');
+        const closeBtn = document.getElementById('mpModalClose');
+        const cancelBtn = document.getElementById('mpCancelBtn');
+        const saveBtn = document.getElementById('mpSaveBtn');
+        const toast = document.getElementById('mpToast');
+        
+        const firstNameInput = document.getElementById('mpFirstName');
+        const lastNameInput = document.getElementById('mpLastName');
+        const phoneInput = document.getElementById('mpPhone');
+
+        function showToast(msg, isError = false) {
+            toast.textContent = msg;
+            toast.className = 'mp-toast ' + (isError ? 'error' : 'success');
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 3000);
+        }
+
+        function openModal() {
+            modalBackdrop.classList.add('open');
+        }
+
+        function closeModal() {
+            modalBackdrop.classList.remove('open');
+        }
+
+        if (editBtn) editBtn.addEventListener('click', openModal);
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+        
+        if (modalBackdrop) {
+            modalBackdrop.addEventListener('click', function (e) {
+                if (e.target === modalBackdrop) {
+                    closeModal();
+                }
+            });
+        }
+
+        if (saveBtn) {
+            saveBtn.addEventListener('click', async function () {
+                const tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+                const token = tokenElement ? tokenElement.value : '';
+                
+                const data = {
+                    FirstName: firstNameInput.value,
+                    LastName: lastNameInput.value,
+                    Phone: phoneInput.value
+                };
+
+                const endpoint = window.location.pathname.toLowerCase().includes('/doctor') 
+                    ? '/Doctor/UpdateProfile' 
+                    : '/Patient/UpdateProfile';
+
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Saving...';
+
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': token
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        showToast('Profile updated successfully!');
+                        closeModal();
+                        document.getElementById('mp-display-name').textContent = data.FirstName + ' ' + data.LastName;
+                        document.getElementById('mp-display-phone').textContent = data.Phone || '—';
+                        const initial = (data.FirstName.charAt(0) + data.LastName.charAt(0)).toUpperCase();
+                        const avatar = document.querySelector('.mp-avatar');
+                        if (avatar) avatar.textContent = initial;
+                    } else {
+                        showToast(result.error || 'Failed to update profile.', true);
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast('An error occurred while saving.', true);
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Save Changes';
+                }
+            });
+        }
+    });
+</script>

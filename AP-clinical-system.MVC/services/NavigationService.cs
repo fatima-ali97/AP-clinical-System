@@ -17,9 +17,8 @@ namespace AP_clinical_system.Services
         {
             new() { Label = "Dashboard",    Controller = "Doctor",       Action = "Index",         Icon = "fa-solid fa-table-cells-large" },
             new() { Label = "My Schedule",  Controller = "Doctor",       Action = "Schedule",      Icon = "fa-solid fa-calendar"},
-            new() { Label = "My Appointments",  Controller = "Doctor",       Action = "Schedule",      Icon = "fa-solid fa-calendar"},
             new() { Label = "My Patients",  Controller = "Doctor",       Action = "Patients",      Icon = "fa-solid fa-bed-pulse" },
-            new() { Label = "Prescriptions",Controller = "Doctor",       Action = "Prescriptions", Icon = "fa-solid fa-capsules" },
+            new() { Label = "My Prescription",Controller = "Doctor",       Action = "Prescriptions", Icon = "fa-solid fa-capsules" },
         },
 
             "Receptionist" => new List<NavItem>

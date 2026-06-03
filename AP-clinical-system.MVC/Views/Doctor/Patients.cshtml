@@ -1,73 +1,9 @@
-@using AP_clinical_system.Models.Entities
-@using System.Collections.Generic
-@{
+ï»¿@{
     Layout = "_AppLayout";
     ViewData["Title"] = "Patients";
     ViewData["ActivePage"] = "Patients";
-
-    var patients = (ViewBag.Patients as List<patient_information>) ?? new List<patient_information>();
-    var patientMap = (ViewBag.PatientUserMap as Dictionary<Guid, system_user>) ?? new Dictionary<Guid, system_user>();
 }
 
-<h1 class="page-heading">My Patients</h1>
+<h1 class="page-heading">Patients List</h1>
 
-<div class="mb-3">
-    <input type="text" id="patientSearch" class="form-control" placeholder="Search patients by name..." />
-</div>
-
-<div class="table-responsive">
-    <table class="data-table" id="patientsTable">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th class="d-none-sm">Record No</th>
-                <th class="d-none-sm">Medical Conditions</th>
-                <th>Details</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (patients.Count > 0)
-            {
-                foreach (var p in patients)
-                {
-                    string patientName = "—";
-                    if (p.system_user_ref.HasValue && patientMap.ContainsKey(p.system_user_ref.Value))
-                    {
-                        var u = patientMap[p.system_user_ref.Value];
-                        patientName = (u.first_name + " " + u.last_name).Trim();
-                    }
-
-                    string conditions = (p.medical_conditions != null && p.medical_conditions.Count > 0)
-                    ? string.Join(", ", p.medical_conditions)
-                    : "—";
-
-                    <tr data-name="@patientName.ToLower()">
-                        <td>@patientName</td>
-                        <td class="d-none-sm">@(p.record_no ?? "—")</td>
-                        <td class="d-none-sm">@conditions</td>
-                        <td>
-                            <a href="@Url.Action("PatientDetails", "Doctor", new { id = p.id })"
-                               class="btn btn-sm btn-outline-primary">View</a>
-                        </td>
-                    </tr>
-                }
-            }
-            else
-            {
-                <tr>
-                    <td colspan="4" class="text-center">No patients found.</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
-
-<script>
-    document.getElementById('patientSearch').addEventListener('input', function () {
-        const term = this.value.toLowerCase();
-        document.querySelectorAll('#patientsTable tbody tr').forEach(function (row) {
-            const name = (row.dataset.name || '');
-            row.style.display = name.includes(term) ? '' : 'none';
-        });
-    });
-</script>
+@await Html.PartialAsync("_DoctorPatientsTable", null, new ViewDataDictionary(ViewData) { { "DT_TableId", "patientsTable" }, { "DT_Title", "" } })

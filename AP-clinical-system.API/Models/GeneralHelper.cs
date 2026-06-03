@@ -231,17 +231,7 @@ namespace AP_clinical_system.Models
 
         public static bool VerifyUserType(AP_Context context, Guid Id, int userRole)
         {
-           var user = context.system_users.First(u=>u.Id == Id && u.user_role == userRole && u.inactive != true);
-
-            if (user == null)
-            {
-                return false;
-            }
-
-            else
-            {
-                return true;
-            }
+            return context.system_users.Any(u => u.Id == Id && u.user_role == userRole && u.inactive != true);
         }
 
         public class DoctorObject
