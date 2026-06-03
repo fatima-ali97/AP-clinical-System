@@ -1,4 +1,4 @@
-﻿using AP_clinical_system.Models.Entities;
+using AP_clinical_system.Models.Entities;
 using AP_clinical_system.Models.Enums;
 using AP_clinical_system.Models.sql_Context;
 using Microsoft.AspNetCore.Mvc;
@@ -26,6 +26,120 @@ namespace AP_clinical_system.Controllers
 
         // GET: Manager/Doctors
         public ActionResult Doctors() => View();
+
+        // GET: Manager/GetDoctors  – JSON list of all active doctors for the dropdown
+        [HttpGet]
+        public async Task<IActionResult> GetDoctors()
+        {
+            var doctorInfos = await _context.doctor_informations
+                .Where(d => d.inactive != true && d.system_user_ref.HasValue)
+                .ToListAsync();
+
+            var userIds = doctorInfos.Select(d => d.system_user_ref!.Value).Distinct().ToList();
+            var users = await _context.system_users
+                .Where(u => userIds.Contains(u.Id) && u.inactive != true)
+                .ToDictionaryAsync(u => u.Id);
+
+            var result = doctorInfos
+                .Where(d => users.ContainsKey(d.system_user_ref!.Value))
+                .Select(d =>
+                {
+                    var u = users[d.system_user_ref!.Value];
+                    return new
+                    {
+                        doctorInfoId = d.id,
+                        fullName = $"Dr. {u.first_name} {u.last_name}".Trim(),
+                        jobTitle = d.job_title ?? "Doctor"
+                    };
+                })
+                .OrderBy(x => x.fullName)
+                .ToList();
+
+            return Ok(result);
+        }
+
+        // GET: Manager/GetDoctorSchedule?doctorInfoId=...
+        [HttpGet]
+        public async Task<IActionResult> GetDoctorSchedule(Guid doctorInfoId)
+        {
+            var schedule = await _context.doctor_schedules
+                .FirstOrDefaultAsync(s => s.doctor_information_ref == doctorInfoId && s.inactive != true);
+
+            if (schedule == null)
+                return Ok(new { exists = false });
+
+            return Ok(new
+            {
+                exists        = true,
+                id            = schedule.id,
+                sunday_start  = schedule.sunday_start,
+                sunday_end    = schedule.sunday_end,
+                monday_start  = schedule.monday_start,
+                monday_end    = schedule.monday_end,
+                tuesday_start = schedule.tuesday_start,
+                tuesday_end   = schedule.tuesday_end,
+                wednesday_start = schedule.wednesday_start,
+                wednesday_end   = schedule.wednesday_end,
+                thursday_start = schedule.thursday_start,
+                thursday_end   = schedule.thursday_end,
+                friday_start  = schedule.friday_start,
+                friday_end    = schedule.friday_end,
+                saturday_start = schedule.saturday_start,
+                saturday_end   = schedule.saturday_end
+            });
+        }
+
+        // POST: Manager/SaveDoctorSchedule
+        [HttpPost]
+        public async Task<IActionResult> SaveDoctorSchedule(
+            Guid doctorInfoId,
+            string? sunday_start,    string? sunday_end,
+            string? monday_start,   string? monday_end,
+            string? tuesday_start,  string? tuesday_end,
+            string? wednesday_start, string? wednesday_end,
+            string? thursday_start, string? thursday_end,
+            string? friday_start,   string? friday_end,
+            string? saturday_start, string? saturday_end)
+        {
+            var schedule = await _context.doctor_schedules
+                .FirstOrDefaultAsync(s => s.doctor_information_ref == doctorInfoId && s.inactive != true);
+
+            if (schedule == null)
+            {
+                var recordNo = await GeneralHelper.GetAutonumber(_context, "doctor_schedule");
+                schedule = new AP_clinical_system.Models.Entities.doctor_schedule
+                {
+                    id = Guid.NewGuid(),
+                    inactive = false,
+                    createdon = DateTime.Now,
+                    doctor_information_ref = doctorInfoId,
+                    record_no = recordNo
+                };
+                _context.doctor_schedules.Add(schedule);
+            }
+            else
+            {
+                schedule.modifiedon = DateTime.Now;
+            }
+
+            schedule.sunday_start    = string.IsNullOrWhiteSpace(sunday_start)    ? null : sunday_start;
+            schedule.sunday_end      = string.IsNullOrWhiteSpace(sunday_end)      ? null : sunday_end;
+            schedule.monday_start    = string.IsNullOrWhiteSpace(monday_start)    ? null : monday_start;
+            schedule.monday_end      = string.IsNullOrWhiteSpace(monday_end)      ? null : monday_end;
+            schedule.tuesday_start   = string.IsNullOrWhiteSpace(tuesday_start)   ? null : tuesday_start;
+            schedule.tuesday_end     = string.IsNullOrWhiteSpace(tuesday_end)     ? null : tuesday_end;
+            schedule.wednesday_start = string.IsNullOrWhiteSpace(wednesday_start) ? null : wednesday_start;
+            schedule.wednesday_end   = string.IsNullOrWhiteSpace(wednesday_end)   ? null : wednesday_end;
+            schedule.thursday_start  = string.IsNullOrWhiteSpace(thursday_start)  ? null : thursday_start;
+            schedule.thursday_end    = string.IsNullOrWhiteSpace(thursday_end)    ? null : thursday_end;
+            schedule.friday_start    = string.IsNullOrWhiteSpace(friday_start)    ? null : friday_start;
+            schedule.friday_end      = string.IsNullOrWhiteSpace(friday_end)      ? null : friday_end;
+            schedule.saturday_start  = string.IsNullOrWhiteSpace(saturday_start)  ? null : saturday_start;
+            schedule.saturday_end    = string.IsNullOrWhiteSpace(saturday_end)    ? null : saturday_end;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
 
 
         [HttpGet]
