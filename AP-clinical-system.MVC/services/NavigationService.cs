@@ -1,4 +1,4 @@
-﻿namespace AP_clinical_system.Services
+namespace AP_clinical_system.Services
 {
     using AP_clinical_system.Models.Navigation;
     public static class NavigationService
@@ -26,6 +26,7 @@
         {
             new() { Label = "Dashboard",    Controller = "Receptionist", Action = "Index",         Icon = "fa-solid fa-table-cells-large" },
             new() { Label = "Book Appointment", Controller = "Receptionist", Action = "Book",      Icon = "fa-solid fa-plus" },
+            new() { Label = "Calendar", Controller = "Receptionist", Action = "Calendar",      Icon = "fa-solid fa-calendar-days" },
             new() { Label = "Notifications",     Controller = "Receptionist", Action = "Notifications",      Icon = "fa-solid fa-bell"  },
         },
 

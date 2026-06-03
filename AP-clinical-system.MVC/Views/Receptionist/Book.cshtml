@@ -1,8 +1,247 @@
+@using AP_clinical_system.Models.Entities
+@using AP_clinical_system.Models.Enums
+@using AP_clinical_system.ViewModels
+
+@model BookAppointmentViewModel
+
 @{
     Layout = "_AppLayout";
-    ViewData["Title"] = "Book Appointment";
-    ViewData["ActivePage"] = "Book Appointment";
+    ViewData["Title"] = "Manage Appointments";
+    ViewData["ActivePage"] = "Appointments";
+    ViewBag.DevRole = "Receptionist";
+
+    var appointments = ViewBag.Appointments as List<appointment> ?? new();
+    var patientUserMap = ViewBag.PatientUserMap as Dictionary<Guid, system_user> ?? new();
+    var doctorUserMap = ViewBag.DoctorUserMap as Dictionary<Guid, system_user> ?? new();
+    var doctorToUserMapping = ViewBag.DoctorToUserGuidMap as Dictionary<Guid, Guid> ?? new();
 }
 
+@section Styles {
+    <link href="~/css/app/app.css" rel="stylesheet" />
+    <link href="~/css/app/Appointment-modalView.css" rel="stylesheet" />
+    <link href="~/css/app/Prescription-modalView.css" rel="stylesheet" />
+    <link href="~/css/components/Forms.css" rel="stylesheet" />
+    <link href="~/css/app/ProfileCard.css" rel="stylesheet" />
+}
 
-<H1> Book Appointment page</H1>
+@functions {
+    public static string StatusBadge(int? s) => s switch
+    {
+        (int)appointment_status.completed => "badge-success",
+        (int)appointment_status.cancelled => "badge-danger",
+        (int)appointment_status.no_show => "badge-danger",
+        (int)appointment_status.in_progress => "badge-warning",
+        (int)appointment_status.confirmed => "badge-info",
+        (int)appointment_status.checked_in => "badge-info",
+        _ => "badge-secondary"
+    };
+
+    public static string StatusLabel(int? s) => s switch
+    {
+        (int)appointment_status.completed => "Completed",
+        (int)appointment_status.cancelled => "Cancelled",
+        (int)appointment_status.no_show => "No Show",
+        (int)appointment_status.in_progress => "In Progress",
+        (int)appointment_status.confirmed => "Confirmed",
+        (int)appointment_status.checked_in => "Checked In",
+        (int)appointment_status.requested => "Requested",
+        _ => "Unknown"
+    };
+
+    public static string SlotToTime(int? slot)
+    {
+        if (slot == null) return "TBD";
+        const int baseVal = 1000;
+        int mins = (slot.Value - baseVal) * 30;
+        int h = 8 + (mins / 60);
+        int m = mins % 60;
+        string period = h >= 12 ? "PM" : "AM";
+        int displayHour = h > 12 ? h - 12 : (h == 0 ? 12 : h);
+        return $"{displayHour:D2}:{m:D2} {period}";
+    }
+
+    public static bool CanConfirm(int? s) => s == (int)appointment_status.requested;
+    public static bool CanCheckIn(int? s) => s == (int)appointment_status.confirmed;
+    public static bool CanNoShow(int? s) => s == (int)appointment_status.checked_in || s == (int)appointment_status.confirmed;
+    public static bool CanCancel(int? s) => s != (int)appointment_status.cancelled && s != (int)appointment_status.completed && s != (int)appointment_status.no_show;
+    public static bool CanReschedule(int? s) => s == (int)appointment_status.requested || s == (int)appointment_status.confirmed;
+}
+
+<div class="ledger-container">
+
+@if (TempData["Success"] != null)
+{
+        <div class="appt-feedback success" style="display:block; margin-bottom:16px; background-color:#dcfce7; color:#166534; border:1px solid #bbf7d0;">
+            @TempData["Success"]
+        </div>
+}
+@if (TempData["Error"] != null)
+{
+        <div class="appt-feedback error" style="display:block; margin-bottom:16px;">
+            @TempData["Error"]
+        </div>
+}
+
+    <div class="ledger-header">
+        <h2 class="ledger-title">Appointment Ledger</h2>
+        <div style="display: flex; gap: 8px;">
+            <button type="button" id="openModalBtn" class="appt-btn-confirm" style="max-width: max-content;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 4px; vertical-align: middle;">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Book Appointment
+            </button>
+        </div>
+    </div>
+
+    <div class="appt-card">
+        <div style="overflow-x: auto;">
+            <table class="data-table table table-hover align-middle mb-0 ap-datatable Custom-dataTable" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Appt No</th>
+                        <th>Patient Identification</th>
+                        <th>Assigned Doctor</th>
+                        <th>Schedule Window</th>
+                        <th>Current Status</th>
+                        <th style="text-align: right; padding-right: 24px;">Management Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var appt in appointments)
+                    {
+                        var pName = appt.patient_ref.HasValue && patientUserMap.ContainsKey(appt.patient_ref.Value)
+                        ? $"{patientUserMap[appt.patient_ref.Value].first_name} {patientUserMap[appt.patient_ref.Value].last_name}"
+                        : "Unknown Patient";
+
+                        var dName = appt.doctor_ref.HasValue && doctorUserMap.ContainsKey(appt.doctor_ref.Value)
+                        ? $"Dr. {doctorUserMap[appt.doctor_ref.Value].first_name} {doctorUserMap[appt.doctor_ref.Value].last_name}"
+                        : "Unknown Doctor";
+
+                        var docGuidString = appt.doctor_ref.HasValue && doctorToUserMapping.ContainsKey(appt.doctor_ref.Value)
+                        ? doctorToUserMapping[appt.doctor_ref.Value].ToString()
+                        : "";
+
+                        <tr>
+                            <td><strong>@appt.appointment_no</strong></td>
+                            <td>@pName</td>
+                            <td>@dName</td>
+                            <td>
+                                <div style="font-weight: 500;">@appt.date?.ToString("yyyy-MM-dd")</div>
+                                <div style="font-size: 12px; color: var(--color-text-muted);">@SlotToTime(appt.appointment_time_slot)</div>
+                            </td>
+                            <td>
+                                <span class="appt-badge @StatusBadge(appt.appointment_status)">@StatusLabel(appt.appointment_status)</span>
+                            </td>
+                            <td style="text-align: right; padding-right: 24px;">
+                                <div class="appt-btn-group">
+                                    @if (CanConfirm(appt.appointment_status))
+                                    {
+                                        <button type="button" class="appt-action-btn btn-confirm-outline action-trigger-btn" data-appt-id="@appt.id" data-action-type="confirm">Confirm</button>
+                                    }
+                                    @if (CanCheckIn(appt.appointment_status))
+                                    {
+                                        <button type="button" class="appt-action-btn btn-checkin-outline action-trigger-btn" data-appt-id="@appt.id" data-action-type="checkin">Check-In</button>
+                                    }
+                                    @if (CanReschedule(appt.appointment_status))
+                                    {
+                                        <button type="button" class="appt-action-btn btn-resched-outline reschedule-trigger-btn" data-appt-id="@appt.id" data-doctor-user-id="@docGuidString">Reschedule</button>
+                                    }
+                                    @if (CanNoShow(appt.appointment_status))
+                                    {
+                                        <button type="button" class="appt-action-btn btn-noshow-outline action-trigger-btn" data-appt-id="@appt.id" data-action-type="noshow">No Show</button>
+                                    }
+                                    @if (CanCancel(appt.appointment_status))
+                                    {
+                                        <button type="button" class="appt-action-btn btn-cancel-outline action-trigger-btn" data-appt-id="@appt.id" data-action-type="cancel">Cancel</button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+@Html.AntiForgeryToken()
+@await Html.PartialAsync("~/Views/Receptionist/_AddAppointmentForm.cshtml")
+@await Html.PartialAsync("~/Views/Receptionist/_RescheduleAppointmentForm.cshtml")
+
+@section Scripts {
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script src="~/js/components/custom-dataTable.js"></script>
+        <script>
+            // Wire up Book Appointment button
+            document.getElementById('openModalBtn')?.addEventListener('click', function () {
+                document.getElementById('apptModalBackdrop')?.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            });
+
+            const csrf = () => document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            const ACTION_MAP = {
+                confirm: { url: '/Receptionist/ConfirmAppointment', q: 'Confirm this appointment request?', label: 'Confirmed', icon: 'question', color: '#10b981' },
+                checkin: { url: '/Receptionist/CheckInAppointment', q: 'Mark this patient as Checked In?', label: 'Checked In', icon: 'info', color: '#06b6d4' },
+                noshow: { url: '/Receptionist/NoShowAppointment', q: 'Mark this appointment as a No Show?', label: 'No Show', icon: 'warning', color: '#6b7280' },
+                cancel: { url: '/Receptionist/CancelAppointment', q: 'Are you sure you want to cancel this appointment?', label: 'Cancelled', icon: 'error', color: '#ef4444' }
+            };
+
+            document.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.action-trigger-btn');
+                if (!btn) return;
+
+                const cfg = ACTION_MAP[btn.dataset.actionType];
+                if (!cfg) return;
+
+                const { isConfirmed } = await Swal.fire({
+                    icon: cfg.icon,
+                    title: cfg.q,
+                    showCancelButton: true,
+                    confirmButtonText: 'Proceed',
+                    confirmButtonColor: cfg.color,
+                    cancelButtonColor: '#6b7280'
+                });
+
+                if (!isConfirmed) return;
+
+                try {
+                    const res = await fetch(cfg.url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'RequestVerificationToken': csrf()
+                        },
+                        body: `appointment_id=${encodeURIComponent(btn.dataset.apptId)}`
+                    });
+
+                    const data = await res.json();
+
+                    if (res.ok && data.success) {
+                        await Swal.fire({
+                            icon: 'success',
+                            title: 'Updated!',
+                            text: `Appointment execution status saved successfully.`,
+                            confirmButtonColor: '#38789e'
+                        });
+                        location.reload();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Action Failed',
+                            text: data.error || 'The system rejected this state change entry.',
+                            confirmButtonColor: '#38789e'
+                        });
+                    }
+                } catch {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Unexpected Error',
+                        text: 'Connection disruption verified. Please retry.',
+                        confirmButtonColor: '#38789e'
+                    });
+                }
+            });
+        </script>
+}

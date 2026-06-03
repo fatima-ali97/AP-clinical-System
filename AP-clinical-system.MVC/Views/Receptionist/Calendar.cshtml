@@ -1,0 +1,230 @@
+@using AP_clinical_system.Models.Entities
+@using AP_clinical_system.Models.Enums
+@using AP_clinical_system.ViewModels
+@model BookAppointmentViewModel
+
+@{
+    Layout = "_AppLayout";
+    ViewData["Title"] = "Receptionist Calendar";
+    ViewData["ActivePage"] = "Calendar";
+    ViewBag.DevRole = "Receptionist";
+    var doctors = ViewBag.Doctors as List<doctor_information> ?? new List<doctor_information>();
+    var doctorUserMap = ViewBag.DoctorUserMap as Dictionary<Guid, system_user> ?? new Dictionary<Guid, system_user>();
+    var patientUserMap = ViewBag.PatientUserMap as Dictionary<Guid, system_user> ?? new Dictionary<Guid, system_user>();
+    var appointments = ViewBag.Appointments as List<appointment> ?? new List<appointment>();
+
+    // Serialize simplified appointments data for client-side rendering
+    var apptsData = appointments.Select(a => new
+    {
+        id = a.id,
+        doctorId = a.doctor_ref,
+        patientName = a.patient_ref.HasValue && patientUserMap.ContainsKey(a.patient_ref.Value)
+            ? patientUserMap[a.patient_ref.Value].first_name + " " + patientUserMap[a.patient_ref.Value].last_name
+            : "Unknown",
+        slot = a.appointment_time_slot,
+        date = a.date?.ToString("yyyy-MM-dd"),
+        status = a.appointment_status
+    }).ToList();
+}
+
+@section Styles {
+    <link href="~/css/app/app.css" rel="stylesheet" />
+    <link href="~/css/components/Forms.css" rel="stylesheet" />
+    <link href="~/css/receptionistCalendar.css" rel="stylesheet" />
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Appointment Calendar</h2>
+        <button type="button" id="openCalendarModalBtn" class="appt-btn-confirm" style="max-width: max-content;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 4px; vertical-align: middle;">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Book Appointment
+        </button>
+    </div>
+
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <div class="calendar-filters">
+                <div>
+                    <label for="calendarDate" class="form-label mb-0 fw-bold">Date:</label>
+                    <input type="date" id="calendarDate" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                </div>
+                <div>
+                    <label for="calendarDoctorFilter" class="form-label mb-0 fw-bold">Filter Doctors:</label>
+                    <select id="calendarDoctorFilter" class="form-control" multiple="multiple">
+                        @foreach (var doc in doctors)
+                        {
+                            if (doctorUserMap.TryGetValue(doc.id, out var user))
+                            {
+                                <option value="@doc.id" selected>Dr. @user.first_name @user.last_name</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="calendar-grid" id="calendarGrid">
+            <div class="time-axis" id="timeAxis">
+            </div>
+
+            <div id="doctorColumns" class="d-flex flex-grow-1">
+            </div>
+        </div>
+    </div>
+</div>
+
+@await Html.PartialAsync("_AddAppointmentForm", Model)
+@await Html.PartialAsync("_RescheduleAppointmentForm", Model)
+@await Html.PartialAsync("_ChangeStatusModal")
+@section Scripts {
+    <script>
+        const doctorsData = [
+            @foreach (var doc in doctors)
+            {
+                    if (doctorUserMap.TryGetValue(doc.id, out var user))
+                    {
+                        var specId = ViewBag.DoctorSpecializationsMap != null && ViewBag.DoctorSpecializationsMap.ContainsKey(doc.id) ? ViewBag.DoctorSpecializationsMap[doc.id] : "";
+                        <text>{ id: '@doc.id', userId: '@user.Id', name: 'Dr. @user.first_name @user.last_name', specializationId: '@specId' },</text>
+                    }
+            }
+        ];
+
+        const appointmentsData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(apptsData));
+        const statusMap = {
+            1: 'requested',
+            2: 'confirmed',
+            3: 'checked_in',
+            4: 'completed',
+            5: 'cancelled',
+            6: 'no_show'
+        };
+
+        // Wire up the Book Appointment button on Calendar page
+        document.getElementById('openCalendarModalBtn')?.addEventListener('click', function () {
+            document.getElementById('apptModalBackdrop')?.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        });
+
+        // Helper: POST form to a Receptionist action
+        function postStatusAction(action, apptId) {
+            const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            const token = tokenInput ? tokenInput.value : '';
+            fetch(`/Receptionist/${action}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: `appointment_id=${encodeURIComponent(apptId)}`
+            })
+            .then(res => {
+                if (!res.ok) {
+                    return res.text().then(txt => { throw new Error(txt); });
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Updated!',
+                        text: 'Appointment status saved successfully.',
+                        confirmButtonColor: '#38789e'
+                    }).then(() => location.reload());
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Action Failed',
+                        text: data.error || 'The system rejected this state change entry.',
+                        confirmButtonColor: '#38789e'
+                    });
+                }
+            })
+            .catch(err => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Unexpected Error',
+                    text: err.message || 'Connection disruption verified. Please retry.',
+                    confirmButtonColor: '#38789e'
+                });
+            });
+        }
+
+        // Calendar card action buttons: Change Status & Cancel
+        document.addEventListener('click', function (e) {
+            const changeBtn = e.target.closest('.cal-status-btn');
+            if (changeBtn) {
+                e.stopPropagation();
+                const apptId = changeBtn.dataset.apptId;
+                const status = changeBtn.dataset.status;
+                if (!apptId) return;
+                
+                // If requested, open the new modal instead
+                if (status === 'requested') {
+                    const card = changeBtn.closest('.appointment-card');
+                    if (card) card.click();
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Change Status',
+                    text: 'Select a new status for this appointment:',
+                    icon: 'question',
+                    showDenyButton: true,
+                    showCancelButton: true,
+                    confirmButtonText: 'Confirm',
+                    denyButtonText: 'Check In',
+                    cancelButtonText: 'No Show',
+                    confirmButtonColor: '#38789e',
+                    denyButtonColor: '#2e7d55',
+                    cancelButtonColor: '#b45309',
+                    reverseButtons: false
+                }).then(result => {
+                    if (result.isConfirmed)       postStatusAction('ConfirmAppointment', apptId);
+                    else if (result.isDenied)     postStatusAction('CheckInAppointment', apptId);
+                    else if (result.dismiss === Swal.DismissReason.cancel) postStatusAction('NoShowAppointment', apptId);
+                });
+                return;
+            }
+
+            // --- Cancel button ---
+            const cancelBtn = e.target.closest('.cal-cancel-btn');
+            if (cancelBtn) {
+                const apptId = cancelBtn.dataset.apptId;
+                if (!apptId) return;
+                Swal.fire({
+                    title: 'Cancel Appointment?',
+                    text: 'This will mark the appointment as cancelled.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, cancel it',
+                    cancelButtonText: 'Go back',
+                    confirmButtonColor: '#dc2626'
+                }).then(result => {
+                    if (result.isConfirmed) postStatusAction('CancelAppointment', apptId);
+                });
+                return;
+            }
+        });
+    </script>
+    <script src="~/js/receptionistCalendar.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#calendarDoctorFilter').select2({
+                placeholder: "Select Doctors",
+                allowClear: true,
+                width: '300px'
+            });
+            $('#rescheduleDoctorSelect').select2({
+                placeholder: "Keep current doctor",
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('#rescheduleModal')
+            });
+        });
+    </script>
+}

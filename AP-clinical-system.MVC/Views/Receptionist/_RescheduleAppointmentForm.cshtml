@@ -1,0 +1,158 @@
+@using AP_clinical_system.Models.Entities
+@using AP_clinical_system.Models.Enums
+@using AP_clinical_system.ViewModels
+@model BookAppointmentViewModel
+
+<div class="appt-backdrop" id="rescheduleModalBackdrop">
+    <div class="appt-modal" id="rescheduleModal" role="dialog" aria-modal="true" aria-labelledby="rescheduleModalTitle">
+        <form asp-controller="Receptionist" asp-action="RescheduleAppointment" method="post" id="rescheduleForm" novalidate>
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" id="rescheduleAppointmentId" name="appointment_id" required />
+
+            <div class="appt-modal-header" style="background-color: var(--color-warning, #f59e0b); color: #1e293b;">
+                <h5 id="rescheduleModalTitle">Reschedule Appointment</h5>
+                <button type="button" class="appt-close-btn" id="rescheduleCloseBtn" style="color: #1e293b;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="appt-modal-body">
+                
+                <div class="appt-field">
+                    <label asp-for="doctor_ref">Replace Doctor (Optional)</label>
+                    <select asp-for="doctor_ref" name="doctor_ref" id="rescheduleDoctorSelect" class="form-select select2-init">
+                        <option value="">Keep current doctor</option>
+                        @if (ViewBag.Doctors != null)
+                        {
+                            foreach (var doctor in ViewBag.Doctors)
+                            {
+                                var dUser = ViewBag.DoctorUserMap != null && ViewBag.DoctorUserMap.ContainsKey(doctor.id) ? ViewBag.DoctorUserMap[doctor.id] : null;
+                                if (dUser != null) {
+                                    <option value="@doctor.id" data-user-id="@dUser.Id">Dr. @dUser.first_name @dUser.last_name</option>
+                                }
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="appt-field">
+                    <label asp-for="date">New Appointment Date</label>
+                    <input asp-for="date" name="date" type="date" id="rescheduleDate" required min="@(DateTime.Today.ToString("yyyy-MM-dd"))" />
+                    <span asp-validation-for="date" class="text-danger small"></span>
+                </div>
+
+                <div class="appt-field">
+                    <label>New Time Slot</label>
+                    <input type="hidden" asp-for="appointment_time_slot" name="appointment_time_slot" id="rescheduleSlotInput" required />
+                    <div id="rescheduleSlotGrid">
+                        <p class="appt-slot-hint">Select a date to see available slots.</p>
+                    </div>
+                    <span asp-validation-for="appointment_time_slot" class="text-danger small"></span>
+                </div>
+
+            </div>
+
+            <div class="appt-modal-footer">
+                <button type="button" class="appt-btn-cancel" id="rescheduleCancelBtn">Keep Original</button>
+                <button type="submit" class="appt-btn-confirm" id="rescheduleConfirmBtn" style="background-color: var(--color-warning, #f59e0b); color: #1e293b;">
+                    Update Schedule
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function () {
+        function openRescheduleModal(apptId, doctorUserId) {
+            resetRescheduleForm();
+            document.getElementById('rescheduleAppointmentId').value = apptId;
+            document.getElementById('rescheduleDate').dataset.doctorUserId = doctorUserId;
+            document.getElementById('rescheduleModalBackdrop').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeRescheduleModal() {
+            document.getElementById('rescheduleModalBackdrop').className = 'appt-backdrop';
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('click', e => {
+            const btn = e.target.closest('.reschedule-trigger-btn');
+            if (!btn) return;
+            e.preventDefault();
+            openRescheduleModal(btn.dataset.apptId, btn.dataset.doctorUserId);
+        });
+
+        document.getElementById('rescheduleCloseBtn').addEventListener('click', closeRescheduleModal);
+        document.getElementById('rescheduleCancelBtn').addEventListener('click', closeRescheduleModal);
+        document.getElementById('rescheduleModalBackdrop').addEventListener('click', function (e) {
+            if (e.target === this) closeRescheduleModal();
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeRescheduleModal();
+        });
+
+        document.getElementById('rescheduleDate').addEventListener('change', function () {
+            const doctorSelect = document.getElementById('rescheduleDoctorSelect');
+            const selectedOpt = doctorSelect.selectedOptions[0];
+            const doctorUserId = (selectedOpt && selectedOpt.value) ? selectedOpt.dataset.userId : this.dataset.doctorUserId;
+            
+            const date = this.value;
+            if (doctorUserId && date) { 
+                window.TimeSlotPicker.loadSlots(
+                    doctorUserId, 
+                    date, 
+                    document.getElementById('rescheduleSlotGrid'), 
+                    document.getElementById('rescheduleSlotInput')
+                ); 
+            }
+        });
+
+        document.getElementById('rescheduleDoctorSelect').addEventListener('change', function () {
+            const dateInput = document.getElementById('rescheduleDate');
+            if (dateInput.value) {
+                dateInput.dispatchEvent(new Event('change'));
+            } else {
+                clearRescheduleSlots();
+            }
+        });
+
+        function clearRescheduleSlots() {
+            window.TimeSlotPicker.clearSlots(
+                document.getElementById('rescheduleSlotGrid'), 
+                document.getElementById('rescheduleSlotInput'), 
+                'Select a date to see available slots.'
+            );
+        }
+
+        document.getElementById('rescheduleForm').addEventListener('submit', function (e) {
+            if (!document.getElementById('rescheduleSlotInput').value) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Time Slot Selected',
+                    text: 'Please select a new time slot before saving.',
+                    confirmButtonColor: '#38789e'
+                });
+                return;
+            }
+            const btn = document.getElementById('rescheduleConfirmBtn');
+            btn.disabled = true;
+            btn.textContent = 'Updating…';
+        });
+
+        function resetRescheduleForm() {
+            document.getElementById('rescheduleForm').reset();
+            if (window.jQuery && $.fn.select2) {
+                $('#rescheduleDoctorSelect').val('').trigger('change.select2');
+            }
+            clearRescheduleSlots();
+            delete document.getElementById('rescheduleDate').dataset.doctorUserId;
+        }
+    })();
+</script>
