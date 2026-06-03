@@ -1,4 +1,4 @@
-﻿using AP_clinical_system.Models;
+using AP_clinical_system.Models;
 using AP_clinical_system.Models.Entities;
 using AP_clinical_system.Models.Enums;
 using AP_clinical_system.Models.sql_Context;
@@ -13,10 +13,6 @@ namespace AP_clinical_system.Controllers
     {
         private readonly AP_Context _context;
         private readonly UserManager<system_user> _userManager;
-        public ActionResult Index()
-        {
-            return View();
-        }
 
         public DoctorController(AP_Context context, UserManager<system_user> userManager)
         {
@@ -24,6 +20,12 @@ namespace AP_clinical_system.Controllers
             _userManager = userManager;
         }
 
+        public ActionResult Index()
+        {
+            return View();
+        }
+
+        // ── Shared helper: build a Guid → system_user map for a set of doctor refs ──
         private static async Task<Dictionary<Guid, system_user>> BuildUnifiedDoctorMapAsync(
             AP_Context context,
             IEnumerable<Guid> appointmentDoctorRefs)
@@ -34,7 +36,8 @@ namespace AP_clinical_system.Controllers
 
             var doctorInfos = await context.doctor_informations
                 .Where(d => d.inactive != true &&
-                            (refs.Contains(d.id) || (d.system_user_ref.HasValue && refs.Contains(d.system_user_ref!.Value))))
+                            (refs.Contains(d.id) ||
+                             (d.system_user_ref.HasValue && refs.Contains(d.system_user_ref!.Value))))
                 .ToListAsync();
 
             var userIds = doctorInfos
@@ -49,24 +52,23 @@ namespace AP_clinical_system.Controllers
 
             var map = new Dictionary<Guid, system_user>();
 
-            foreach (var d in doctorInfos.Where(d => d.system_user_ref.HasValue && usersById.ContainsKey(d.system_user_ref!.Value)))
+            foreach (var d in doctorInfos
+                         .Where(d => d.system_user_ref.HasValue &&
+                                     usersById.ContainsKey(d.system_user_ref!.Value)))
             {
                 var user = usersById[d.system_user_ref!.Value];
                 map[d.id] = user;
                 map[d.system_user_ref!.Value] = user;
             }
 
-            foreach (var @ref in refs.Where(r => !map.ContainsKey(r) && usersById.ContainsKey(r)))
-            {
-                map[@ref] = usersById[@ref];
-            }
+            foreach (var r in refs.Where(r => !map.ContainsKey(r) && usersById.ContainsKey(r)))
+                map[r] = usersById[r];
 
             return map;
         }
 
-
-
-        public async Task<IActionResult> Schedule() //AKA the doctor's appointments that r not completed
+        // GET: /Doctor/Schedule  (patient's upcoming / confirmed appointments)
+        public async Task<IActionResult> Schedule()
         {
             var currentUser = await _userManager.GetUserAsync(User);
 
@@ -76,8 +78,10 @@ namespace AP_clinical_system.Controllers
             if (patientInfo == null)
                 return NotFound();
 
-            var appointments = await _context.appointments //&& (a.appointment_status.Equals(appointment_status.completed) || a.appointment_status.Equals(appointment_status.completed))
-                .Where(a => a.patient_ref == patientInfo.id && a.inactive != true && (a.appointment_status == 1004 || a.appointment_status == 1005))
+            var appointments = await _context.appointments
+                .Where(a => a.patient_ref == patientInfo.id &&
+                            a.inactive != true &&
+                            (a.appointment_status == 1004 || a.appointment_status == 1005))
                 .OrderByDescending(a => a.date)
                 .ToListAsync();
 
@@ -115,20 +119,157 @@ namespace AP_clinical_system.Controllers
             ViewBag.DoctorInfoToUser = doctorMap;
 
             return View(currentUser);
-
         }
-        public ActionResult Patients()
-        {
-            return View();
-        }
-
 
         public ActionResult Prescriptions()
         {
             return View();
         }
 
+        // GET: /Doctor/MyAppointments
+        public async Task<IActionResult> MyAppointments()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return NotFound();
 
+            var doctorInfo = await _context.doctor_informations
+                .FirstOrDefaultAsync(d => d.system_user_ref == currentUser.Id && d.inactive != true);
+            if (doctorInfo == null) return NotFound();
 
+            var appointments = await _context.appointments
+                .Where(a => a.doctor_ref == doctorInfo.id &&
+                            a.inactive != true &&
+                            (a.appointment_status == 1004 || a.appointment_status == 1005))
+                .OrderByDescending(a => a.date)
+                .ToListAsync();
+
+            // patient_ref values on these appointments are patient_information.id (not system_user.Id),
+            // so we resolve via patient_informations first, then join to system_users.
+            var patientInfoIds = appointments
+                .Where(a => a.patient_ref.HasValue)
+                .Select(a => a.patient_ref!.Value)
+                .Distinct()
+                .ToList();
+
+            var patientInfoList = await _context.patient_informations
+                .Where(p => patientInfoIds.Contains(p.id) && p.inactive != true)
+                .ToListAsync();
+
+            var patientSystemUserIds = patientInfoList
+                .Where(p => p.system_user_ref.HasValue)
+                .Select(p => p.system_user_ref!.Value)
+                .Distinct()
+                .ToList();
+
+            var patientSystemUsers = await _context.system_users
+                .Where(u => patientSystemUserIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id);
+
+            // Build patient_information.id → system_user map for the view
+            var patientUserMap = new Dictionary<Guid, system_user>();
+            foreach (var pi in patientInfoList)
+            {
+                if (pi.system_user_ref.HasValue &&
+                    patientSystemUsers.TryGetValue(pi.system_user_ref.Value, out var su))
+                {
+                    patientUserMap[pi.id] = su;
+                }
+            }
+
+            ViewBag.Appointments = appointments;
+            ViewBag.PatientUserMap = patientUserMap;
+            ViewBag.DoctorInfoToUser = await BuildUnifiedDoctorMapAsync(
+                _context,
+                appointments.Where(a => a.doctor_ref.HasValue).Select(a => a.doctor_ref!.Value).Distinct());
+
+            return View();
+        }
+
+        // GET: /Doctor/Patients
+        public async Task<IActionResult> Patients()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return NotFound();
+
+            var patients = await _context.patient_informations
+                .Where(p => p.inactive != true)
+                .ToListAsync();
+
+            // Build patient_information.system_user_ref → system_user map for name display
+            var systemUserIds = patients
+                .Where(p => p.system_user_ref.HasValue)
+                .Select(p => p.system_user_ref!.Value)
+                .Distinct()
+                .ToList();
+
+            var patientUserMap = await _context.system_users
+                .Where(u => systemUserIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id);
+
+            ViewBag.Patients = patients;
+            ViewBag.PatientUserMap = patientUserMap;
+
+            return View();
+        }
+
+        // GET: /Doctor/PatientDetails/{id}
+        public async Task<IActionResult> PatientDetails(Guid id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return NotFound();
+
+            var patientInfo = await _context.patient_informations
+                .FirstOrDefaultAsync(p => p.id == id && p.inactive != true);
+            if (patientInfo == null) return NotFound();
+
+            var patientSystemUser = patientInfo.system_user_ref.HasValue 
+                ? await _userManager.FindByIdAsync(patientInfo.system_user_ref.Value.ToString())
+                : null;
+
+            var prescriptions = await _context.prescriptions
+                .Where(pr => pr.patient_ref == id && pr.inactive != true)
+                .OrderByDescending(pr => pr.createdon)
+                .ToListAsync();
+
+            var appointments = await _context.appointments
+                .Where(a => a.patient_ref == id && a.inactive != true)
+                .OrderByDescending(a => a.date)
+                .ToListAsync();
+
+            // Setup mapping for appointments table
+            var doctorRefs = appointments.Where(a => a.doctor_ref.HasValue).Select(a => a.doctor_ref!.Value).Distinct();
+            var doctorUserMap = await BuildUnifiedDoctorMapAsync(_context, doctorRefs);
+            
+            var patientUserMap = new Dictionary<Guid, system_user>();
+            if (patientSystemUser != null) {
+                patientUserMap[patientInfo.id] = patientSystemUser;
+            }
+
+            var doctorToUserMapping = new Dictionary<Guid, Guid>();
+            foreach(var kvp in doctorUserMap) {
+                doctorToUserMapping[kvp.Key] = kvp.Value.Id;
+            }
+
+            // Get current doctor's schedule
+            var doctorInfo = await _context.doctor_informations
+                .FirstOrDefaultAsync(d => d.system_user_ref == currentUser.Id && d.inactive != true);
+
+            doctor_schedule docSchedule = null;
+            if (doctorInfo != null) {
+                docSchedule = await _context.doctor_schedules
+                    .FirstOrDefaultAsync(ds => ds.doctor_information_ref == doctorInfo.id && ds.inactive != true);
+            }
+
+            ViewBag.PatientInfo = patientInfo;
+            ViewBag.ProfileUser = patientSystemUser;
+            ViewBag.Prescriptions = prescriptions;
+            ViewBag.Appointments = appointments;
+            ViewBag.DoctorUserMap = doctorUserMap;
+            ViewBag.PatientUserMap = patientUserMap;
+            ViewBag.DoctorToUserMapping = doctorToUserMapping;
+            ViewBag.DoctorSchedule = docSchedule;
+
+            return View();
+        }
     }
 }
