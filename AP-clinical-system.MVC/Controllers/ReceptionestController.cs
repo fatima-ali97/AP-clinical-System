@@ -2,15 +2,17 @@ using AP_clinical_system.Models;
 using AP_clinical_system.Models.Entities;
 using AP_clinical_system.Models.Enums;
 using AP_clinical_system.Models.sql_Context;
+using AP_clinical_system.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 using AP_clinical_system.ViewModels;
+using static AP_clinical_system.Models.GeneralHelper;
 
 namespace AP_clinical_system.Controllers
 {
@@ -18,23 +20,25 @@ namespace AP_clinical_system.Controllers
     {
         private readonly AP_Context _context;
         private readonly UserManager<system_user> _userManager;
+        private readonly IHubContext<AppointmentsWatcher> _hubContext;
 
-        public ReceptionistController(AP_Context context, UserManager<system_user> userManager)
+        public ReceptionistController(
+            AP_Context context,
+            UserManager<system_user> userManager,
+            IHubContext<AppointmentsWatcher> hubContext)
         {
             _context = context;
             _userManager = userManager;
+            _hubContext = hubContext;
         }
 
-        // GET: ReceptionistController
+        // GET: Receptionist/Index
         public async Task<ActionResult> Index()
         {
             var appointments = await _context.appointments
                 .Where(a => a.inactive != true)
                 .OrderByDescending(a => a.date)
                 .ToListAsync();
-
-            var patientRefs = appointments.Where(a => a.patient_ref.HasValue).Select(a => a.patient_ref!.Value).Distinct().ToList();
-            var doctorRefs = appointments.Where(a => a.doctor_ref.HasValue).Select(a => a.doctor_ref!.Value).Distinct().ToList();
 
             var patientInfos = await _context.patient_informations
                 .Where(p => p.inactive != true)
@@ -96,13 +100,11 @@ namespace AP_clinical_system.Controllers
         // GET: Receptionist/Book
         public async Task<ActionResult> Book()
         {
-            // 1. Query all active scheduled appointments for the list matrix grid
             var appointments = await _context.appointments
                 .Where(a => a.inactive != true)
                 .OrderByDescending(a => a.date)
                 .ToListAsync();
 
-            // 2. Query ALL Active Master Records required to fill dropdown components safely
             var patientInfos = await _context.patient_informations
                 .Where(p => p.inactive != true)
                 .ToListAsync();
@@ -115,7 +117,6 @@ namespace AP_clinical_system.Controllers
                 .Where(s => s.inactive != true)
                 .ToListAsync();
 
-            // 3. Resolve underlying user IDs from the master tables
             var userIds = patientInfos.Where(p => p.system_user_ref.HasValue).Select(p => p.system_user_ref!.Value)
                 .Union(doctorInfos.Where(d => d.system_user_ref.HasValue).Select(d => d.system_user_ref!.Value))
                 .Distinct()
@@ -125,7 +126,6 @@ namespace AP_clinical_system.Controllers
                 .Where(u => userIds.Contains(u.Id))
                 .ToDictionaryAsync(u => u.Id);
 
-            // 4. Construct presentation layer lookup mappings
             var patientUserMap = new Dictionary<Guid, system_user>();
             foreach (var p in patientInfos.Where(p => p.system_user_ref.HasValue))
             {
@@ -140,11 +140,10 @@ namespace AP_clinical_system.Controllers
                 if (usersById.TryGetValue(d.system_user_ref!.Value, out var user))
                 {
                     doctorUserMap[d.id] = user;
-                    doctorToUserGuidMap[d.id] = user.Id; // Crucial for client-side AJAX availability grids
+                    doctorToUserGuidMap[d.id] = user.Id;
                 }
             }
 
-            // 5. Pack data fields cleanly into layout data bags
             ViewBag.Appointments = appointments;
             ViewBag.Patients = patientInfos;
             ViewBag.Doctors = doctorInfos;
@@ -153,20 +152,17 @@ namespace AP_clinical_system.Controllers
             ViewBag.DoctorUserMap = doctorUserMap;
             ViewBag.DoctorToUserGuidMap = doctorToUserGuidMap;
 
-            // 6. Return an initialized view model instance to protect against form model binding crashes
             return View(new BookAppointmentViewModel());
         }
 
         // GET: Receptionist/Calendar
         public async Task<ActionResult> Calendar()
         {
-            // 1. Query all active scheduled appointments
             var appointments = await _context.appointments
                 .Where(a => a.inactive != true)
                 .OrderByDescending(a => a.date)
                 .ToListAsync();
 
-            // 2. Query ALL Active Master Records required
             var patientInfos = await _context.patient_informations
                 .Where(p => p.inactive != true)
                 .ToListAsync();
@@ -179,7 +175,6 @@ namespace AP_clinical_system.Controllers
                 .Where(s => s.inactive != true)
                 .ToListAsync();
 
-            // 3. Resolve underlying user IDs from the master tables
             var userIds = patientInfos.Where(p => p.system_user_ref.HasValue).Select(p => p.system_user_ref!.Value)
                 .Union(doctorInfos.Where(d => d.system_user_ref.HasValue).Select(d => d.system_user_ref!.Value))
                 .Distinct()
@@ -189,7 +184,6 @@ namespace AP_clinical_system.Controllers
                 .Where(u => userIds.Contains(u.Id))
                 .ToDictionaryAsync(u => u.Id);
 
-            // 4. Construct presentation layer lookup mappings
             var patientUserMap = new Dictionary<Guid, system_user>();
             foreach (var p in patientInfos.Where(p => p.system_user_ref.HasValue))
             {
@@ -209,13 +203,11 @@ namespace AP_clinical_system.Controllers
                     doctorToUserGuidMap[d.id] = user.Id;
                 }
 
-                // Get first specialization for pre-filling the form
                 var spec = await _context.doctor_information_specialization_mtms
                     .FirstOrDefaultAsync(m => m.doctor_information_ref == d.id);
                 doctorSpecializationsMap[d.id] = spec != null ? spec.doctor_specialization_ref.ToString() : "";
             }
 
-            // 5. Pack data fields cleanly into layout data bags
             ViewBag.Appointments = appointments;
             ViewBag.Patients = patientInfos;
             ViewBag.Doctors = doctorInfos;
@@ -243,10 +235,12 @@ namespace AP_clinical_system.Controllers
             var receptionist = await _userManager.GetUserAsync(User);
             if (receptionist == null) return Unauthorized();
 
-            // FIX: Convert the ViewModel DateTime? into DateOnly? for comparison
+            // verify user is a receptionist
+            if (!GeneralHelper.VerifyUserType(_context, receptionist.Id, (int)user_role.receptionist))
+                return Json(new { success = false, error = "User is not a receptionist." });
+
             DateOnly? targetDate = model.date.HasValue ? DateOnly.FromDateTime(model.date.Value) : null;
 
-            // FIX: The AJAX dropdown provides system_user.Id for the doctor, but we need doctor_information.id
             var actualDoctorInfo = await _context.doctor_informations
                 .FirstOrDefaultAsync(d => d.system_user_ref == model.doctor_ref && d.inactive != true);
 
@@ -258,7 +252,7 @@ namespace AP_clinical_system.Controllers
 
             bool slotTaken = await _context.appointments.AnyAsync(a =>
                 a.doctor_ref == actualDoctorInfo.id &&
-                a.date == targetDate && // Fixed type evaluation mismatch
+                a.date == targetDate &&
                 a.appointment_time_slot == model.appointment_time_slot &&
                 a.inactive != true);
 
@@ -268,8 +262,7 @@ namespace AP_clinical_system.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Fallback generation helper logic
-            var apptNo = Guid.NewGuid().ToString().Substring(0, 8).ToUpper();
+            var apptNo = await GeneralHelper.GetAutonumber(_context, "appointment");
             var now = DateTime.UtcNow;
 
             var appt = new appointment
@@ -278,9 +271,9 @@ namespace AP_clinical_system.Controllers
                 appointment_no = apptNo,
                 appointment_reason = model.appointment_reason,
                 patient_ref = model.patient_ref,
-                doctor_ref = actualDoctorInfo.id, // Use resolved ID
+                doctor_ref = actualDoctorInfo.id,
                 specialization_ref = model.specialization_ref,
-                date = targetDate, // FIX: Assign the converted DateOnly? value
+                date = targetDate,
                 appointment_time_slot = model.appointment_time_slot,
                 appointment_status = (int)appointment_status.requested,
                 createdon = now,
@@ -292,6 +285,12 @@ namespace AP_clinical_system.Controllers
 
             _context.appointments.Add(appt);
             await _context.SaveChangesAsync();
+
+            // broadcast via SignalR
+            var watcher = new AppointmentsWatcher(_context);
+            var counts = watcher.CalculateCounts();
+            await _hubContext.Clients.All.SendAsync("UpdateStatuses", counts);
+            await _hubContext.Clients.All.SendAsync("RefreshAppointments");
 
             TempData["Success"] = $"Appointment {apptNo} created successfully!";
             return RedirectToAction(nameof(Index));
@@ -308,13 +307,13 @@ namespace AP_clinical_system.Controllers
             var receptionist = await _userManager.GetUserAsync(User);
             if (receptionist == null) return Unauthorized();
 
+            if (!GeneralHelper.VerifyUserType(_context, receptionist.Id, (int)user_role.receptionist))
+                return Json(new { success = false, error = "User is not a receptionist." });
+
             DateOnly? targetDate = model.date.HasValue ? DateOnly.FromDateTime(model.date.Value) : null;
 
-            // Optional: update doctor if a replacement is provided
             if (model.doctor_ref.HasValue)
-            {
                 appt.doctor_ref = model.doctor_ref;
-            }
 
             appt.date = targetDate;
             appt.appointment_time_slot = model.appointment_time_slot;
@@ -323,41 +322,68 @@ namespace AP_clinical_system.Controllers
 
             await _context.SaveChangesAsync();
 
+            await _hubContext.Clients.All.SendAsync("RefreshAppointments");
+
             TempData["Success"] = $"Appointment {appt.appointment_no} rescheduled successfully!";
 
-            // Redirect back to referring page (Calendar or Index/Book)
             var referer = Request.Headers["Referer"].ToString();
             if (!string.IsNullOrEmpty(referer))
-            {
                 return Redirect(referer);
-            }
+
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
-        public async Task<IActionResult> ConfirmAppointment(Guid appointment_id) => await UpdateStatus(appointment_id, appointment_status.confirmed);
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ConfirmAppointment(Guid appointment_id)
+            => await UpdateStatus(appointment_id, appointment_status.confirmed);
 
         [HttpPost]
-        public async Task<IActionResult> CheckInAppointment(Guid appointment_id) => await UpdateStatus(appointment_id, appointment_status.checked_in);
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CheckInAppointment(Guid appointment_id)
+            => await UpdateStatus(appointment_id, appointment_status.checked_in);
 
         [HttpPost]
-        public async Task<IActionResult> NoShowAppointment(Guid appointment_id) => await UpdateStatus(appointment_id, appointment_status.no_show);
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> NoShowAppointment(Guid appointment_id)
+            => await UpdateStatus(appointment_id, appointment_status.no_show);
 
         [HttpPost]
-        public async Task<IActionResult> CancelAppointment(Guid appointment_id) => await UpdateStatus(appointment_id, appointment_status.cancelled);
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelAppointment(Guid appointment_id)
+            => await UpdateStatus(appointment_id, appointment_status.cancelled);
 
         private async Task<IActionResult> UpdateStatus(Guid id, appointment_status status)
         {
-            var appt = await _context.appointments.FindAsync(id);
-            if (appt == null) return NotFound("Appointment not found");
+            try
+            {
+                var appt = await _context.appointments.FindAsync(id);
+                if (appt == null || appt.inactive == true)
+                    return Json(new { success = false, error = "Appointment not found or inactive." });
 
-            var user = await _userManager.GetUserAsync(User);
-            appt.appointment_status = (int)status;
-            appt.modifiedon = DateTime.UtcNow;
-            appt.modifiedby = user?.Id ?? Guid.Empty;
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null)
+                    return Json(new { success = false, error = "Unauthorized." });
 
-            await _context.SaveChangesAsync();
-            return Json(new { success = true });
+                if (!GeneralHelper.VerifyUserType(_context, user.Id, (int)user_role.receptionist))
+                    return Json(new { success = false, error = "User is not a receptionist." });
+
+                appt.appointment_status = (int)status;
+                appt.modifiedon = DateTime.UtcNow;
+                appt.modifiedby = user.Id;
+
+                await _context.SaveChangesAsync();
+                var watcher = new AppointmentsWatcher(_context);
+                var counts = watcher.CalculateCounts();
+                await _hubContext.Clients.All.SendAsync("UpdateStatuses", counts);
+                await _hubContext.Clients.All.SendAsync("RefreshAppointments");
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, error = ex.Message });
+            }
         }
 
         // GET: Receptionist/Notifications
