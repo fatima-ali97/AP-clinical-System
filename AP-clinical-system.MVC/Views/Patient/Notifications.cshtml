@@ -1,8 +1,38 @@
+@using AP_clinical_system.Models.Entities
 @{
     Layout = "_AppLayout";
     ViewData["Title"] = "Notifications";
     ViewData["ActivePage"] = "Notifications";
+    var notifications = ViewBag.Notifications as List<notification> ?? new();
 }
 
-
-<h1>Notifications</h1>
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title">All Notifications</h5>
+    </div>
+    <div class="card-body" style="min-height: 400px;">
+        <div class="container my-3">
+            <div class="row">
+                <div class="col-md-10 offset-md-1">
+                    @if (!notifications.Any())
+                    {
+                        <p class="text-muted" style="font-size:14px;">You have no notifications at this time.</p>
+                    }
+                    else
+                    {
+                        <ul class="timeline-3">
+                            @foreach (var note in notifications)
+                            {
+                                <li>
+                                    <a href="#!">@(note.title ?? "Notification")</a>
+                                    <a href="#!" class="float-end">@(note.createdon.ToString("dd MMM yyyy, hh:mm tt"))</a>
+                                    <p class="mt-2">@(note.message)</p>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
