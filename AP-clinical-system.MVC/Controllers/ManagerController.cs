@@ -4,16 +4,21 @@ using AP_clinical_system.Models.sql_Context;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
+using Microsoft.AspNetCore.Identity;
+using AP_clinical_system.Models;
+using System.Security.Claims;
 
 namespace AP_clinical_system.Controllers
 {
     public class ManagerController : Controller
     {
         private readonly AP_Context _context;
+        private readonly UserManager<system_user> _userManager;
 
-        public ManagerController(AP_Context context)
+        public ManagerController(AP_Context context, UserManager<system_user> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: Manager/Index
@@ -23,237 +28,6 @@ namespace AP_clinical_system.Controllers
         public ActionResult Doctors() => View();
 
 
-
-        // GET: Manager/Appointments
-        public ActionResult Appointments() => View();
-
-        // ── REPORTS ────────────────────────────────────────────────────
-
-        // GET: Manager/Reports
-        [HttpGet]
-        public async Task<IActionResult> Reports(string? startDate, string? endDate)
-        {
-            startDate ??= DateTime.Now.AddMonths(-1).ToString("yyyy-MM-dd");
-            endDate ??= DateTime.Now.ToString("yyyy-MM-dd");
-
-            var start = DateOnly.Parse(startDate);
-            var end = DateOnly.Parse(endDate);
-
-            ViewBag.StartDate = startDate;
-            ViewBag.EndDate = endDate;
-
-            // ── 1. Appointment Statistics ──────────────────────────────
-            // Fetch every active appointment inside the date range once;
-            // all other stats are derived from this same in-memory list.
-            var appointments = await _context.appointments
-                .Where(a => a.inactive != true
-                         && a.date.HasValue
-                         && a.date >= start
-                         && a.date <= end)
-                .ToListAsync();
-
-            int total = appointments.Count;
-            int completed = appointments.Count(a => a.appointment_status == (int)appointment_status.completed);
-            int cancelled = appointments.Count(a => a.appointment_status == (int)appointment_status.cancelled);
-            int noShow = appointments.Count(a => a.appointment_status == (int)appointment_status.no_show);
-            int requested = appointments.Count(a => a.appointment_status == (int)appointment_status.requested);
-            int confirmed = appointments.Count(a => a.appointment_status == (int)appointment_status.confirmed);
-            int checkedIn = appointments.Count(a => a.appointment_status == (int)appointment_status.checked_in);
-            int inProgress = appointments.Count(a => a.appointment_status == (int)appointment_status.in_progress);
-
-            var appointmentStatistics = new
-            {
-                summary = new
-                {
-                    total,
-                    completed,
-                    cancelled,
-                    noShow,
-                    requested,
-                    confirmed,
-                    checkedIn,
-                    inProgress
-                }
-            };
-
-            ViewBag.AppointmentStatistics = JsonSerializer.Serialize(appointmentStatistics);
-
-            // ── 2. Cancellation & No-Show Rates ───────────────────────
-            double cancellationRate = total > 0 ? Math.Round((double)cancelled / total * 100, 1) : 0;
-            double noShowRate = total > 0 ? Math.Round((double)noShow / total * 100, 1) : 0;
-            double combinedRate = total > 0 ? Math.Round((double)(cancelled + noShow) / total * 100, 1) : 0;
-
-            var cancellationAndNoShowRates = new
-            {
-                overall = new
-                {
-                    cancellationRate,
-                    noShowRate,
-                    combinedRate
-                }
-            };
-
-            ViewBag.CancellationAndNoShowRates = JsonSerializer.Serialize(cancellationAndNoShowRates);
-
-            // ── 3. Appointments by Specialization ─────────────────────
-            // appointments.specialization_ref → doctor_specialization.id
-            var specializationIds = appointments
-                .Where(a => a.specialization_ref.HasValue)
-                .Select(a => a.specialization_ref!.Value)
-                .Distinct()
-                .ToList();
-
-            var specializations = await _context.doctor_specializations
-                .Where(s => specializationIds.Contains(s.id) && s.inactive != true)
-                .ToListAsync();
-
-            var specializationNameMap = specializations
-                .ToDictionary(s => s.id, s => s.specialization_name ?? "Unknown");
-
-            var bySpecialization = appointments
-                .Where(a => a.specialization_ref.HasValue)
-                .GroupBy(a => a.specialization_ref!.Value)
-                .Select(g => new
-                {
-                    specializationName = specializationNameMap.ContainsKey(g.Key)
-                        ? specializationNameMap[g.Key]
-                        : "Unknown",
-                    totalAppointments = g.Count()
-                })
-                .OrderByDescending(x => x.totalAppointments)
-                .ToList();
-
-            ViewBag.AppointmentsBySpecialization = JsonSerializer.Serialize(
-                new { bySpecialization });
-
-            // ── 4. Doctor Workload Distribution ───────────────────────
-            // appointments.doctor_ref → doctor_information.id
-            // doctor_information.system_user_ref → system_users.Id (for name)
-            var appointmentDoctorInfoIds = appointments
-                .Where(a => a.doctor_ref.HasValue)
-                .Select(a => a.doctor_ref!.Value)
-                .Distinct()
-                .ToList();
-
-            var allDoctorInfos = await _context.doctor_informations
-                .Where(d => d.inactive != true)
-                .ToListAsync();
-
-            var activeDoctorInfoIds = allDoctorInfos.Select(d => d.id).ToHashSet();
-
-            var doctorUserIds = allDoctorInfos
-                .Where(d => d.system_user_ref.HasValue)
-                .Select(d => d.system_user_ref!.Value)
-                .ToList();
-
-            var doctorUsers = await _context.system_users
-                .Where(u => doctorUserIds.Contains(u.Id) && u.inactive != true)
-                .ToDictionaryAsync(u => u.Id);
-
-            // doctor_information.id → display name
-            var doctorInfoToName = allDoctorInfos
-                .Where(d => d.system_user_ref.HasValue && doctorUsers.ContainsKey(d.system_user_ref!.Value))
-                .ToDictionary(
-                    d => d.id,
-                    d =>
-                    {
-                        var u = doctorUsers[d.system_user_ref!.Value];
-                        return $"Dr. {u.first_name} {u.last_name}".Trim();
-                    });
-
-            int totalDoctors = allDoctorInfos.Count;
-            int activeDoctors = allDoctorInfos.Count(d =>
-                d.system_user_ref.HasValue && doctorUsers.ContainsKey(d.system_user_ref!.Value));
-
-            var doctorWorkloads = appointments
-                .Where(a => a.doctor_ref.HasValue)
-                .GroupBy(a => a.doctor_ref!.Value)
-                .Select(g => new
-                {
-                    doctorName = doctorInfoToName.ContainsKey(g.Key)
-                        ? doctorInfoToName[g.Key]
-                        : "Unknown",
-                    totalAppointments = g.Count(),
-                    completed = g.Count(a => a.appointment_status == (int)appointment_status.completed),
-                    cancelled = g.Count(a => a.appointment_status == (int)appointment_status.cancelled)
-                })
-                .OrderByDescending(x => x.totalAppointments)
-                .ToList();
-
-            double avgAppointmentsPerActiveDoctor = activeDoctors > 0
-                ? Math.Round((double)total / activeDoctors, 1)
-                : 0;
-
-            ViewBag.DoctorWorkloadDistribution = JsonSerializer.Serialize(new
-            {
-                summary = new
-                {
-                    totalDoctors,
-                    activeDoctors,
-                    avgAppointmentsPerActiveDoctor
-                },
-                doctorWorkloads
-            });
-
-            // ── 5. Doctor Leave Summary ────────────────────────────────
-            // Leaves that overlap with the selected date range
-            var leaves = await _context.doctor_leaves
-                .Where(l => l.inactive != true
-                         && l.start_date.HasValue
-                         && l.end_date.HasValue
-                         && l.start_date <= end
-                         && l.end_date >= start)
-                .ToListAsync();
-
-            var leaveTypeLabels = new Dictionary<int, string>
-            {
-                { (int)leave_type.annual_leave,             "Annual Leave" },
-                { (int)leave_type.sick_leave,               "Sick Leave" },
-                { (int)leave_type.unpaid_leave,             "Unpaid Leave" },
-                { (int)leave_type.maternity_paternity_leave,"Maternity / Paternity" },
-                { (int)leave_type.study_leave,              "Study Leave" },
-                { (int)leave_type.other,                    "Other" }
-            };
-
-            var leaveTypeBreakdown = leaves
-                .Where(l => l.leave_type.HasValue)
-                .GroupBy(l => l.leave_type!.Value)
-                .Select(g => new
-                {
-                    leaveType = leaveTypeLabels.ContainsKey(g.Key)
-                        ? leaveTypeLabels[g.Key]
-                        : "Unknown",
-                    count = g.Count()
-                })
-                .OrderByDescending(x => x.count)
-                .ToList();
-
-            int totalLeaveRecords = leaves.Count;
-            int doctorsOnLeave = leaves
-                .Where(l => l.doctor_information_ref.HasValue)
-                .Select(l => l.doctor_information_ref!.Value)
-                .Distinct()
-                .Count();
-
-            ViewBag.DoctorLeaveSummary = JsonSerializer.Serialize(new
-            {
-                summary = new
-                {
-                    totalLeaveRecords,
-                    doctorsOnLeave,
-                    leaveTypeBreakdown
-                }
-            });
-
-            return View();
-        }
-
-        // ── LIVE DASHBOARD API (Index page) ────────────────────────────
-
-        /// <summary>
-        /// Appointment counts grouped by day-of-week for the last 90 days.
-        /// Powers the bar chart on the Index dashboard.
-        /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetAppointmentsByDayOfWeek()
         {
@@ -447,6 +221,10 @@ namespace AP_clinical_system.Controllers
                 })
                 .ToListAsync();
 
+            ViewBag.Specializations = await _context.doctor_specializations
+                .Where(s => s.inactive != true)
+                .ToListAsync();
+
             return View(users);
         }
 
@@ -512,6 +290,117 @@ namespace AP_clinical_system.Controllers
                 specializations = specializations ?? new List<string>(),
                 createdOn = user.createdon.ToString("dd MMM yyyy")
             });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddDoctor(string Name, string Email, string Phone, Guid Specialty, string Password)
+        {
+            var parts = Name.Split(' ');
+            var firstName = parts[0];
+            var lastName = parts.Length > 1 ? string.Join(" ", parts.Skip(1)) : "";
+
+            var userNo = await GeneralHelper.GetAutonumber(_context, "system_user");
+
+            var user = new system_user
+            {
+                UserName = Email,
+                Email = Email,
+                PhoneNumber = Phone,
+                first_name = firstName,
+                last_name = lastName,
+                createdon = DateTime.Now,
+                inactive = false,
+                user_role = (int)user_role.doctor,
+                user_no = userNo
+            };
+
+            var result = await _userManager.CreateAsync(user, Password);
+            if (result.Succeeded)
+            {
+                var docInfo = new doctor_information
+                {
+                    id = Guid.NewGuid(),
+                    inactive = false,
+                    createdon = DateTime.Now,
+                    createdby = user.Id,
+                    system_user_ref = user.Id,
+                    job_title = "Doctor"
+                };
+                _context.doctor_informations.Add(docInfo);
+                await _context.SaveChangesAsync();
+
+                var docSpec = new doctor_information_specialization_mtm
+                {
+                    id = Guid.NewGuid(),
+                    doctor_information_ref = docInfo.id,
+                    doctor_specialization_ref = Specialty
+                };
+                _context.doctor_information_specialization_mtms.Add(docSpec);
+                await _context.SaveChangesAsync();
+
+                await _userManager.AddClaimAsync(user, new Claim("FirstName", firstName));
+                await _userManager.AddClaimAsync(user, new Claim("LastName", lastName));
+                await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Role, "doctor"));
+
+                TempData["Success"] = "Doctor added successfully.";
+            }
+            else
+            {
+                TempData["Error"] = "Failed to add doctor: " + string.Join(", ", result.Errors.Select(e => e.Description));
+            }
+
+            return RedirectToAction("Users");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddReceptionist(string Name, string Email, string Phone, string Password)
+        {
+            var parts = Name.Split(' ');
+            var firstName = parts[0];
+            var lastName = parts.Length > 1 ? string.Join(" ", parts.Skip(1)) : "";
+
+            var userNo = await GeneralHelper.GetAutonumber(_context, "system_user");
+
+            var user = new system_user
+            {
+                UserName = Email,
+                Email = Email,
+                PhoneNumber = Phone,
+                first_name = firstName,
+                last_name = lastName,
+                createdon = DateTime.Now,
+                inactive = false,
+                user_role = (int)user_role.receptionist,
+                user_no = userNo
+            };
+
+            var result = await _userManager.CreateAsync(user, Password);
+            if (result.Succeeded)
+            {
+                var recInfo = new receptionist_information
+                {
+                    id = Guid.NewGuid(),
+                    inactive = false,
+                    createdon = DateTime.Now,
+                    createdby = user.Id,
+                    system_user_ref = user.Id,
+                    job_title = "Receptionist"
+                };
+                _context.receptionist_informations.Add(recInfo);
+                await _context.SaveChangesAsync();
+
+                await _userManager.AddClaimAsync(user, new Claim("FirstName", firstName));
+                await _userManager.AddClaimAsync(user, new Claim("LastName", lastName));
+                await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Role, "receptionist"));
+
+                TempData["Success"] = "Receptionist added successfully.";
+            }
+            else
+            {
+                TempData["Error"] = "Failed to add receptionist: " + string.Join(", ", result.Errors.Select(e => e.Description));
+            }
+
+            return RedirectToAction("Users");
         }
     }
 

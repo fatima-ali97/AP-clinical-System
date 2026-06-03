@@ -201,7 +201,6 @@
                 confirmBtn.disabled = true;
                 confirmBtn.textContent = 'Saving…';
 
-                // Read token from the @Html.AntiForgeryToken() input rendered in the page body
                 const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
 
                 const body = new URLSearchParams({

@@ -18,6 +18,7 @@
     var appointments = ViewBag.Appointments as List<appointment> ?? new();
     var prescriptions = ViewBag.Prescriptions as List<prescription> ?? new();
     var doctorMap = ViewBag.DoctorInfoToUser as Dictionary<Guid, AP_clinical_system.Models.Entities.system_user> ?? new();
+    var notifications = ViewBag.Notifications as List<notification> ?? new();
     //var prescriptions = ViewBag.prescriptions as List<prescription> ?? new();
 
     static string StatusBadge(int? status) => status switch
@@ -148,30 +149,41 @@
             <h5 class="card-title">Recent Notifications</h5>
         </div>
         <div class="card-body" style="min-height:220px;">
-            <div class="container my-5">
+            <div class="container my-3">
                 <div class="row">
-                    <div class="col-md-6 offset-md-3">
-                        <ul class="timeline-3">
-                            <li>
-                                <a href="#!">Appointment Cancelled</a>
-                                <a href="#!" class="float-end">21 March, 2026</a>
-                                <p class="mt-2">Click to see more</p>
-                            </li>
-                            <li>
-                                <a href="#!">Appointment Cancelled</a>
-                                <a href="#!" class="float-end">21 March, 2026</a>
-                                <p class="mt-2">Click to see more</p>
-                            </li>
-                            <li>
-                                <a href="#!">Appointment Cancelled</a>
-                                <a href="#!" class="float-end">21 March, 2026</a>
-                                <p class="mt-2">Click to see more</p>
-                            </li>
-                        </ul>
+                    <div class="col-md-10 offset-md-1">
+                        @{
+                            var recentNotifications = notifications.Take(3).ToList();
+                        }
+                        @if (!recentNotifications.Any())
+                        {
+                            <p class="text-muted" style="font-size:14px;">No new notifications.</p>
+                        }
+                        else
+                        {
+                            <ul class="timeline-3">
+                                @foreach (var note in recentNotifications)
+                                {
+                                    <li>
+                                        <a href="#!">@(note.title ?? "Notification")</a>
+                                        <a href="#!" class="float-end">@(note.createdon.ToString("dd MMM, yyyy"))</a>
+                                        <p class="mt-2">@(note.message)</p>
+                                    </li>
+                                }
+                            </ul>
+                        }
                     </div>
                 </div>
             </div>
         </div>
+        @if (notifications.Count > 3)
+        {
+            <div class="card-footer text-end" style="background:transparent; border-top:1px solid #f0f0f0; padding: 10px 16px;">
+                <a href="/Patient/Notifications" style="font-size:13px; font-weight:600; color:var(--color-brand-primary); text-decoration:none;">
+                    View All (@notifications.Count) →
+                </a>
+            </div>
+        }
     </div>
 </div>
 

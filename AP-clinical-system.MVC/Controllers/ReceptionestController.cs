@@ -85,6 +85,16 @@ namespace AP_clinical_system.Controllers
                 doctorSpecializationsMap[d.id] = spec != null ? spec.doctor_specialization_ref.ToString() : "";
             }
 
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser != null)
+            {
+                var notifications = await _context.notifications
+                    .Where(n => n.system_user_ref == currentUser.Id && n.inactive != true)
+                    .OrderByDescending(n => n.createdon)
+                    .ToListAsync();
+                ViewBag.Notifications = notifications;
+            }
+
             ViewBag.Appointments = appointments;
             ViewBag.Patients = patientInfos;
             ViewBag.Doctors = doctorInfos;
@@ -389,7 +399,16 @@ namespace AP_clinical_system.Controllers
         // GET: Receptionist/Notifications
         public async Task<ActionResult> Notifications()
         {
-            return View();
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return NotFound();
+
+            var notifications = await _context.notifications
+                .Where(n => n.system_user_ref == currentUser.Id && n.inactive != true)
+                .OrderByDescending(n => n.createdon)
+                .ToListAsync();
+
+            ViewBag.Notifications = notifications;
+            return View(currentUser);
         }
     }
 }

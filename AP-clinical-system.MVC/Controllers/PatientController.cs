@@ -1,4 +1,4 @@
-﻿using AP_clinical_system.Models;
+using AP_clinical_system.Models;
 using AP_clinical_system.Models.Entities;
 using AP_clinical_system.Models.Enums;
 using AP_clinical_system.Models.sql_Context;
@@ -170,6 +170,11 @@ namespace AP_clinical_system.Controllers
                 })
                 .ToList();
 
+            var notifications = await _context.notifications
+                .Where(n => n.system_user_ref == currentUser.Id && n.inactive != true)
+                .OrderByDescending(n => n.createdon)
+                .ToListAsync();
+
             ViewBag.PatientInfo = patientInfo;
             ViewBag.PatientId = patientInfo.id;
             ViewBag.Appointments = appointments;
@@ -177,6 +182,7 @@ namespace AP_clinical_system.Controllers
             ViewBag.DoctorInfoToUser = doctorMap;
             ViewBag.MyDoctors = myDoctors;
             ViewBag.Prescriptions = prescriptions;
+            ViewBag.Notifications = notifications;
             ViewBag.CalendarEventsJson = System.Text.Json.JsonSerializer.Serialize(calendarEvents);
 
             return View(currentUser);
@@ -253,7 +259,21 @@ namespace AP_clinical_system.Controllers
             return View(currentUser);
         }
 
-        public ActionResult Notifications() => View();
+        public async Task<ActionResult> Notifications()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+                return NotFound();
+
+            var notifications = await _context.notifications
+                .Where(n => n.system_user_ref == currentUser.Id && n.inactive != true)
+                .OrderByDescending(n => n.createdon)
+                .ToListAsync();
+
+            ViewBag.Notifications = notifications;
+
+            return View(currentUser);
+        }
 
 
 

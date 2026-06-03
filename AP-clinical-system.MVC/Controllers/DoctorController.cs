@@ -26,9 +26,32 @@ namespace AP_clinical_system.Controllers
             _userManager = userManager;
         }
 
-        public ActionResult Index()
+        public async Task<ActionResult> Index()
         {
-            return View();
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser != null)
+            {
+                var notifications = await _context.notifications
+                    .Where(n => n.system_user_ref == currentUser.Id && n.inactive != true)
+                    .OrderByDescending(n => n.createdon)
+                    .ToListAsync();
+                ViewBag.Notifications = notifications;
+            }
+            return View(currentUser);
+        }
+
+        public async Task<ActionResult> Notifications()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return NotFound();
+
+            var notifications = await _context.notifications
+                .Where(n => n.system_user_ref == currentUser.Id && n.inactive != true)
+                .OrderByDescending(n => n.createdon)
+                .ToListAsync();
+
+            ViewBag.Notifications = notifications;
+            return View(currentUser);
         }
 
         // ── Shared helper: build a Guid → system_user map for a set of doctor refs ──

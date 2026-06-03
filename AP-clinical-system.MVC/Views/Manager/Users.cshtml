@@ -9,32 +9,42 @@
     Layout = "_AppLayout";
 }
 
-<div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
-    <span class="fw-semibold text-muted me-1" style="font-size:13px;">Filter by role:</span>
-    <button class="btn btn-sm role-filter-btn active" data-role="all" style="border-radius:20px; font-size:12.5px;">
-        All
-        <span class="badge bg-secondary ms-1">@Model.Count</span>
-    </button>
-    @foreach (var role in Enum.GetValues<user_role>())
-    {
-        var count = Model.Count(u => u.UserRole == (int)role);
-        if (count == 0) continue;
-        var label = role.ToString().Replace("_", " ");
-        <button class="btn btn-sm role-filter-btn" data-role="@((int)role)"
-                style="border-radius:20px; font-size:12.5px; text-transform:capitalize;">
-            @label
-            <span class="badge ms-1
-            @(role switch
-                  {
-                      user_role.system_admin => "bg-danger",
-                      user_role.clinic_manager => "bg-indigo",
-                      user_role.doctor => "bg-teal",
-                      user_role.receptionist => "bg-blue",
-                      user_role.patient => "bg-green",
-                      _ => "bg-secondary"
-                  })">@count</span>
+<div class="d-flex flex-wrap gap-2 mb-3 align-items-center justify-content-between">
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+        <span class="fw-semibold text-muted me-1" style="font-size:13px;">Filter by role:</span>
+        <button class="btn btn-sm role-filter-btn active" data-role="all" style="border-radius:20px; font-size:12.5px;">
+            All
+            <span class="badge bg-secondary ms-1">@Model.Count</span>
         </button>
-    }
+        @foreach (var role in Enum.GetValues<user_role>())
+        {
+            var count = Model.Count(u => u.UserRole == (int)role);
+            if (count == 0) continue;
+            var label = role.ToString().Replace("_", " ");
+            <button class="btn btn-sm role-filter-btn" data-role="@((int)role)"
+                    style="border-radius:20px; font-size:12.5px; text-transform:capitalize;">
+                @label
+                <span class="badge ms-1
+                @(role switch
+                      {
+                          user_role.system_admin => "bg-danger",
+                          user_role.clinic_manager => "bg-indigo",
+                          user_role.doctor => "bg-teal",
+                          user_role.receptionist => "bg-blue",
+                          user_role.patient => "bg-green",
+                          _ => "bg-secondary"
+                      })">@count</span>
+            </button>
+        }
+    </div>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-primary btn-sm d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#addDoctorModal" style="background: var(--color-brand-primary); border: none; border-radius: 8px;">
+            <i class="fa-solid fa-user-doctor"></i> Add Doctor
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#addReceptionistModal" style="background: var(--color-steel-500); border: none; border-radius: 8px;">
+            <i class="fa-solid fa-user-tie"></i> Add Receptionist
+        </button>
+    </div>
 </div>
 
 <div class="card">
@@ -145,6 +155,91 @@
 
         </div>
     </div>
+</div>
+
+<!-- Add Doctor Modal -->
+<div class="modal fade" id="addDoctorModal" tabindex="-1" aria-labelledby="addDoctorModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="/Manager/AddDoctor" method="post">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addDoctorModalLabel">Add New Doctor</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div class="mb-3">
+                <label for="docName" class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="docName" name="Name" required>
+            </div>
+            <div class="mb-3">
+                <label for="docEmail" class="form-label">Email Address</label>
+                <input type="email" class="form-control" id="docEmail" name="Email" required>
+            </div>
+            <div class="mb-3">
+                <label for="docPhone" class="form-label">Phone Number</label>
+                <input type="text" class="form-control" id="docPhone" name="Phone" required>
+            </div>
+            <div class="mb-3">
+                <label for="docSpecialty" class="form-label">Specialty</label>
+                <select class="form-select" id="docSpecialty" name="Specialty" required>
+                    <option value="" disabled selected>Select a specialization...</option>
+                    @if(ViewBag.Specializations != null)
+                    {
+                        foreach(var spec in ViewBag.Specializations)
+                        {
+                            <option value="@spec.id">@spec.specialization_name</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="docPassword" class="form-label">Temporary Password</label>
+                <input type="password" class="form-control" id="docPassword" name="Password" required>
+            </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" style="background: var(--color-brand-primary); border: none;">Add Doctor</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add Receptionist Modal -->
+<div class="modal fade" id="addReceptionistModal" tabindex="-1" aria-labelledby="addReceptionistModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="/Manager/AddReceptionist" method="post">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addReceptionistModalLabel">Add New Receptionist</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div class="mb-3">
+                <label for="recName" class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="recName" name="Name" required>
+            </div>
+            <div class="mb-3">
+                <label for="recEmail" class="form-label">Email Address</label>
+                <input type="email" class="form-control" id="recEmail" name="Email" required>
+            </div>
+            <div class="mb-3">
+                <label for="recPhone" class="form-label">Phone Number</label>
+                <input type="text" class="form-control" id="recPhone" name="Phone" required>
+            </div>
+            <div class="mb-3">
+                <label for="recPassword" class="form-label">Temporary Password</label>
+                <input type="password" class="form-control" id="recPassword" name="Password" required>
+            </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" style="background: var(--color-brand-primary); border: none;">Add Receptionist</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 
 
