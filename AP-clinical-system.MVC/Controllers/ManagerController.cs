@@ -42,9 +42,6 @@ namespace AP_clinical_system.Controllers
             ViewBag.StartDate = startDate;
             ViewBag.EndDate = endDate;
 
-            // ── 1. Appointment Statistics ──────────────────────────────
-            // Fetch every active appointment inside the date range once;
-            // all other stats are derived from this same in-memory list.
             var appointments = await _context.appointments
                 .Where(a => a.inactive != true
                          && a.date.HasValue
