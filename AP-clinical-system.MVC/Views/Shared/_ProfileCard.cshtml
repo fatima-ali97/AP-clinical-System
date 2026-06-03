@@ -1,0 +1,144 @@
+@using AP_clinical_system.Models.Entities
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<system_user> _profileUserManager
+
+@{
+    var profileUser = ViewBag.ProfileUser as system_user;
+    if (profileUser == null)
+    {
+        profileUser = await _profileUserManager.GetUserAsync(User);
+    }
+
+    var profileInfo = ViewBag.PatientInfo as patient_information;
+
+    string profileInitials()
+    {
+        var f = profileUser?.first_name?.Length > 0 ? profileUser.first_name[0].ToString() : "";
+        var l = profileUser?.last_name?.Length > 0 ? profileUser.last_name[0].ToString() : "";
+        return (f + l).ToUpper();
+    }
+}
+
+<div class="mp-card-inner">
+
+    <div class="mp-avatar-row">
+        <div class="mp-avatar">@profileInitials()</div>
+        <div>
+            <div class="mp-name" id="mp-display-name">
+                @($"{profileUser?.first_name} {profileUser?.last_name}".Trim())
+            </div>
+            <div class="mp-record">Record No: @(profileInfo?.record_no ?? "—")</div>
+        </div>
+    </div>
+
+    <div class="mp-fields">
+
+        <div class="mp-field">
+            <div class="mp-field-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                    <polyline points="22,6 12,13 2,6" />
+                </svg>
+            </div>
+            <div>
+                <div class="mp-field-label">Email</div>
+                <div class="mp-field-value">@(profileUser?.Email ?? "—")</div>
+            </div>
+        </div>
+
+        <div class="mp-field">
+            <div class="mp-field-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path
+                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.77 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 5.99 5.99l.91-1.91a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                </svg>
+            </div>
+            <div>
+                <div class="mp-field-label">Phone</div>
+                <div class="mp-field-value" id="mp-display-phone">@(profileUser?.PhoneNumber ?? "—")</div>
+            </div>
+        </div>
+
+        <div class="mp-field">
+            <div class="mp-field-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+            </div>
+            <div>
+                <div class="mp-field-label">CPR</div>
+                <div class="mp-field-value">@(profileUser?.cpr ?? "—")</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="mp-actions">
+        <button class="mp-btn-edit" id="mpEditBtn" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+            Edit Profile
+        </button>
+    </div>
+
+</div>
+
+
+<div class="mp-modal-backdrop" id="mpModalBackdrop">
+    <div class="mp-modal" role="dialog" aria-modal="true" aria-labelledby="mpModalTitle">
+
+        <div class="mp-modal-header">
+            <span class="mp-modal-title" id="mpModalTitle">Edit Profile</span>
+            <button class="mp-modal-close" id="mpModalClose" type="button" aria-label="Close">&times;</button>
+        </div>
+
+        <div class="mp-form-group">
+            <label class="mp-form-label" for="mpFirstName">First Name</label>
+            <input class="mp-form-input" id="mpFirstName" type="text" value="@(profileUser?.first_name ?? "")"
+                   maxlength="100" />
+        </div>
+
+        <div class="mp-form-group">
+            <label class="mp-form-label" for="mpLastName">Last Name</label>
+            <input class="mp-form-input" id="mpLastName" type="text" value="@(profileUser?.last_name ?? "")"
+                   maxlength="100" />
+        </div>
+
+        <div class="mp-form-group">
+            <label class="mp-form-label" for="mpPhone">Phone Number</label>
+            <input class="mp-form-input" id="mpPhone" type="tel" value="@(profileUser?.PhoneNumber ?? "")"
+                   maxlength="20" />
+        </div>
+
+        <div class="mp-form-group">
+            <label class="mp-form-label" for="mpEmail">Email</label>
+            <input class="mp-form-input" id="mpEmail" type="email" value="@(profileUser?.Email ?? "")" disabled />
+            <div class="mp-hint">Email cannot be changed.</div>
+        </div>
+
+        <div class="mp-form-group">
+            <label class="mp-form-label" for="mpCpr">CPR</label>
+            <input class="mp-form-input" id="mpCpr" type="text" value="@(profileUser?.cpr ?? "")" disabled />
+            <div class="mp-hint">CPR cannot be changed.</div>
+        </div>
+
+        <div class="mp-modal-footer">
+            <button class="mp-btn-cancel" id="mpCancelBtn" type="button">Cancel</button>
+            <button class="mp-btn-save" id="mpSaveBtn" type="button">Save Changes</button>
+        </div>
+
+    </div>
+</div>
+
+<div class="mp-toast" id="mpToast"></div>
+
+@* <script src="~/js/app/profile-card.js" defer></script> *@

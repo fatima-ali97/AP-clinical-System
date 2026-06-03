@@ -1,0 +1,112 @@
+@using AP_clinical_system.Models.Entities
+@{
+    Layout = "_AppLayout";
+    ViewData["Title"] = "My Appointments";
+    ViewData["ActivePage"] = "My Appointments";
+}
+
+<h1 class="page-heading">My Appointments</h1>
+
+<div class="tabs">
+    <button class="tab-button active" data-status="All">All</button>
+    <button class="tab-button" data-status="Upcoming">Upcoming</button>
+    <button class="tab-button" data-status="InProgress">In&#8209;Progress</button>
+    <button class="tab-button" data-status="Completed">Completed</button>
+</div>
+
+<div class="table-responsive mt-4">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Patient</th>
+                <th>Date &amp; Time</th>
+                <th>Status</th>
+                <th class="d-none-sm">Doctor</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                var appointments = ViewBag.Appointments as List<appointment> ?? new();
+                var patientMap = ViewBag.PatientUserMap as Dictionary<Guid, system_user> ?? new();
+                var doctorMap = ViewBag.DoctorInfoToUser as Dictionary<Guid, system_user> ?? new();
+            }
+            @if (appointments.Count > 0)
+            {
+                foreach (var appt in appointments)
+                {
+                    var statusText = appt.appointment_status == 1004 ? "Upcoming" :
+                    appt.appointment_status == 1005 ? "InProgress" : "Completed";
+
+                    system_user? patientUser = null;
+                    if (appt.patient_ref.HasValue)
+                        patientMap.TryGetValue(appt.patient_ref.Value, out patientUser);
+                    var patientName = patientUser != null
+                    ? $"{patientUser.first_name} {patientUser.last_name}".Trim()
+                    : "—";
+
+                    system_user? doctorUser = null;
+                    if (appt.doctor_ref.HasValue)
+                        doctorMap.TryGetValue(appt.doctor_ref.Value, out doctorUser);
+                    var doctorName = doctorUser != null
+                    ? $"{doctorUser.first_name} {doctorUser.last_name}".Trim()
+                    : "—";
+
+                    var dateDisplay = appt.date?.ToString("yyyy-MM-dd") ?? "—";
+
+                    <tr data-status="@statusText">
+                        <td>@patientName</td>
+                        <td>@dateDisplay</td>
+                        <td>
+                            <span class="badge @(statusText == "Completed" ? "badge-success" : statusText == "InProgress" ? "badge-warning" : "badge-primary")">
+                                @(statusText == "InProgress" ? "In&#8209;Progress" : statusText)
+                            </span>
+                        </td>
+                        <td class="d-none-sm">@doctorName</td>
+                        <td>
+                            @if (statusText == "Upcoming")
+                            {
+                                <form asp-controller="Doctor" asp-action="StartAppointment" method="post" class="d-inline">
+                                    <input type="hidden" name="appointmentId" value="@appt.id" />
+                                    <button type="submit" class="btn btn-sm btn-success">Mark In&#8209;Progress</button>
+                                </form>
+                            }
+                            @if (statusText == "InProgress")
+                            {
+                                <form asp-controller="Doctor" asp-action="CompleteAppointment" method="post" class="d-inline">
+                                    <input type="hidden" name="appointmentId" value="@appt.id" />
+                                    <button type="submit" class="btn btn-sm btn-primary">Mark Completed</button>
+                                </form>
+                            }
+                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                    data-bs-toggle="modal" data-bs-target="#addNoteModal"
+                                    data-appt-id="@appt.id">
+                                Add Note
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr><td colspan="5" class="text-center">No appointments found.</td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@* Include the Add Note modal *@
+@await Html.PartialAsync("_AddNoteModal")
+
+<script>
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const filter = btn.dataset.status;
+            document.querySelectorAll('tbody tr').forEach(row => {
+                row.style.display = (filter === 'All' || row.dataset.status === filter) ? '' : 'none';
+            });
+        });
+    });
+</script>

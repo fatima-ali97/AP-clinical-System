@@ -1,0 +1,218 @@
+@using AP_clinical_system.Models.Entities
+@using AP_clinical_system.Models.Enums
+@using AP_clinical_system.ViewModels
+@model BookAppointmentViewModel
+
+<div class="appt-backdrop" id="apptModalBackdrop">
+    <div class="appt-modal" id="apptModal" role="dialog" aria-modal="true" aria-labelledby="apptModalTitle">
+        <form asp-controller="Receptionist" asp-action="CreateAppointment" method="post" id="apptForm" novalidate>
+            @Html.AntiForgeryToken()
+
+            <div class="appt-modal-header">
+                <h5 id="apptModalTitle">Book an Appointment</h5>
+                <button type="button" class="appt-close-btn" id="apptCloseBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="appt-modal-body">
+
+                <!-- Specialization Dropdown -->
+                <div class="appt-field">
+                    <label asp-for="specialization_ref">Specialization</label>
+                    <select asp-for="specialization_ref" name="specialization_ref" id="apptSpecialization" required>
+                        <option value="">Select specialization</option>
+                        @if (ViewBag.Specializations != null)
+                        {
+                            foreach (var spec in ViewBag.Specializations)
+                            {
+                                <option value="@spec.id">@spec.specialization_name</option>
+                            }
+                        }
+                    </select>
+                    <span asp-validation-for="specialization_ref" class="text-danger small"></span>
+                </div>
+
+                <!-- Doctor Dropdown -->
+                <div class="appt-field">
+                    <label asp-for="doctor_ref">Doctor</label>
+                    <select asp-for="doctor_ref" name="doctor_ref" id="apptDoctor" disabled required>
+                        <option value="">Select specialization first</option>
+                    </select>
+                    <span asp-validation-for="doctor_ref" class="text-danger small"></span>
+                </div>
+
+                <!-- Patient Dropdown -->
+                <div class="appt-field">
+                    <label asp-for="patient_ref">Patient</label>
+                    <select asp-for="patient_ref" name="patient_ref" id="apptPatient" required>
+                        <option value="">Select patient</option>
+                        @if (ViewBag.Patients != null)
+                        {
+                            foreach (var patient in ViewBag.Patients)
+                            {
+                                var pUser = ViewBag.PatientUserMap != null && ViewBag.PatientUserMap.ContainsKey(patient.id) ? ViewBag.PatientUserMap[patient.id] : null;
+                                <option value="@patient.id">
+                                    @(pUser != null ? $"{pUser.first_name} {pUser.last_name}" : "Unknown Patient")
+                                </option>
+                            }
+                        }
+                    </select>
+                    <span asp-validation-for="patient_ref" class="text-danger small"></span>
+                </div>
+
+                <!-- Date Input -->
+                <div class="appt-field">
+                    <label asp-for="date">Date</label>
+                    <input asp-for="date" name="date" type="date" id="apptDate" disabled required min="@(DateTime.Today.ToString("yyyy-MM-dd"))" />
+                    <span asp-validation-for="date" class="text-danger small"></span>
+                </div>
+
+                <!-- Time Slot Grid System -->
+                <div class="appt-field">
+                    <label>Time Slot</label>
+                    <input type="hidden" asp-for="appointment_time_slot" name="appointment_time_slot" id="apptSlotInput" required />
+                    <div id="apptSlotGrid">
+                        <p class="appt-slot-hint">Select a doctor and date to see available slots.</p>
+                    </div>
+                    <span asp-validation-for="appointment_time_slot" class="text-danger small"></span>
+                </div>
+
+                <!-- Reason Text Area -->
+                <div class="appt-field">
+                    <label asp-for="appointment_reason">Reason for visit</label>
+                    <textarea asp-for="appointment_reason" name="appointment_reason" id="apptReason" rows="3" placeholder="Briefly describe your reason..."></textarea>
+                    <span asp-validation-for="appointment_reason" class="text-danger small"></span>
+                </div>
+
+            </div>
+
+            <div class="appt-modal-footer">
+                <button type="button" class="appt-btn-cancel" id="apptCancelBtn">Cancel</button>
+                <button type="submit" class="appt-btn-confirm" id="apptConfirmBtn">Confirm Booking</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="~/js/timeSlotPicker.js"></script>
+<script>
+    (function () {
+        function openModal() {
+            resetApptForm();
+            document.getElementById('apptModalBackdrop').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeModal() {
+            document.getElementById('apptModalBackdrop').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        document.getElementById('openModalBtn')?.addEventListener('click', e => { e.preventDefault(); openModal(); });
+        document.getElementById('apptCloseBtn').addEventListener('click', closeModal);
+        document.getElementById('apptCancelBtn').addEventListener('click', closeModal);
+        document.getElementById('apptModalBackdrop').addEventListener('click', function (e) {
+            if (e.target === this) closeModal();
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        document.getElementById('apptSpecialization').addEventListener('change', async function () {
+            const specId = this.value;
+            const doctorSel = document.getElementById('apptDoctor');
+            const dateInput = document.getElementById('apptDate');
+
+            doctorSel.innerHTML = '<option value="">Loading…</option>';
+            doctorSel.disabled = true;
+            dateInput.value = '';
+            dateInput.disabled = true;
+            clearApptSlots();
+
+            if (!specId) {
+                doctorSel.innerHTML = '<option value="">Select specialization first</option>';
+                return;
+            }
+            try {
+                // Pointing to your corrected Receptionist endpoints if needed, or keeping your current structure
+                const res = await fetch(`/Appointments/GetDoctorsBySpecialization?specializationId=${specId}`);
+                const doctors = await res.json();
+                doctorSel.innerHTML = '<option value="">Select doctor</option>';
+                doctors.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d.id;
+                    opt.dataset.userId = d.userId;
+                    opt.textContent = d.name;
+                    doctorSel.appendChild(opt);
+                });
+                doctorSel.disabled = false;
+            } catch {
+                doctorSel.innerHTML = '<option value="">Failed to load doctors</option>';
+            }
+        });
+
+        document.getElementById('apptDoctor').addEventListener('change', function () {
+            const dateInput = document.getElementById('apptDate');
+            clearApptSlots();
+            dateInput.value = '';
+            if (this.value) {
+                dateInput.min = new Date().toISOString().split('T')[0];
+                dateInput.disabled = false;
+            } else {
+                dateInput.disabled = true;
+            }
+        });
+
+        document.getElementById('apptDate').addEventListener('change', function () {
+            const sel = document.getElementById('apptDoctor').selectedOptions[0];
+            const userId = sel?.dataset.userId || sel?.value;
+            const date = this.value;
+            if (userId && date) {
+                window.TimeSlotPicker.loadSlots(
+                    userId,
+                    date,
+                    document.getElementById('apptSlotGrid'),
+                    document.getElementById('apptSlotInput')
+                );
+            }
+        });
+
+        function clearApptSlots() {
+            window.TimeSlotPicker.clearSlots(
+                document.getElementById('apptSlotGrid'),
+                document.getElementById('apptSlotInput'),
+                'Select a doctor and date to see available slots.'
+            );
+        }
+
+        // Standard HTML form POST processing for CreateAppointment action
+        document.getElementById('apptForm').addEventListener('submit', function (e) {
+            if (!document.getElementById('apptSlotInput').value) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Time Slot Selected',
+                    text: 'Please select a time slot before confirming.',
+                    confirmButtonColor: '#38789e'
+                });
+                return;
+            }
+            const btn = document.getElementById('apptConfirmBtn');
+            btn.disabled = true;
+            btn.textContent = 'Booking…';
+        });
+
+        function resetApptForm() {
+            document.getElementById('apptForm').reset();
+            const doc = document.getElementById('apptDoctor');
+            const date = document.getElementById('apptDate');
+            doc.innerHTML = '<option value="">Select specialization first</option>';
+            doc.disabled = true;
+            date.disabled = true;
+            clearApptSlots();
+        }
+    })();
+</script>

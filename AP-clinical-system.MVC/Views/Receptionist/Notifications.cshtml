@@ -4,5 +4,272 @@
     ViewData["ActivePage"] = "Notifications";
 }
 
+@section Styles {
+    <link href="~/css/app/app.css" rel="stylesheet" />
+    <style>
+        .notif-page-wrap {
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 0 16px 40px;
+        }
 
-<h1>Notifications</h1>
+        .notif-page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .notif-page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--color-text-primary, #0f172a);
+        }
+
+        .notif-mark-all-btn {
+            font-size: 13px;
+            padding: 6px 14px;
+            border: 1px solid var(--color-primary, #38789e);
+            border-radius: 6px;
+            background: transparent;
+            color: var(--color-primary, #38789e);
+            cursor: pointer;
+            transition: background .15s, color .15s;
+        }
+
+            .notif-mark-all-btn:hover {
+                background: var(--color-primary, #38789e);
+                color: #fff;
+            }
+
+        .notif-section-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--color-text-muted, #64748b);
+            margin: 24px 0 10px;
+        }
+
+        .timeline-3 {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+            .timeline-3 li {
+                position: relative;
+                padding: 14px 14px 14px 48px;
+                border-radius: 10px;
+                margin-bottom: 10px;
+                background: var(--color-surface, #fff);
+                border: 1px solid var(--border-color, #e2e8f0);
+                transition: border-color .15s, box-shadow .15s;
+            }
+
+                .timeline-3 li:hover {
+                    border-color: var(--color-primary, #38789e);
+                    box-shadow: 0 2px 8px rgba(56,120,158,.08);
+                }
+
+                .timeline-3 li.is-read {
+                    opacity: .65;
+                }
+
+                .timeline-3 li::before {
+                    content: '';
+                    position: absolute;
+                    left: 16px;
+                    top: 18px;
+                    width: 10px;
+                    height: 10px;
+                    border-radius: 50%;
+                    background: var(--color-primary, #38789e);
+                }
+
+                .timeline-3 li.is-read::before {
+                    background: var(--color-slate-300, #cbd5e1);
+                }
+
+        .notif-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .notif-title-text {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--color-text-primary, #0f172a);
+        }
+
+        .notif-time {
+            font-size: 11px;
+            color: var(--color-text-muted, #64748b);
+            white-space: nowrap;
+        }
+
+        .notif-message {
+            font-size: 13px;
+            color: var(--color-text-secondary, #334155);
+            margin: 0;
+        }
+
+        .notif-mark-read-btn {
+            font-size: 11px;
+            margin-top: 8px;
+            padding: 3px 10px;
+            border: 1px solid var(--color-slate-300, #cbd5e1);
+            border-radius: 5px;
+            background: transparent;
+            color: var(--color-text-muted, #64748b);
+            cursor: pointer;
+        }
+
+            .notif-mark-read-btn:hover {
+                background: var(--color-slate-100, #f1f5f9);
+            }
+
+        .notif-empty {
+            text-align: center;
+            padding: 48px 0;
+            color: var(--color-text-muted, #64748b);
+            font-size: 14px;
+        }
+
+        .notif-loading {
+            text-align: center;
+            padding: 48px 0;
+            color: var(--color-text-muted, #64748b);
+        }
+
+        .unread-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--color-primary, #38789e);
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+    </style>
+}
+
+<div class="notif-page-wrap">
+    <div class="notif-page-header">
+        <h2 class="notif-page-title">Notifications</h2>
+        <button class="notif-mark-all-btn" id="markAllReadBtn">Mark all as read</button>
+    </div>
+
+    <div id="notifContainer">
+        <div class="notif-loading">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite; display:inline-block;">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+            </svg>
+            <p style="margin-top:12px;">Loading notifications…</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
+@section Scripts {
+    <script>
+        (function () {
+            function timeAgo(dateStr) {
+                if (!dateStr) return '';
+                const d = new Date(dateStr);
+                const diff = Math.floor((Date.now() - d.getTime()) / 1000);
+                if (diff < 60) return 'Just now';
+                if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+                if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+                if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+                return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            }
+
+            function buildList(items, isRead) {
+                if (!items.length) return '';
+                return items.map(n => `
+                    <li class="${isRead ? 'is-read' : ''}" data-id="${n.id}">
+                        <div class="notif-title-row">
+                            <span class="notif-title-text">${n.title || 'Notification'}${!isRead ? '<span class="unread-dot"></span>' : ''}</span>
+                            <span class="notif-time">${timeAgo(n.createdon)}</span>
+                        </div>
+                        <p class="notif-message">${n.message || ''}</p>
+                        ${!isRead ? `<button class="notif-mark-read-btn" data-notif-id="${n.id}">Mark as read</button>` : ''}
+                    </li>`).join('');
+            }
+
+            async function loadNotifications() {
+                const container = document.getElementById('notifContainer');
+                try {
+                    const res = await fetch('/Notifications/GetMyNotifications');
+                    if (!res.ok) throw new Error('Failed to load');
+                    const data = await res.json();
+
+                    const unread = data.unread || [];
+                    const read   = data.read   || [];
+
+                    if (!unread.length && !read.length) {
+                        container.innerHTML = '<div class="notif-empty">You have no notifications yet.</div>';
+                        return;
+                    }
+
+                    let html = '';
+                    if (unread.length) {
+                        html += `<div class="notif-section-label">Unread (${unread.length})</div>
+                                 <ul class="timeline-3">${buildList(unread, false)}</ul>`;
+                    }
+                    if (read.length) {
+                        html += `<div class="notif-section-label">Read</div>
+                                 <ul class="timeline-3">${buildList(read, true)}</ul>`;
+                    }
+                    container.innerHTML = html;
+                } catch (err) {
+                    container.innerHTML = '<div class="notif-empty">Could not load notifications. Please refresh.</div>';
+                }
+            }
+
+            async function markRead(notifId) {
+                await fetch('/Notifications/MarkAsRead', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                    },
+                    body: `notificationId=${encodeURIComponent(notifId)}`
+                });
+                loadNotifications();
+            }
+
+            async function markAllRead() {
+                await fetch('/Notifications/MarkAllAsRead', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                    }
+                });
+                loadNotifications();
+            }
+
+            document.getElementById('notifContainer').addEventListener('click', function (e) {
+                const btn = e.target.closest('.notif-mark-read-btn');
+                if (btn) markRead(btn.dataset.notifId);
+            });
+
+            document.getElementById('markAllReadBtn').addEventListener('click', markAllRead);
+
+            loadNotifications();
+        })();
+    </script>
+    @Html.AntiForgeryToken()
+}

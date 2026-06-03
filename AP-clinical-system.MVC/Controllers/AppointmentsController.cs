@@ -621,6 +621,134 @@ namespace AP_clinical_system.Controllers
             return RedirectToAction("Index", "Receptionist");
         }
 
+        [HttpPost]
+        public IActionResult CheckInAppointment(Guid appointment_id)
+        {
+            try
+            {
+                var appointment = context.appointments
+                    .FirstOrDefault(a => a.id == appointment_id && a.inactive != true);
+
+                if (appointment == null)
+                    return BadRequest("Appointment Not Found or is Inactive");
+
+                var receptionistId = GeneralHelper.GetUserIdByJWT(User);
+                var receptionistUserCheck = GeneralHelper.VerifyUserType(context, receptionistId, (int)user_role.receptionist);
+                if (!receptionistUserCheck)
+                    return BadRequest("User is not a receptionist");
+
+                appointment.appointment_status = (int)appointment_status.checked_in;
+                appointment.modifiedon = DateTime.UtcNow;
+                appointment.modifiedby = receptionistId;
+
+                context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+
+            return RedirectToAction("Index", "Receptionist");
+        }
+
+        [HttpPost]
+        public IActionResult NoShowAppointment(Guid appointment_id)
+        {
+            try
+            {
+                var appointment = context.appointments
+                    .FirstOrDefault(a => a.id == appointment_id && a.inactive != true);
+
+                if (appointment == null)
+                    return BadRequest("Appointment Not Found or is Inactive");
+
+                var receptionistId = GeneralHelper.GetUserIdByJWT(User);
+                var receptionistUserCheck = GeneralHelper.VerifyUserType(context, receptionistId, (int)user_role.receptionist);
+                if (!receptionistUserCheck)
+                    return BadRequest("User is not a receptionist");
+
+                appointment.appointment_status = (int)appointment_status.no_show;
+                appointment.modifiedon = DateTime.UtcNow;
+                appointment.modifiedby = receptionistId;
+
+                context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+
+            return RedirectToAction("Index", "Receptionist");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetAppointmentInfo(Guid apptID)
+        {
+            var currentUser = await context.Users
+                .FirstOrDefaultAsync(u => u.UserName == User.Identity!.Name);
+            if (currentUser == null) return NotFound();
+
+            var appt = await context.appointments
+                .FirstOrDefaultAsync(a => a.id == apptID && a.inactive != true);
+
+            if (appt == null) return NotFound();
+
+            bool isReceptionist = GeneralHelper.VerifyUserType(context, currentUser.Id, (int)user_role.receptionist);
+            bool isDoctor = GeneralHelper.VerifyUserType(context, currentUser.Id, (int)user_role.doctor);
+            
+            var patientInfo = await context.patient_informations
+                .FirstOrDefaultAsync(p => p.system_user_ref == currentUser.Id && p.inactive != true);
+            bool isPatientOwner = patientInfo != null && appt.patient_ref == patientInfo.id;
+
+            if (!isReceptionist && !isDoctor && !isPatientOwner)
+                return Unauthorized();
+
+            system_user? doctorUser = null;
+            if (appt.doctor_ref.HasValue)
+            {
+                var doctorInfo = await context.doctor_informations
+                    .FirstOrDefaultAsync(d => d.id == appt.doctor_ref && d.inactive != true);
+
+                if (doctorInfo?.system_user_ref.HasValue == true)
+                    doctorUser = await context.Users.FirstOrDefaultAsync(u => u.Id == doctorInfo.system_user_ref);
+                else
+                    doctorUser = await context.Users.FirstOrDefaultAsync(u => u.Id == appt.doctor_ref);
+            }
+
+            system_user? patientUser = null;
+            if (appt.patient_ref.HasValue)
+            {
+                var pInfo = await context.patient_informations
+                    .FirstOrDefaultAsync(p => p.id == appt.patient_ref && p.inactive != true);
+                if (pInfo?.system_user_ref.HasValue == true)
+                    patientUser = await context.Users.FirstOrDefaultAsync(u => u.Id == pInfo.system_user_ref);
+            }
+
+            var specialization = appt.specialization_ref.HasValue
+                ? await context.doctor_specializations.FirstOrDefaultAsync(s => s.id == appt.specialization_ref)
+                : null;
+
+            var doctorName = doctorUser != null
+                ? $"Dr. {GeneralHelper.GetUserFullNameByID(context, doctorUser.Id)}"
+                : "—";
+                
+            var patientName = patientUser != null
+                ? $"{patientUser.first_name} {patientUser.last_name}"
+                : "—";
+
+            return Json(new
+            {
+                appointment_no = appt.appointment_no,
+                date = appt.date?.ToString("dd MMM yyyy"),
+                time_slot = appt.appointment_time_slot,
+                status = appt.appointment_status,
+                reason = appt.appointment_reason,
+                patient_name = patientName,
+                doctor_name = doctorName,
+                specialization = specialization?.specialization_name ?? "—"
+            });
+        }
+
         private static (string? start, string? end) GetScheduleForDay(doctor_schedule schedule, DayOfWeek day)
         {
             return day switch

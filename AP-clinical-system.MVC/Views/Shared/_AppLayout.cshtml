@@ -1,4 +1,4 @@
-﻿@using AP_clinical_system.Services
+@using AP_clinical_system.Services
 @using AP_clinical_system.Models.sql_Context
 @using Microsoft.AspNetCore.Identity;
 @inject AP_Context _context;
@@ -207,6 +207,30 @@
         });
     </script>
 
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const errorMsg = '@(TempData["Error"] ?? "")';
+            const successMsg = '@(TempData["Success"] ?? "")';
+            
+            if (errorMsg && errorMsg.length > 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errorMsg,
+                    confirmButtonColor: '#0f172a' // --color-slate-900
+                });
+            }
+            if (successMsg && successMsg.length > 0) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: successMsg,
+                    confirmButtonColor: '#0f172a'
+                });
+            }
+        });
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
