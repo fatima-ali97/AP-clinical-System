@@ -24,8 +24,6 @@ namespace AP_clinical_system.Controllers
 
 
 
-        // GET: Manager/Appointments
-        public ActionResult Appointments() => View();
 
         // ── REPORTS ────────────────────────────────────────────────────
 
