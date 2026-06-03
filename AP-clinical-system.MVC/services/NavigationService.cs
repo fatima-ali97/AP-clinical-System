@@ -9,7 +9,6 @@ namespace AP_clinical_system.Services
         {
             new() { Label = "Dashboard",    Controller = "Manager",      Action = "Index",         Icon = "fa-solid fa-table-cells-large" },
             new() { Label = "Doctors Availability",      Controller = "Manager",      Action = "Doctors",       Icon = "fa-solid fa-user-doctor" },
-            new() { Label = "Reports",      Controller = "Manager",      Action = "Reports",       Icon = "fa-solid fa-chart-line" },
             new() { Label = "Users",        Controller = "Manager",      Action = "Users",         Icon = "fa-solid fa-user-gear" },
         },
 
