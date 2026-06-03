@@ -94,8 +94,9 @@
 </div>
 
 @await Html.PartialAsync("_ChangeAppointmentStatusModal")
-@await Html.PartialAsync("_AddVisitRecordModal")
-@await Html.PartialAsync("_AddPrescriptionModal")
+@await Html.PartialAsync("_AddPrescriptionModal", new AP_clinical_system.Models.Entities.prescription())
+@await Html.PartialAsync("_AddVisitRecordModal", new AP_clinical_system.Models.Entities.visit_record())
+
 
 <script>
     const events = [

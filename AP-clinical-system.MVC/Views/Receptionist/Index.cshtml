@@ -20,7 +20,7 @@
         (int)appointment_status.in_progress => "badge-warning",
         (int)appointment_status.confirmed => "badge-info",
         (int)appointment_status.checked_in => "badge-info",
-        _ => "badge-secondary"
+        _ => "badge-info"
     };
 
     static string StatusLabel(int? status) => status switch
@@ -37,22 +37,17 @@
 
     static string SlotToTime(int? slot)
     {
-        // 1. Return immediately if null
         if (slot == null) return "TBD";
 
-        // 2. Perform your business logic calculation
         int minutes = (slot.Value - 1000) * 30;
 
-        // 3. Fail gracefully if the slot value evaluates negatively
         if (minutes < 0) return $"Invalid ({slot})";
 
         int hour = 8 + (minutes / 60);
         int min = minutes % 60;
 
-        // 4. Fail gracefully if the hour rolls past midnight (24-hour limit)
         if (hour >= 24) return $"Invalid ({slot})";
 
-        // 5. Safe to build your DateTime now
         return new DateTime(2000, 1, 1, hour, min, 0).ToString("hh:mm tt");
     }
 }

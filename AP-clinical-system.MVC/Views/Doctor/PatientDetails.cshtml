@@ -10,31 +10,31 @@
     var prescriptions = ViewBag.Prescriptions as List<prescription> ?? new();
     var appointments = ViewBag.Appointments as List<appointment> ?? new();
     var doctorSchedule = ViewBag.DoctorSchedule as doctor_schedule;
-    
+
     var patientUserMap = ViewBag.PatientUserMap as Dictionary<Guid, system_user> ?? new();
     var doctorUserMap = ViewBag.DoctorUserMap as Dictionary<Guid, system_user> ?? new();
     var doctorToUserMapping = ViewBag.DoctorToUserMapping as Dictionary<Guid, Guid> ?? new();
 
     static string StatusBadge(int? status) => status switch
     {
-        (int)appointment_status.completed  => "badge-success",
-        (int)appointment_status.cancelled  => "badge-danger",
-        (int)appointment_status.no_show    => "badge-danger",
+        (int)appointment_status.completed => "badge-success",
+        (int)appointment_status.cancelled => "badge-danger",
+        (int)appointment_status.no_show => "badge-danger",
         (int)appointment_status.in_progress => "badge-warning",
-        (int)appointment_status.confirmed  => "badge-info",
+        (int)appointment_status.confirmed => "badge-info",
         (int)appointment_status.checked_in => "badge-info",
         _ => "badge-secondary"
     };
 
     static string StatusLabel(int? status) => status switch
     {
-        (int)appointment_status.completed   => "Completed",
-        (int)appointment_status.cancelled   => "Cancelled",
-        (int)appointment_status.no_show     => "No Show",
+        (int)appointment_status.completed => "Completed",
+        (int)appointment_status.cancelled => "Cancelled",
+        (int)appointment_status.no_show => "No Show",
         (int)appointment_status.in_progress => "In Progress",
-        (int)appointment_status.confirmed   => "Confirmed",
-        (int)appointment_status.checked_in  => "Checked In",
-        (int)appointment_status.requested   => "Requested",
+        (int)appointment_status.confirmed => "Confirmed",
+        (int)appointment_status.checked_in => "Checked In",
+        (int)appointment_status.requested => "Requested",
         _ => "Unknown"
     };
 
@@ -43,7 +43,7 @@
         if (slot == null) return "TBD";
         int minutes = (slot.Value - 1000) * 30;
         int hour = 8 + minutes / 60;
-        int min  = minutes % 60;
+        int min = minutes % 60;
         return new DateTime(2000, 1, 1, hour, min, 0).ToString("hh:mm tt");
     }
 
@@ -88,7 +88,7 @@
                 @if (prescriptions.Any())
                 {
                     <ul class="list-group list-group-flush">
-                        @foreach(var p in prescriptions)
+                        @foreach (var p in prescriptions)
                         {
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>

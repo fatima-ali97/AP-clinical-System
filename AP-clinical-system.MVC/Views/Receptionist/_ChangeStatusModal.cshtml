@@ -28,7 +28,7 @@
             <p class="text-muted mb-4 text-center">Please select an action for this requested appointment.</p>
             
             <div class="d-flex flex-column gap-2 px-3">
-                <form asp-controller="Receptionist" asp-action="ConfirmAppointment" method="post" id="formConfirmStatus">
+            @*     <form asp-controller="Receptionist" asp-action="ConfirmAppointment" method="post" id="formConfirmStatus">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="appointment_id" id="statusApptIdConfirm" />
                     <button type="submit" class="btn btn-success w-100 fw-bold" style="background-color: #2e7d55; border: none;">Approve & Confirm</button>
@@ -43,7 +43,8 @@
                     <input type="hidden" name="appointment_id" id="statusApptIdCancel" />
                     <button type="button" class="btn btn-outline-danger w-100" id="statusCancelActionBtn">Cancel Appointment</button>
                 </form>
-            </div>
+                *@ 
+            </div> 
         </div>
     </div>
 </div>
