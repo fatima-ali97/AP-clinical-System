@@ -57,7 +57,6 @@ public class HomeController : Controller
     [HttpPost]
     public async Task<IActionResult> Lookup(LookupRequest model)
     {
-        // model.Cpr maps from the "Cpr" input, model.RecordNo from the "RecordNo" input
         if (string.IsNullOrWhiteSpace(model.Cpr) && string.IsNullOrWhiteSpace(model.RecordNo))
         {
             ModelState.AddModelError("", "Please enter either a CPR or a Record Number.");
@@ -81,7 +80,7 @@ public class HomeController : Controller
                 var errorBody = await response.Content.ReadAsStringAsync();
                 string customMessage = null;
 
-                
+
                 try
                 {
                     using (var doc = JsonDocument.Parse(errorBody))

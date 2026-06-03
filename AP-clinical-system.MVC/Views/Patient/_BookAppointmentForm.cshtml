@@ -11,7 +11,8 @@
             <div class="appt-modal-header">
                 <h5 id="apptModalTitle">Book an Appointment</h5>
                 <button type="button" class="appt-close-btn" id="apptCloseBtn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                         stroke-linecap="round">
                         <line x1="18" y1="6" x2="6" y2="18" />
                         <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
@@ -52,7 +53,8 @@
 
                 <div class="appt-field">
                     <label for="apptReason">Reason for visit</label>
-                    <textarea name="appointment_reason" id="apptReason" rows="3" placeholder="Briefly describe your reason..."></textarea>
+                    <textarea name="appointment_reason" id="apptReason" rows="3"
+                              placeholder="Briefly describe your reason..."></textarea>
                 </div>
 
                 <div class="appt-feedback error" id="apptError"></div>
@@ -93,30 +95,30 @@
         
 
         document.getElementById('apptSpecialization').addEventListener('change', async function () {
-            const specId     = this.value;
-            const doctorSel  = document.getElementById('apptDoctor');
-            const dateInput  = document.getElementById('apptDate');
+            const specId = this.value;
+            const doctorSel = document.getElementById('apptDoctor');
+            const dateInput = document.getElementById('apptDate');
 
             doctorSel.innerHTML = '<option value="">Loading…</option>';
-            doctorSel.disabled  = true;
-            dateInput.value     = '';
-            dateInput.disabled  = true;
+            doctorSel.disabled = true;
+            dateInput.value = '';
+            dateInput.disabled = true;
             clearApptSlots();
-           
 
+           
             if (!specId) {
                 doctorSel.innerHTML = '<option value="">Select specialization first</option>';
                 return;
             }
             try {
-                const res     = await fetch(`/Appointments/GetDoctorsBySpecialization?specializationId=${specId}`);
+                const res = await fetch(`/Appointments/GetDoctorsBySpecialization?specializationId=${specId}`);
                 const doctors = await res.json();
                 doctorSel.innerHTML = '<option value="">Select doctor</option>';
                 doctors.forEach(d => {
                     const opt = document.createElement('option');
-                    opt.value          = d.id;
+                    opt.value = d.id;
                     opt.dataset.userId = d.userId;
-                    opt.textContent    = d.name;
+                    opt.textContent = d.name;
                     doctorSel.appendChild(opt);
                 });
                 doctorSel.disabled = false;
@@ -130,19 +132,19 @@
             clearApptSlots();
             dateInput.value = '';
             if (this.value) {
-                dateInput.min      = new Date().toISOString().split('T')[0];
+                dateInput.min = new Date().toISOString().split('T')[0];
                 dateInput.disabled = false;
-                
+
             } else {
                 dateInput.disabled = true;
-                
+
             }
         });
 
         document.getElementById('apptDate').addEventListener('change', function () {
-            const sel    = document.getElementById('apptDoctor').selectedOptions[0];
+            const sel = document.getElementById('apptDoctor').selectedOptions[0];
             const userId = sel?.dataset.userId;
-            const date   = this.value;
+            const date = this.value;
             if (userId && date) { loadApptSlots(userId, date); }
         });
 
@@ -151,13 +153,13 @@
             grid.innerHTML = '<p class="appt-slot-hint">Loading slots…</p>';
             document.getElementById('apptSlotInput').value = '';
             try {
-                const res  = await fetch('/Appointments/GetAvailableDatesAndTimesByDoctorID', {
-                    method:  'POST',
+                const res = await fetch('/Appointments/GetAvailableDatesAndTimesByDoctorID', {
+                    method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body:    `doctorID=${encodeURIComponent(doctorUserId)}`
+                    body: `doctorID=${encodeURIComponent(doctorUserId)}`
                 });
                 if (!res.ok) { grid.innerHTML = '<p class="appt-slot-hint" style="color:var(--color-danger,#dc2626)">No schedule found for this doctor.</p>'; return; }
-                const data  = await res.json();
+                const data = await res.json();
                 const match = data.find(d => d.date === date);
                 grid.innerHTML = '';
                 if (!match || !match.availableTimeSlots.length) {
@@ -165,15 +167,15 @@
                 }
                 match.availableTimeSlots.forEach(sv => {
                     const btn = document.createElement('button');
-                    btn.type          = 'button';
-                    btn.className     = 'appt-slot';
+                    btn.type = 'button';
+                    btn.className = 'appt-slot';
                     btn.dataset.slotValue = sv;
-                    btn.textContent   = apptSlotToTime(sv);
+                    btn.textContent = apptSlotToTime(sv);
                     btn.addEventListener('click', function () {
                         document.querySelectorAll('#apptSlotGrid .appt-slot').forEach(s => s.classList.remove('active'));
                         this.classList.add('active');
                         document.getElementById('apptSlotInput').value = sv;
-                        
+
                     });
                     grid.appendChild(btn);
                 });
@@ -183,12 +185,12 @@
         }
 
         function apptSlotToTime(sv) {
-            const mins  = (sv - 1000) * 30;
-            const h     = 8 + Math.floor(mins / 60);
-            const m     = mins % 60;
-            const p     = h >= 12 ? 'PM' : 'AM';
-            const dh    = h > 12 ? h - 12 : (h === 0 ? 12 : h);
-            return `${String(dh).padStart(2,'0')}:${String(m).padStart(2,'0')} ${p}`;
+            const mins = (sv - 1000) * 30;
+            const h = 8 + Math.floor(mins / 60);
+            const m = mins % 60;
+            const p = h >= 12 ? 'PM' : 'AM';
+            const dh = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+            return `${String(dh).padStart(2, '0')}:${String(m).padStart(2, '0')} ${p}`;
         }
 
         function clearApptSlots() {
@@ -199,29 +201,47 @@
         document.getElementById('apptForm').addEventListener('submit', async function (e) {
             e.preventDefault();
             const errDiv = document.getElementById('apptError');
-            const okDiv  = document.getElementById('apptSuccess');
+            const okDiv = document.getElementById('apptSuccess');
             errDiv.style.display = okDiv.style.display = 'none';
 
             if (!document.getElementById('apptSlotInput').value) {
-                errDiv.textContent = 'Please select a time slot before confirming.';
-                errDiv.style.display = 'block'; return;
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Time Slot Selected',
+                    text: 'Please select a time slot before confirming.',
+                    confirmButtonColor: '#38789e'
+                });
+                return;
             }
             const btn = document.getElementById('apptConfirmBtn');
             btn.disabled = true; btn.textContent = 'Booking…';
             try {
-                const res    = await fetch('/Appointments/Book', { method: 'POST', body: new FormData(this) });
+                const res = await fetch('/Appointments/Book', { method: 'POST', body: new FormData(this) });
                 const result = await res.json();
                 if (result.success) {
-                    okDiv.textContent   = `Appointment ${result.appointment_no} booked successfully!`;
-                    okDiv.style.display = 'block';
-                    setTimeout(() => { closeModal(); location.reload(); }, 1500);
+                    closeModal();
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Appointment Booked!',
+                        text: `Appointment ${result.appointment_no} has been booked successfully.`,
+                        confirmButtonColor: '#38789e'
+                    });
+                    location.reload();
                 } else {
-                    errDiv.textContent  = result.error ?? 'Booking failed. Please try again.';
-                    errDiv.style.display = 'block';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Booking Failed',
+                        text: result.error ?? 'Booking failed. Please try again.',
+                        confirmButtonColor: '#38789e'
+                    });
                 }
             } catch {
-                errDiv.textContent  = 'An unexpected error occurred. Please try again.';
-                errDiv.style.display = 'block';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Unexpected Error',
+                    text: 'An unexpected error occurred. Please try again.',
+                    confirmButtonColor: '#38789e'
+                });
             } finally {
                 btn.disabled = false; btn.textContent = 'Confirm Booking';
             }
@@ -229,15 +249,15 @@
 
         function resetApptForm() {
             document.getElementById('apptForm').reset();
-            const doc  = document.getElementById('apptDoctor');
+            const doc = document.getElementById('apptDoctor');
             const date = document.getElementById('apptDate');
             doc.innerHTML = '<option value="">Select specialization first</option>';
-            doc.disabled  = true;
+            doc.disabled = true;
             date.disabled = true;
             clearApptSlots();
-            document.getElementById('apptError').style.display   = 'none';
+            document.getElementById('apptError').style.display = 'none';
             document.getElementById('apptSuccess').style.display = 'none';
-           
+
         }
     })();
 </script>

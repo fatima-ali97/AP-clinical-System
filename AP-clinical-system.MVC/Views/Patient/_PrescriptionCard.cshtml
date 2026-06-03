@@ -1,0 +1,85 @@
+@using AP_clinical_system.Models.Entities
+@using AP_clinical_system.Models.Enums
+
+<div class="singlePres-backdrop" id="singlePresModalBackdrop">
+    <div class="singlePres-modal" id="singlePresModal" role="dialog" aria-modal="true">
+        <div class="singlePres-modal-header">
+            <h5>Prescription Info</h5>
+            <button type="button" class="pres-close-btn" id="singlePresCloseBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                     stroke-linecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+        </div>
+        <div class="singlePres-modal-body">
+            <p id="singlePresContent">Prescription info goes here.</p>
+            <div id="prescription-info"></div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<script>
+    (function () {
+        function openModal() {
+            document.getElementById('singlePresModalBackdrop').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeModal() {
+            document.getElementById('singlePresModalBackdrop').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        document.getElementById('singlePresCloseBtn').addEventListener('click', closeModal);
+
+        document.getElementById('singlePresModalBackdrop').addEventListener('click', function (e) {
+            if (e.target === this) closeModal();
+        });
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        async function loadPresInfo(presID) {
+            const grid = document.getElementById('prescription-info');
+            grid.innerHTML = '<p class="pres-slot-hint">Loading…</p>';
+
+            try {
+                const res = await fetch('/Patient/GetPrescriptionInfo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `presID=${encodeURIComponent(presID)}`
+                });
+
+                if (!res.ok) {
+                    grid.innerHTML = '<p class="pres-slot-hint" style="color:#dc2626;">Prescription not found.</p>';
+                    return;
+                }
+
+                const d = await res.json();
+                grid.innerHTML = `
+                <div class="pres-info-row"><span class="pres-info-label">Prescription No</span><span>${d.prescription_no ?? '—'}</span></div>
+                <div class="pres-info-row"><span class="pres-info-label">Linked Appointment</span><span>${d.appointment_no ?? '—'}</span></div>
+                <div class="pres-info-row"><span class="pres-info-label">Doctor</span><span>${d.doctor_name ?? '—'}</span></div>
+            `;
+            } catch (err) {
+                console.error('Fetch error:', err);
+                grid.innerHTML = `<p class="pres-slot-hint" style="color:#dc2626;">Error: ${err.message}</p>`;
+            }
+        }
+
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('[data-action="view-prescription"]');
+            if (btn) {
+                e.preventDefault();
+                const presID = btn.dataset.presId;
+                loadPresInfo(presID);
+                openModal();
+            }
+        });
+    })();
+</script>

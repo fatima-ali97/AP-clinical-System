@@ -1,0 +1,55 @@
+.card-subtitle {
+  font-size: 12px;
+  color: var(--color-slate-400, #94a3b8);
+  margin-left: 8px;
+  font-weight: 400;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-requested {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.status-confirmed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-checked_in {
+  background: #bfdbfe;
+  color: #1e40af;
+}
+
+.status-in_progress {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-completed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-no_show {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.status-unknown {
+  background: #f3f4f6;
+  color: #6b7280;
+}

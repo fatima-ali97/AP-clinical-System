@@ -1,4 +1,4 @@
-﻿namespace AP_clinical_system.Services
+namespace AP_clinical_system.Services
 {
     using AP_clinical_system.Models.Navigation;
     public static class NavigationService
@@ -9,7 +9,6 @@
         {
             new() { Label = "Dashboard",    Controller = "Manager",      Action = "Index",         Icon = "fa-solid fa-table-cells-large" },
             new() { Label = "Doctors Availability",      Controller = "Manager",      Action = "Doctors",       Icon = "fa-solid fa-user-doctor" },
-            new() { Label = "Reports",      Controller = "Manager",      Action = "Reports",       Icon = "fa-solid fa-chart-line" },
             new() { Label = "Users",        Controller = "Manager",      Action = "Users",         Icon = "fa-solid fa-user-gear" },
         },
 
@@ -20,12 +19,15 @@
             new() { Label = "My Appointments",  Controller = "Doctor",       Action = "Schedule",      Icon = "fa-solid fa-calendar"},
             new() { Label = "My Patients",  Controller = "Doctor",       Action = "Patients",      Icon = "fa-solid fa-bed-pulse" },
             new() { Label = "Prescriptions",Controller = "Doctor",       Action = "Prescriptions", Icon = "fa-solid fa-capsules" },
+            new() { Label = "Notifications",Controller = "Doctor",       Action = "Notifications", Icon = "fa-solid fa-bell" },
+
         },
 
             "Receptionist" => new List<NavItem>
         {
             new() { Label = "Dashboard",    Controller = "Receptionist", Action = "Index",         Icon = "fa-solid fa-table-cells-large" },
             new() { Label = "Book Appointment", Controller = "Receptionist", Action = "Book",      Icon = "fa-solid fa-plus" },
+            new() { Label = "Calendar", Controller = "Receptionist", Action = "Calendar",      Icon = "fa-solid fa-calendar-days" },
             new() { Label = "Notifications",     Controller = "Receptionist", Action = "Notifications",      Icon = "fa-solid fa-bell"  },
         },
 

@@ -23,6 +23,171 @@ namespace AP_clinical_system.Controllers
             hubContext = _hubContext;
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Cancel(Guid appointment_id)
+        {
+            var currentUser = await context.Users
+                .FirstOrDefaultAsync(u => u.UserName == User.Identity!.Name);
+
+            if (currentUser == null)
+                return Json(new { success = false, error = "Unauthorized." });
+
+            var patientInfo = await context.patient_informations
+                .FirstOrDefaultAsync(p => p.system_user_ref == currentUser.Id && p.inactive != true);
+
+            if (patientInfo == null)
+                return Json(new { success = false, error = "Patient record not found." });
+
+            var appt = await context.appointments
+                .FirstOrDefaultAsync(a => a.id == appointment_id
+                                        && a.patient_ref == patientInfo.id
+                                        && a.inactive != true);
+
+            if (appt == null)
+                return Json(new { success = false, error = "Appointment not found." });
+
+            if (appt.appointment_status != (int)appointment_status.requested
+             && appt.appointment_status != (int)appointment_status.confirmed)
+                return Json(new { success = false, error = "Only requested or confirmed appointments can be cancelled." });
+
+            appt.appointment_status = (int)appointment_status.cancelled;
+            appt.modifiedon = DateTime.UtcNow;
+            appt.modifiedby = currentUser.Id;
+
+            await context.SaveChangesAsync();
+
+            // Notify patient + doctor
+            var doctorInfo = appt.doctor_ref.HasValue
+                ? await context.doctor_informations
+                    .FirstOrDefaultAsync(d => d.system_user_ref == appt.doctor_ref && d.inactive != true)
+                : null;
+
+            var recipientIds = new List<Guid> { (Guid)patientInfo.system_user_ref! };
+            if (doctorInfo?.system_user_ref != null)
+                recipientIds.Add((Guid)doctorInfo.system_user_ref);
+
+            var msg = $"Appointment {appt.appointment_no} has been cancelled.";
+            await NotificationsHelper.SendNotificationMultipleAsync(context, recipientIds, "Appointment Cancelled", msg);
+
+            return Json(new { success = true });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Reschedule(Guid id)
+        {
+            var currentUser = await context.Users
+                .FirstOrDefaultAsync(u => u.UserName == User.Identity!.Name);
+
+            if (currentUser == null) return Unauthorized();
+
+            var patientInfo = await context.patient_informations
+                .FirstOrDefaultAsync(p => p.system_user_ref == currentUser.Id && p.inactive != true);
+
+            if (patientInfo == null) return NotFound();
+
+            var appt = await context.appointments
+                .FirstOrDefaultAsync(a => a.id == id
+                                       && a.patient_ref == patientInfo.id
+                                       && a.inactive != true);
+
+            if (appt == null) return NotFound();
+
+            // Only allow reschedule on pending statuses
+            if (appt.appointment_status != (int)appointment_status.requested
+             && appt.appointment_status != (int)appointment_status.confirmed)
+            {
+                TempData["Error"] = "This appointment cannot be rescheduled.";
+                return RedirectToAction("Appointments", "Patient");
+            }
+
+            var doctorInfo = appt.doctor_ref.HasValue
+    ? await context.doctor_informations.FirstOrDefaultAsync(d => d.system_user_ref == appt.doctor_ref && d.inactive != true)
+    : null;
+
+            var doctorUser = doctorInfo?.system_user_ref.HasValue == true
+                ? await context.Users.FirstOrDefaultAsync(u => u.Id == doctorInfo.system_user_ref)
+                : null;
+
+            var specialization = appt.specialization_ref.HasValue
+                ? await context.doctor_specializations.FirstOrDefaultAsync(s => s.id == appt.specialization_ref)
+                : null;
+
+            ViewBag.Appointment = appt;
+            ViewBag.DoctorUser = doctorUser;
+            ViewBag.DoctorInfo = doctorInfo;
+            ViewBag.Specialization = specialization;
+            ViewBag.DoctorUserRef = doctorInfo?.system_user_ref;
+            return View("~/Views/Appointments/Reschedule.cshtml");
+        }
+        // POST /Appointments/SaveReschedule
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveReschedule(Guid appointment_id, DateOnly new_date, int new_time_slot)
+        {
+            var currentUser = await context.Users
+                .FirstOrDefaultAsync(u => u.UserName == User.Identity!.Name);
+
+            if (currentUser == null)
+                return Json(new { success = false, error = "Unauthorized." });
+
+            var patientInfo = await context.patient_informations
+                .FirstOrDefaultAsync(p => p.system_user_ref == currentUser.Id && p.inactive != true);
+
+            if (patientInfo == null)
+                return Json(new { success = false, error = "Patient record not found." });
+
+            var appt = await context.appointments
+                .FirstOrDefaultAsync(a => a.id == appointment_id
+                                       && a.patient_ref == patientInfo.id
+                                       && a.inactive != true);
+
+            if (appt == null)
+                return Json(new { success = false, error = "Appointment not found." });
+
+            if (appt.appointment_status != (int)appointment_status.requested
+             && appt.appointment_status != (int)appointment_status.confirmed)
+                return Json(new { success = false, error = "This appointment cannot be rescheduled." });
+
+            // Check new slot isn't already taken
+            bool slotTaken = await context.appointments.AnyAsync(a =>
+                a.doctor_ref == appt.doctor_ref &&
+                a.date == new_date &&
+                a.appointment_time_slot == new_time_slot &&
+                a.id != appointment_id &&
+                a.inactive != true &&
+                a.appointment_status != (int)appointment_status.cancelled);
+
+            if (slotTaken)
+                return Json(new { success = false, error = "That time slot is already taken. Please pick another." });
+
+            var now = DateTime.UtcNow;
+            appt.date = new_date;
+            appt.appointment_time_slot = new_time_slot;
+            appt.appointment_status = (int)appointment_status.requested; // reset to requested after reschedule
+            appt.modifiedon = now;
+            appt.modifiedby = currentUser.Id;
+
+            await context.SaveChangesAsync();
+
+            // Notify patient + doctor
+            var doctorInfo = appt.doctor_ref.HasValue
+    ? await context.doctor_informations.FirstOrDefaultAsync(d => d.system_user_ref == appt.doctor_ref && d.inactive != true)
+    : null;
+
+            if (doctorInfo?.system_user_ref != null)
+            {
+                var recipientIds = new List<Guid>
+        {
+            (Guid)patientInfo.system_user_ref!,
+            (Guid)doctorInfo.system_user_ref
+        };
+                var msg = $"Appointment {appt.appointment_no} has been rescheduled to {new_date:yyyy-MM-dd}.";
+                await NotificationsHelper.SendNotificationMultipleAsync(context, recipientIds, "Appointment Rescheduled", msg);
+            }
+
+            return Json(new { success = true });
+        }
         // GET /Appointments/getAllSpecializations
         [HttpGet]
         public IActionResult getAllSpecializations()
@@ -39,7 +204,7 @@ namespace AP_clinical_system.Controllers
             return Ok(specializations);
         }
 
-     
+
         [HttpGet]
         public async Task<IActionResult> GetDoctorsBySpecialization(Guid specializationId)
         {
@@ -47,7 +212,7 @@ namespace AP_clinical_system.Controllers
             var specialization = await context.doctor_specializations
                 .Where(s => s.id == specializationId && s.inactive != true)
                 .FirstOrDefaultAsync();
-            
+
             // verify it exists
             if (specialization == null)
             {
@@ -171,6 +336,112 @@ namespace AP_clinical_system.Controllers
             }
 
             return Ok(result);
+        }
+
+
+        [HttpGet]
+        public IActionResult GetAvailableDatesAndTimesByDoctorIDGet(Guid doctorID)
+        {
+            var doctor = context.system_users
+                .Where(u => u.Id == doctorID && u.user_role == (int)user_role.doctor && u.inactive != true)
+                .FirstOrDefault();
+
+            if (doctor == null)
+                return NotFound("Doctor not found.");
+
+            var doctor_information = context.doctor_informations
+                .Where(d => d.system_user_ref == doctorID && d.inactive != true)
+                .FirstOrDefault();
+
+            if (doctor_information == null)
+                return NotFound("Doctor information not found.");
+
+            var doctor_schedule = context.doctor_schedules
+                .Where(s => s.doctor_information_ref == doctor_information.id && s.inactive != true)
+                .FirstOrDefault();
+
+            if (doctor_schedule == null)
+                return NotFound("Doctor schedule not found.");
+
+            var doctor_leaves = context.doctor_leaves
+                .Where(l => l.doctor_information_ref == doctor_information.id
+                    && l.end_date >= DateOnly.FromDateTime(DateTime.Today)
+                    && l.inactive != true)
+                .ToList();
+
+            var existingAppointments = context.appointments
+                .Where(a => a.doctor_ref == doctor_information.id
+                    && a.date >= DateOnly.FromDateTime(DateTime.Today)
+                    && a.inactive != true
+                    && a.appointment_status != (int)appointment_status.cancelled)
+                .ToList();
+
+            var allTimeSlots = Enum.GetValues<appointment_time_slot>()
+                .Select(s => new
+                {
+                    EnumValue = (int)s,
+                    Hours = 8 + ((int)s - 1000) / 2,
+                    Minutes = ((int)s - 1000) % 2 == 0 ? 0 : 30
+                })
+                .ToList();
+
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            int daysToGenerate = 30;
+            var result = new List<object>();
+
+            for (int i = 0; i < daysToGenerate; i++)
+            {
+                var currentDate = today.AddDays(i);
+
+                var (startTime, endTime) = GetScheduleForDay(doctor_schedule, currentDate.DayOfWeek);
+
+                if (string.IsNullOrEmpty(startTime) || string.IsNullOrEmpty(endTime))
+                    continue;
+
+                bool isOnLeave = doctor_leaves.Any(l =>
+                    l.start_date <= currentDate && l.end_date >= currentDate);
+                if (isOnLeave)
+                    continue;
+
+                var startParts = startTime.Split(':');
+                int startHour = int.Parse(startParts[0]);
+                int startMinute = int.Parse(startParts[1]);
+
+                var endParts = endTime.Split(':');
+                int endHour = int.Parse(endParts[0]);
+                int endMinute = int.Parse(endParts[1]);
+
+                var availableSlots = allTimeSlots
+                    .Where(s =>
+                    {
+                        int slotTotal = s.Hours * 60 + s.Minutes;
+                        int scheduleStart = startHour * 60 + startMinute;
+                        int scheduleEnd = endHour * 60 + endMinute;
+                        return slotTotal >= scheduleStart && slotTotal < scheduleEnd;
+                    })
+                    .Select(s => s.EnumValue)
+                    .ToList();
+
+                var bookedSlots = existingAppointments
+                    .Where(a => a.date == currentDate && a.appointment_time_slot.HasValue)
+                    .Select(a => a.appointment_time_slot!.Value)
+                    .ToHashSet();
+
+                availableSlots = availableSlots
+                    .Where(s => !bookedSlots.Contains(s))
+                    .ToList();
+
+                if (availableSlots.Any())
+                {
+                    result.Add(new
+                    {
+                        date = currentDate.ToString("yyyy-MM-dd"),
+                        availableTimeSlots = availableSlots
+                    });
+                }
+            }
+
+            return GetAvailableDatesAndTimesByDoctorID(doctorID);
         }
 
         [HttpPost]
@@ -350,6 +621,134 @@ namespace AP_clinical_system.Controllers
             return RedirectToAction("Index", "Receptionist");
         }
 
+        [HttpPost]
+        public IActionResult CheckInAppointment(Guid appointment_id)
+        {
+            try
+            {
+                var appointment = context.appointments
+                    .FirstOrDefault(a => a.id == appointment_id && a.inactive != true);
+
+                if (appointment == null)
+                    return BadRequest("Appointment Not Found or is Inactive");
+
+                var receptionistId = GeneralHelper.GetUserIdByJWT(User);
+                var receptionistUserCheck = GeneralHelper.VerifyUserType(context, receptionistId, (int)user_role.receptionist);
+                if (!receptionistUserCheck)
+                    return BadRequest("User is not a receptionist");
+
+                appointment.appointment_status = (int)appointment_status.checked_in;
+                appointment.modifiedon = DateTime.UtcNow;
+                appointment.modifiedby = receptionistId;
+
+                context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+
+            return RedirectToAction("Index", "Receptionist");
+        }
+
+        [HttpPost]
+        public IActionResult NoShowAppointment(Guid appointment_id)
+        {
+            try
+            {
+                var appointment = context.appointments
+                    .FirstOrDefault(a => a.id == appointment_id && a.inactive != true);
+
+                if (appointment == null)
+                    return BadRequest("Appointment Not Found or is Inactive");
+
+                var receptionistId = GeneralHelper.GetUserIdByJWT(User);
+                var receptionistUserCheck = GeneralHelper.VerifyUserType(context, receptionistId, (int)user_role.receptionist);
+                if (!receptionistUserCheck)
+                    return BadRequest("User is not a receptionist");
+
+                appointment.appointment_status = (int)appointment_status.no_show;
+                appointment.modifiedon = DateTime.UtcNow;
+                appointment.modifiedby = receptionistId;
+
+                context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+
+            return RedirectToAction("Index", "Receptionist");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetAppointmentInfo(Guid apptID)
+        {
+            var currentUser = await context.Users
+                .FirstOrDefaultAsync(u => u.UserName == User.Identity!.Name);
+            if (currentUser == null) return NotFound();
+
+            var appt = await context.appointments
+                .FirstOrDefaultAsync(a => a.id == apptID && a.inactive != true);
+
+            if (appt == null) return NotFound();
+
+            bool isReceptionist = GeneralHelper.VerifyUserType(context, currentUser.Id, (int)user_role.receptionist);
+            bool isDoctor = GeneralHelper.VerifyUserType(context, currentUser.Id, (int)user_role.doctor);
+            
+            var patientInfo = await context.patient_informations
+                .FirstOrDefaultAsync(p => p.system_user_ref == currentUser.Id && p.inactive != true);
+            bool isPatientOwner = patientInfo != null && appt.patient_ref == patientInfo.id;
+
+            if (!isReceptionist && !isDoctor && !isPatientOwner)
+                return Unauthorized();
+
+            system_user? doctorUser = null;
+            if (appt.doctor_ref.HasValue)
+            {
+                var doctorInfo = await context.doctor_informations
+                    .FirstOrDefaultAsync(d => d.id == appt.doctor_ref && d.inactive != true);
+
+                if (doctorInfo?.system_user_ref.HasValue == true)
+                    doctorUser = await context.Users.FirstOrDefaultAsync(u => u.Id == doctorInfo.system_user_ref);
+                else
+                    doctorUser = await context.Users.FirstOrDefaultAsync(u => u.Id == appt.doctor_ref);
+            }
+
+            system_user? patientUser = null;
+            if (appt.patient_ref.HasValue)
+            {
+                var pInfo = await context.patient_informations
+                    .FirstOrDefaultAsync(p => p.id == appt.patient_ref && p.inactive != true);
+                if (pInfo?.system_user_ref.HasValue == true)
+                    patientUser = await context.Users.FirstOrDefaultAsync(u => u.Id == pInfo.system_user_ref);
+            }
+
+            var specialization = appt.specialization_ref.HasValue
+                ? await context.doctor_specializations.FirstOrDefaultAsync(s => s.id == appt.specialization_ref)
+                : null;
+
+            var doctorName = doctorUser != null
+                ? $"Dr. {GeneralHelper.GetUserFullNameByID(context, doctorUser.Id)}"
+                : "—";
+                
+            var patientName = patientUser != null
+                ? $"{patientUser.first_name} {patientUser.last_name}"
+                : "—";
+
+            return Json(new
+            {
+                appointment_no = appt.appointment_no,
+                date = appt.date?.ToString("dd MMM yyyy"),
+                time_slot = appt.appointment_time_slot,
+                status = appt.appointment_status,
+                reason = appt.appointment_reason,
+                patient_name = patientName,
+                doctor_name = doctorName,
+                specialization = specialization?.specialization_name ?? "—"
+            });
+        }
+
         private static (string? start, string? end) GetScheduleForDay(doctor_schedule schedule, DayOfWeek day)
         {
             return day switch
@@ -364,6 +763,6 @@ namespace AP_clinical_system.Controllers
                 _ => (null, null)
             };
         }
-        
+
     }
 }

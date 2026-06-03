@@ -1,4 +1,4 @@
-﻿@using AP_clinical_system.Services
+@using AP_clinical_system.Services
 @using AP_clinical_system.Models.sql_Context
 @using Microsoft.AspNetCore.Identity;
 @inject AP_Context _context;
@@ -45,14 +45,22 @@
   
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
     <!-- DataTables -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.bootstrap5.min.css">
     <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/2.0.8/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
 
     <link rel="stylesheet" href="~/css/app/AppLayout.css">
     <link rel="stylesheet" href="~/css/app/app.css">
     <link rel="stylesheet" href="~/css/components/datatable-custom.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
 
     <title>@ViewData["Title"] - AdvancedHealth</title>
     @RenderSection("Styles", required: false)
@@ -203,6 +211,30 @@
         });
     </script>
 
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+        const errorMsg = '@(TempData["Error"] ?? "")';
+        const successMsg = '@(TempData["Success"] ?? "")';
+
+        if (errorMsg && errorMsg.length > 0) {
+        Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: errorMsg,
+        confirmButtonColor: '#0f172a' // --color-slate-900
+        });
+        }
+        if (successMsg && successMsg.length > 0) {
+        Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: successMsg,
+        confirmButtonColor: '#0f172a'
+        });
+        }
+        });
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

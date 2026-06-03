@@ -15,33 +15,32 @@
     var currentUser = await UserManager.GetUserAsync(User);
     string FirstName = currentUser.first_name;
 
-    
     var appointments = ViewBag.Appointments as List<appointment> ?? new();
     var prescriptions = ViewBag.Prescriptions as List<prescription> ?? new();
-    var myDoctors = ViewBag.MyDoctors;
     var doctorMap = ViewBag.DoctorInfoToUser as Dictionary<Guid, AP_clinical_system.Models.Entities.system_user> ?? new();
+    var notifications = ViewBag.Notifications as List<notification> ?? new();
+    //var prescriptions = ViewBag.prescriptions as List<prescription> ?? new();
 
-    // Status badge helper
     static string StatusBadge(int? status) => status switch
     {
-        (int)appointment_status.completed => "badge-success",
-        (int)appointment_status.cancelled => "badge-danger",
-        (int)appointment_status.no_show => "badge-danger",
+        (int)appointment_status.completed  => "badge-success",
+        (int)appointment_status.cancelled  => "badge-danger",
+        (int)appointment_status.no_show    => "badge-danger",
         (int)appointment_status.in_progress => "badge-warning",
-        (int)appointment_status.confirmed => "badge-info",
+        (int)appointment_status.confirmed  => "badge-info",
         (int)appointment_status.checked_in => "badge-info",
         _ => "badge-secondary"
     };
 
     static string StatusLabel(int? status) => status switch
     {
-        (int)appointment_status.completed => "Completed",
-        (int)appointment_status.cancelled => "Cancelled",
-        (int)appointment_status.no_show => "No Show",
+        (int)appointment_status.completed   => "Completed",
+        (int)appointment_status.cancelled   => "Cancelled",
+        (int)appointment_status.no_show     => "No Show",
         (int)appointment_status.in_progress => "In Progress",
-        (int)appointment_status.confirmed => "Confirmed",
-        (int)appointment_status.checked_in => "Checked In",
-        (int)appointment_status.requested => "Requested",
+        (int)appointment_status.confirmed   => "Confirmed",
+        (int)appointment_status.checked_in  => "Checked In",
+        (int)appointment_status.requested   => "Requested",
         _ => "Unknown"
     };
 
@@ -50,35 +49,30 @@
         if (slot == null) return "TBD";
         int minutes = (slot.Value - 1000) * 30;
         int hour = 8 + minutes / 60;
-        int min = minutes % 60;
+        int min  = minutes % 60;
         return new DateTime(2000, 1, 1, hour, min, 0).ToString("hh:mm tt");
     }
-
-    static string Initials(AP_clinical_system.Models.Entities.system_user? u)
-    {
-        if (u == null) return "??";
-        var f = u.first_name?.Length > 0 ? u.first_name[0].ToString() : "";
-        var l = u.last_name?.Length > 0 ? u.last_name[0].ToString() : "";
-        return (f + l).ToUpper();
-    }
 }
+
 @section Styles
 {
     <link href="~/css/app/app.css" rel="stylesheet" />
-    <link href="~/css/components/Forms.css" rel="stylesheet" />
     <link href="~/css/app/Appointment-modalView.css" rel="stylesheet" />
+    <link href="~/css/app/Prescription-modalView.css" rel="stylesheet" />
     <link href="~/css/components/Forms.css" rel="stylesheet" />
+    <link href="~/css/app/ProfileCard.css" rel="stylesheet" />
 }
 
 @section scripts
 {
-    <script src="~/js/custom-dataTable.js"></script>
+    <script src="~/js/components/custom-dataTable.js"></script>
+    <script src="~/js/components/ProfileCard.js"></script>
 }
 
 <div class="stat-grid patient">
     <div class="card">
         <div class="card-body" style="padding: 0;">
-            <a href="#" class="hpd hpd-basic">
+            <a class="hpd hpd-basic">
                 <h4 class="hpd-title">Welcome, @FirstName</h4>
                 <p class="hpd-desc">Feel free to book an appointment with us!</p>
                 <span class="hpd-btn" id="openModalBtn">Book Now</span>
@@ -91,43 +85,27 @@
 
     <div class="card">
         <div class="card-header">
-            <h5 class="card-title">My Doctors</h5>
+            <h5 class="card-title">My Profile</h5>
         </div>
         <div class="card-body">
-            @if (myDoctors != null)
-            {
-                @foreach (var doc in myDoctors)
-                {
-                    var docUser = doc.User as AP_clinical_system.Models.Entities.system_user;
-                    string fullName = $"{docUser?.first_name} {docUser?.last_name}".Trim();
-                    int visits = doc.TotalVisits;
-
-                    <div class="event-card highlighted">
-                        <div class="doc-avatars">
-                            <div class="doc-avatar">@Initials(docUser)</div>
-                        </div>
-                        <div class="event-info" style="margin-left: 20px;">
-                            <div class="event-name">@fullName</div>
-                            <div class="event-sub-text">@visits Visit@(visits == 1 ? "" : "s")</div>
-                        </div>
-                    </div>
-                }
-            }
-
-            @if (myDoctors == null || !((IEnumerable<dynamic>)myDoctors).Any())
-            {
-                <p style="color: var(--color-text-tertiary); font-size: 14px; text-align: center; padding: 16px;">
-                    No doctors yet.
-                </p>
-            }
+            @await Html.PartialAsync("_ProfileCard")
         </div>
     </div>
 
     <div class="card">
-        <div class="card-header">
-            <h5 class="card-title">My perscription</h5>
-        </div>
-        <div class="card-body" style="min-height:220px;">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <h5 class="card-title mb-0">My Prescriptions</h5>
+    </div>
+    <div class="card-body" style="min-height:220px;">
+        @{
+            var latestPrescriptions = prescriptions.Take(3).ToList();
+        }
+        @if (!latestPrescriptions.Any())
+        {
+            <p class="text-muted" style="font-size:14px;">No prescriptions yet.</p>
+        }
+        @foreach (var pres in latestPrescriptions)
+        {
             <div class="prescription-entry">
                 <div class="prescription-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
@@ -139,55 +117,75 @@
                     </svg>
                 </div>
                 <div class="prescription-info">
-                    <span class="prescription-title">Cardiology Prescription</span>
-                    <span class="prescription-date">20 Apr 2025</span>
+                    <span class="prescription-title">@pres.medicine_name</span>
+                    <span class="prescription-date">@(pres.createdon.ToString("dd MMM yyyy"))</span>
                 </div>
                 <div class="prescription-actions">
-                    <button class="action-btn" title="View">
+                    <button class="action-btn" title="View"
+                            data-action="view-prescription"
+                            data-pres-id="@pres.id">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                              stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                             <circle cx="12" cy="12" r="3" />
                         </svg>
                     </button>
-
                 </div>
             </div>
-        </div>
+        }
     </div>
+    @if (prescriptions.Count > 3)
+    {
+        <div class="card-footer text-end" style="background:transparent; border-top:1px solid #f0f0f0; padding: 10px 16px;">
+            <a href="/Patient/Prescriptions" style="font-size:13px; font-weight:600; color:var(--color-brand-primary); text-decoration:none;">
+                View All (@prescriptions.Count) →
+            </a>
+        </div>
+    }
+</div>
+
     <div class="card">
         <div class="card-header">
             <h5 class="card-title">Recent Notifications</h5>
         </div>
         <div class="card-body" style="min-height:220px;">
-
-            <div class="container my-5">
+            <div class="container my-3">
                 <div class="row">
-                    <div class="col-md-6 offset-md-3">
-                        <ul class="timeline-3">
-                            <li>
-                                <a href="#!">appointment Cancelled</a>
-                                <a href="#!" class="float-end">21 March, 2026</a>
-                                <p class="mt-2">Click To see more </p>
-                            </li>
-                            <li>
-                                <a href="#!">appointment Cancelled</a>
-                                <a href="#!" class="float-end">21 March, 2026</a>
-                                <p class="mt-2">Click To see more </p>
-                            </li>
-                            <li>
-                                <a href="#!">appointment Cancelled</a>
-                                <a href="#!" class="float-end">21 March, 2026</a>
-                                <p class="mt-2">Click To see more </p>
-                            </li>
-                        </ul>
+                    <div class="col-md-10 offset-md-1">
+                        @{
+                            var recentNotifications = notifications.Take(3).ToList();
+                        }
+                        @if (!recentNotifications.Any())
+                        {
+                            <p class="text-muted" style="font-size:14px;">No new notifications.</p>
+                        }
+                        else
+                        {
+                            <ul class="timeline-3">
+                                @foreach (var note in recentNotifications)
+                                {
+                                    <li>
+                                        <a href="#!">@(note.title ?? "Notification")</a>
+                                        <a href="#!" class="float-end">@(note.createdon.ToString("dd MMM, yyyy"))</a>
+                                        <p class="mt-2">@(note.message)</p>
+                                    </li>
+                                }
+                            </ul>
+                        }
                     </div>
                 </div>
             </div>
         </div>
+        @if (notifications.Count > 3)
+        {
+            <div class="card-footer text-end" style="background:transparent; border-top:1px solid #f0f0f0; padding: 10px 16px;">
+                <a href="/Patient/Notifications" style="font-size:13px; font-weight:600; color:var(--color-brand-primary); text-decoration:none;">
+                    View All (@notifications.Count) →
+                </a>
+            </div>
+        }
     </div>
 </div>
-
 
 <div class="card">
     <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
@@ -197,8 +195,9 @@
         </span>
     </div>
     <div class="card-body">
-        <table id="appointmentsTable" class="table table-hover align-middle mb-0 ap-datatable" @* ← removed
-            table-striped *@ data-page-length="10" data-sort-col="2" style="width:100%">
+        <table id="appointmentsTable"
+               class="table table-hover align-middle mb-0 ap-datatable"
+               data-page-length="10" data-sort-col="2" style="width:100%">
             <thead>
                 <tr>
                     <th>Appointment No.</th>
@@ -216,24 +215,25 @@
                     if (appt.doctor_ref.HasValue)
                         doctorMap.TryGetValue(appt.doctor_ref.Value, out apptDoctor);
 
-                    string doctorName = $"{apptDoctor?.first_name} {apptDoctor?.last_name}".Trim();
-                    string dateOrder = appt.date?.ToString("yyyy-MM-dd") ?? "";
+                    string doctorName  = apptDoctor != null
+                        ? $"Dr. {apptDoctor.first_name} {apptDoctor.last_name}".Trim()
+                        : "—";
+                    string dateOrder   = appt.date?.ToString("yyyy-MM-dd") ?? "";
                     string dateDisplay = appt.date?.ToString("dd MMM yyyy") ?? "—";
-                    
+
                     <tr>
                         <td>@(appt.appointment_no ?? "—")</td>
                         <td>@doctorName</td>
                         <td data-order="@dateOrder">@dateDisplay</td>
                         <td>@SlotToTime(appt.appointment_time_slot)</td>
                         <td>
-                            @* TODO: stylize this!!! *@
                             <span class="badge @StatusBadge(appt.appointment_status)">
                                 @StatusLabel(appt.appointment_status)
                             </span>
                         </td>
                         <td class="text-center">
-                            <button type="button" class="btn btn-sm btn-outline-primary" data-action="view-appointment"
-                                    data-appt-id="@appt.id">
+                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                    data-action="view-appointment" data-appt-id="@appt.id">
                                 View
                             </button>
                         </td>
@@ -243,6 +243,7 @@
         </table>
     </div>
 </div>
+
 @await Html.PartialAsync("_SingleAppointmentView")
 @await Html.PartialAsync("_BookAppointmentForm")
-
+@await Html.PartialAsync("_PrescriptionCard")
