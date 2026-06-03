@@ -78,8 +78,16 @@
 
 <h1 class="page-heading">Clinical Manager's Reporting Dashboard</h1>
 
+<!-- Export pdf -->
+<div class="export-row">
+    <button type="button" class="btn btn-primary" onclick="exportDashboardPdf()">
+        <i class="fa-solid fa-file-pdf"></i>
+        Export PDF
+    </button>
+</div>
+
 <!-- Date filtering -->
-<form method="get" asp-controller="Reports" asp-action="Dashboard" class="row dashboard-filter report-section">
+<form method="get" asp-controller="Reports" asp-action="Dashboard" class="row dashboard-filter report-section align-items-end">
     <div class="col-md-4">
         <label>Start Date</label>
         <input type="date" name="startDate" value="@startDate" class="form-control" />
@@ -90,20 +98,12 @@
         <input type="date" name="endDate" value="@endDate" class="form-control" />
     </div>
 
-    <div class="col-md-4 d-flex align-items-end">
-        <button type="submit" class="btn btn-primary w-100">
+    <div class="col-md-4 filter-button-col">
+        <button type="submit" class="btn btn-primary w-100 filter-btn">
             Load Reports
         </button>
     </div>
 </form>
-
-<!-- Export pdf -->
-<div class="export-row">
-    <button type="button" class="btn btn-primary" onclick="exportDashboardPdf()">
-        <i class="fa-solid fa-file-pdf"></i>
-        Export PDF
-    </button>
-</div>
 
 <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
@@ -119,7 +119,7 @@
     <div class="section-card report-section">
         <h5 class="card-title mb-4">Doctor Summary</h5>
 
-        <div class="mini-card-row">
+        <div class="mini-card-row row5">
 
             <div class="mini-card">
                 <div class="mini-card-title">
@@ -159,6 +159,16 @@
                     <div class="mini-card-label">Leave Records</div>
                 </div>
                 <div class="mini-card-value">@totalLeaveRecords</div>
+            </div>
+
+            <div class="mini-card">
+                <div class="mini-card-title">
+                    <div class="mini-card-icon">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <div class="mini-card-label">Average Appointments per Doctor</div>
+                </div>
+                <div class="mini-card-value">@avgAppointmentsPerDoctor</div>
             </div>
 
         </div>
@@ -208,50 +218,6 @@
                     <div class="mini-card-label">No Show</div>
                 </div>
                 <div class="mini-card-value">@noShowAppointments</div>
-            </div>
-
-        </div>
-
-        <div class="mini-card-row">
-
-            <div class="mini-card">
-                <div class="mini-card-title">
-                    <div class="mini-card-icon">
-                        <i class="fa-solid fa-percent"></i>
-                    </div>
-                    <div class="mini-card-label">Cancellation Rate</div>
-                </div>
-                <div class="mini-card-value">@cancellationRate%</div>
-            </div>
-
-            <div class="mini-card">
-                <div class="mini-card-title">
-                    <div class="mini-card-icon">
-                        <i class="fa-solid fa-user-slash"></i>
-                    </div>
-                    <div class="mini-card-label">No Show Rate</div>
-                </div>
-                <div class="mini-card-value">@noShowRate%</div>
-            </div>
-
-            <div class="mini-card">
-                <div class="mini-card-title">
-                    <div class="mini-card-icon">
-                        <i class="fa-solid fa-chart-simple"></i>
-                    </div>
-                    <div class="mini-card-label">Combined Rate</div>
-                </div>
-                <div class="mini-card-value">@combinedRate%</div>
-            </div>
-
-            <div class="mini-card">
-                <div class="mini-card-title">
-                    <div class="mini-card-icon">
-                        <i class="fa-solid fa-chart-line"></i>
-                    </div>
-                    <div class="mini-card-label">Average Appointments per Doctor</div>
-                </div>
-                <div class="mini-card-value">@avgAppointmentsPerDoctor</div>
             </div>
 
         </div>
