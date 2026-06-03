@@ -20,9 +20,32 @@ namespace AP_clinical_system.Controllers
             _userManager = userManager;
         }
 
-        public ActionResult Index()
+        public async Task<ActionResult> Index()
         {
-            return View();
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser != null)
+            {
+                var notifications = await _context.notifications
+                    .Where(n => n.system_user_ref == currentUser.Id && n.inactive != true)
+                    .OrderByDescending(n => n.createdon)
+                    .ToListAsync();
+                ViewBag.Notifications = notifications;
+            }
+            return View(currentUser);
+        }
+
+        public async Task<ActionResult> Notifications()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return NotFound();
+
+            var notifications = await _context.notifications
+                .Where(n => n.system_user_ref == currentUser.Id && n.inactive != true)
+                .OrderByDescending(n => n.createdon)
+                .ToListAsync();
+
+            ViewBag.Notifications = notifications;
+            return View(currentUser);
         }
 
         // ── Shared helper: build a Guid → system_user map for a set of doctor refs ──
@@ -66,6 +89,7 @@ namespace AP_clinical_system.Controllers
 
             return map;
         }
+
 
         // GET: /Doctor/Schedule  (patient's upcoming / confirmed appointments)
         public async Task<IActionResult> Schedule()
@@ -222,7 +246,7 @@ namespace AP_clinical_system.Controllers
                 .FirstOrDefaultAsync(p => p.id == id && p.inactive != true);
             if (patientInfo == null) return NotFound();
 
-            var patientSystemUser = patientInfo.system_user_ref.HasValue 
+            var patientSystemUser = patientInfo.system_user_ref.HasValue
                 ? await _userManager.FindByIdAsync(patientInfo.system_user_ref.Value.ToString())
                 : null;
 
@@ -239,14 +263,16 @@ namespace AP_clinical_system.Controllers
             // Setup mapping for appointments table
             var doctorRefs = appointments.Where(a => a.doctor_ref.HasValue).Select(a => a.doctor_ref!.Value).Distinct();
             var doctorUserMap = await BuildUnifiedDoctorMapAsync(_context, doctorRefs);
-            
+
             var patientUserMap = new Dictionary<Guid, system_user>();
-            if (patientSystemUser != null) {
+            if (patientSystemUser != null)
+            {
                 patientUserMap[patientInfo.id] = patientSystemUser;
             }
 
             var doctorToUserMapping = new Dictionary<Guid, Guid>();
-            foreach(var kvp in doctorUserMap) {
+            foreach (var kvp in doctorUserMap)
+            {
                 doctorToUserMapping[kvp.Key] = kvp.Value.Id;
             }
 
@@ -255,7 +281,8 @@ namespace AP_clinical_system.Controllers
                 .FirstOrDefaultAsync(d => d.system_user_ref == currentUser.Id && d.inactive != true);
 
             doctor_schedule docSchedule = null;
-            if (doctorInfo != null) {
+            if (doctorInfo != null)
+            {
                 docSchedule = await _context.doctor_schedules
                     .FirstOrDefaultAsync(ds => ds.doctor_information_ref == doctorInfo.id && ds.inactive != true);
             }
