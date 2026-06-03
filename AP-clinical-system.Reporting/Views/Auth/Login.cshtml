@@ -16,11 +16,15 @@
 </head>
 
 <body>
+
+    <!--UI Loading Block-->
+    <partial name="_LoadingOverlay" model='"Loading records..."' />
+
     <div class="login-page">
         <div class="login-card">
             <h2 class="text-center mb-4">Clinic Reporting Login</h2>
 
-            <form asp-action="Login" asp-controller="Auth" method="post">
+            <form asp-action="Login" asp-controller="Auth" method="post" id="loginForm"> 
                 @Html.AntiForgeryToken()
 
                 <div asp-validation-summary="All" class="text-danger mb-3"></div>
@@ -37,13 +41,28 @@
                     <span asp-validation-for="Password" class="text-danger"></span>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100 mt-2">
+                <button type="submit" class="btn btn-primary w-100 mt-2" id="btnSubmit">
                     Login
                 </button>
             </form>
         </div>
     </div>
 
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        $(function () {
+            $('#loginForm').on('submit', function () {
+                if ($(this).valid()) {
+                    $('#blockui-overlay').css('display', 'flex');
+                    $('#btnSubmit').prop('disabled', true).text('Please wait...');
+                }
+            });
+        });
+    </script>
+
 </body>
 </html>

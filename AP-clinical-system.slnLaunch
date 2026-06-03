@@ -7,7 +7,7 @@
         "Action": "Start"
       },
       {
-        "Path": "AP-clinical-system.MVC\\AP-clinical-system.MVC.csproj",
+        "Path": "AP-clinical-system.Reporting\\AP-clinical-system.Reporting.csproj",
         "Action": "Start"
       }
     ]
