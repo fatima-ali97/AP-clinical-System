@@ -20,6 +20,8 @@ namespace AP_clinical_system.Services
             new() { Label = "My Appointments",  Controller = "Doctor",       Action = "Schedule",      Icon = "fa-solid fa-calendar"},
             new() { Label = "My Patients",  Controller = "Doctor",       Action = "Patients",      Icon = "fa-solid fa-bed-pulse" },
             new() { Label = "Prescriptions",Controller = "Doctor",       Action = "Prescriptions", Icon = "fa-solid fa-capsules" },
+            new() { Label = "Notifications",Controller = "Doctor",       Action = "Notifications", Icon = "fa-solid fa-bell" },
+
         },
 
             "Receptionist" => new List<NavItem>
