@@ -1,8 +1,9 @@
+using AP_clinical_system.Hubs;
+using AP_clinical_system.Models.Entities;
+using AP_clinical_system.Models.sql_Context;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
-using AP_clinical_system.Models.sql_Context;
-using AP_clinical_system.Models.Entities;
-using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -65,6 +66,7 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -73,7 +75,7 @@ using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
 
-    string[] roles = { "Patient", "Doctor", "Receptionist", "ClinicManager" };
+    string[] roles = { "Patient", "Doctor", "Receptionist", "ClinicManager", "SystemAdmin" };
 
     foreach (var role in roles)
     {
@@ -108,7 +110,7 @@ app.UseAuthorization();
 
 app.MapStaticAssets();
 
-
+app.MapHub<AppointmentsWatcher>("/hubs/appointmentsWatcher");
 
 app.MapControllerRoute(
     name: "default",

@@ -1,7 +1,386 @@
+@model List<AP_clinical_system.Models.UserListViewModel>
+@using AP_clinical_system.Models.Enums
+
 @{
-    Layout = "_AppLayout";
     ViewData["Title"] = "Users";
-    ViewData["ActivePage"] = "Users";
+    ViewData["DT_TableId"] = "usersTable";
+    ViewData["DT_Title"] = "System Users";
+    ViewData["DT_PageLength"] = 15;
+    Layout = "_AppLayout";
 }
 
-<h1 class="page-heading">Users</h1>
+<div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+    <span class="fw-semibold text-muted me-1" style="font-size:13px;">Filter by role:</span>
+    <button class="btn btn-sm role-filter-btn active" data-role="all" style="border-radius:20px; font-size:12.5px;">
+        All
+        <span class="badge bg-secondary ms-1">@Model.Count</span>
+    </button>
+    @foreach (var role in Enum.GetValues<user_role>())
+    {
+        var count = Model.Count(u => u.UserRole == (int)role);
+        if (count == 0) continue;
+        var label = role.ToString().Replace("_", " ");
+        <button class="btn btn-sm role-filter-btn" data-role="@((int)role)"
+                style="border-radius:20px; font-size:12.5px; text-transform:capitalize;">
+            @label
+            <span class="badge ms-1
+            @(role switch
+                  {
+                      user_role.system_admin => "bg-danger",
+                      user_role.clinic_manager => "bg-indigo",
+                      user_role.doctor => "bg-teal",
+                      user_role.receptionist => "bg-blue",
+                      user_role.patient => "bg-green",
+                      _ => "bg-secondary"
+                  })">@count</span>
+        </button>
+    }
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">System Users</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table id="usersTable" class="dt-container table table-hover table-striped align-middle mb-0 datatable-ap"
+                   style="width:100%">
+                <thead>
+                    <tr>
+                        <th>User No.</th>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Role</th>
+                        <th>Joined</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        <tr data-role="@user.UserRole">
+                            <td>
+                                <code style="font-size:12px; color:var(--color-brand-primary);">
+                                    @user.UserNo
+                                </code>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="profile-avatar"
+                                         style="width:34px;height:34px;font-size:13px;border-radius:50%;background:var(--color-brand-primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">
+                                        @(user.FullName.Length > 0 ? user.FullName[0].ToString().ToUpper() : "?")
+                                    </div>
+                                    <span class="fw-semibold" style="font-size:14px;">@user.FullName</span>
+                                </div>
+                            </td>
+                            <td style="font-size:13px;">@user.Email</td>
+                            <td style="font-size:13px;">@user.Phone</td>
+                            <td>
+                                <span class="badge text-capitalize @user.RoleBadgeClass"
+                                      style="font-size:11.5px; padding:4px 10px; border-radius:20px;">
+                                    @user.RoleLabel
+                                </span>
+                            </td>
+                            <td style="font-size:13px; color:#6b7280;">
+                                @user.CreatedOn.ToString("dd MMM yyyy")
+                            </td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-primary view-user-btn" data-user-id="@user.Id"
+                                        style="border-radius:8px; font-size:12px; padding:4px 12px;">
+                                    <i class="bi bi-eye me-1"></i> View
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="userDetailModal" tabindex="-1" aria-labelledby="userDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+        <div class="modal-content" style="border-radius:16px; border:none; overflow:hidden;">
+
+            @* Modal Header *@
+            <div class="modal-header border-0 pb-0"
+                 style="background:var(--color-brand-primary); color:#fff; padding:20px 24px 16px;">
+                <div class="d-flex align-items-center gap-3 w-100">
+                    <div id="modal-avatar"
+                         style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.25);color:#fff;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        ?
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="modal-title mb-0 fw-bold" id="userDetailModalLabel"
+                            style="font-size:16px; color:#fff;">Loading…</h6>
+                        <small id="modal-userno" style="opacity:0.8; font-size:12px;"></small>
+                    </div>
+                    <span id="modal-role-badge" class="badge" style="font-size:11px; border-radius:20px;"></span>
+                </div>
+                <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+
+            @* Modal Body *@
+            <div class="modal-body px-4 py-3" id="modal-body-content">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status" style="width:24px;height:24px;">
+                        <span class="visually-hidden">Loading…</span>
+                    </div>
+                </div>
+            </div>
+
+            @* Modal Footer *@
+            <div class="modal-footer border-0 px-4 pb-4 pt-1 gap-2">
+                <a id="modal-mailto-btn" href="#" class="btn btn-primary btn-sm d-flex align-items-center gap-2"
+                   style="border-radius:8px; font-size:13px; padding:7px 16px;">
+                    <i class="bi bi-envelope"></i> Send Email
+                </a>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal"
+                        style="border-radius:8px; font-size:13px; padding:7px 16px;">
+                    Close
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<style>
+    /* Role filter pills */
+    .role-filter-btn {
+        border: 1.5px solid var(--color-slate-200);
+        background: #fff;
+        color: var(--color-slate-700);
+        transition: all 0.2s ease;
+        font-weight: 500;
+        text-transform: capitalize;
+    }
+
+    .role-filter-btn.active,
+    .role-filter-btn:hover {
+        border-color: var(--color-brand-primary);
+        background: var(--color-brand-primary);
+        color: #fff;
+    }
+
+    .role-filter-btn.active .badge,
+    .role-filter-btn:hover .badge {
+        background: rgba(255, 255, 255, 0.3) !important;
+        color: #fff !important;
+    }
+
+    /* Badge custom colours mapping Bootstrap-like helpers */
+    .bg-teal {
+        background-color: var(--color-teal-500) !important;
+    }
+
+    .bg-indigo {
+        background-color: var(--color-indigo-600) !important;
+    }
+
+    .bg-blue {
+        background-color: var(--color-brand-primary) !important;
+    }
+
+    .bg-green {
+        background-color: var(--color-green-700) !important;
+    }
+
+    /* Modal detail rows */
+    .detail-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--color-slate-100);
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: var(--color-slate-100);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--color-brand-primary);
+        flex-shrink: 0;
+    }
+
+    .detail-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #9ca3af;
+        line-height: 1;
+        margin-bottom: 2px;
+    }
+
+    .detail-value {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--color-slate-800);
+    }
+
+    .spec-tag {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 20px;
+        background: var(--color-teal-100);
+        color: var(--color-teal-800);
+        font-size: 11.5px;
+        font-weight: 500;
+        margin: 2px;
+    }
+</style>
+
+
+<script>
+    $(function () {
+
+        // ── Init DataTable
+        var table = $('#usersTable').DataTable({
+            pageLength: 15,
+            language: {
+                search: "",
+                searchPlaceholder: "Search…",
+                lengthMenu: "Show _MENU_ entries",
+                info: "Showing _START_–_END_ of _TOTAL_",
+                paginate: { previous: "‹", next: "›" }
+            },
+            columnDefs: [
+                { orderable: false, targets: -1 }
+            ]
+        });
+
+        // ── Role filter pills  →  DataTables $.fn.search()
+        $('.role-filter-btn').on('click', function () {
+            $('.role-filter-btn').removeClass('active');
+            $(this).addClass('active');
+
+            var role = $(this).data('role');
+
+            // Use a custom search function stored on the table
+            if (role === 'all') {
+                $.fn.dataTable.ext.search.pop();   // remove last added filter
+                // Re-add a pass-all guard so pop() is safe on repeated all clicks
+                $.fn.dataTable.ext.search.push(function () { return true; });
+            } else {
+                // Remove whatever was last, push new
+                $.fn.dataTable.ext.search.pop();
+                $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+                    var rowNode = table.row(dataIndex).node();
+                    return $(rowNode).data('role') == role;
+                });
+            }
+            table.draw();
+        });
+
+        // Seed a pass-all filter so first pop() is safe
+        $.fn.dataTable.ext.search.push(function () { return true; });
+
+
+        // ── View button → load modal
+        $(document).on('click', '.view-user-btn', function () {
+            var userId = $(this).data('user-id');
+
+            // Reset modal to loading state
+            $('#userDetailModalLabel').text('Loading…');
+            $('#modal-avatar').text('?');
+            $('#modal-userno').text('');
+            $('#modal-role-badge').text('').attr('class', 'badge');
+            $('#modal-mailto-btn').attr('href', '#');
+            $('#modal-body-content').html(`
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status" style="width:24px;height:24px;">
+                    <span class="visually-hidden">Loading…</span>
+                </div>
+            </div>`);
+
+            var modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
+            modal.show();
+
+            // Fetch details
+            $.getJSON('@Url.Action("GetUserDetails", "Manager")', { userId: userId })
+                .done(function (u) {
+                    var initials = u.fullName
+                        .split(' ')
+                        .filter(Boolean)
+                        .slice(0, 2)
+                        .map(function (n) { return n[0].toUpperCase(); })
+                        .join('');
+
+                    // Header
+                    $('#userDetailModalLabel').text(u.fullName);
+                    $('#modal-avatar').text(initials || '?');
+                    $('#modal-userno').text('# ' + u.userNo);
+                    $('#modal-role-badge')
+                        .text(u.roleLabel)
+                        .addClass(getRoleBadgeClass(u.userRole));
+                    $('#modal-mailto-btn').attr('href',
+                        'mailto:' + encodeURIComponent(u.email) +
+                        '?subject=' + encodeURIComponent('Message from Clinic Manager'));
+
+                    // Body rows
+                    var specs = '';
+                    if (u.specializations && u.specializations.length) {
+                        specs = u.specializations
+                            .map(function (s) { return '<span class="spec-tag">' + s + '</span>'; })
+                            .join('');
+                    }
+
+                    var rows = [
+                        { icon: 'bi-envelope', label: 'Email', value: u.email },
+                        { icon: 'bi-telephone', label: 'Phone', value: u.phone },
+                        { icon: 'bi-person-badge', label: 'CPR', value: u.cpr },
+                        { icon: 'bi-briefcase', label: 'Job Title', value: u.jobTitle !== '—' ? u.jobTitle : null },
+                        { icon: 'bi-calendar3', label: 'Member Since', value: u.createdOn },
+                    ];
+                    if (specs) {
+                        rows.push({ icon: 'bi-award', label: 'Specializations', value: specs, raw: true });
+                    }
+
+                    var html = rows
+                        .filter(function (r) { return r.value != null; })
+                        .map(function (r) {
+                            return `<div class="detail-row">
+                            <div class="detail-icon"><i class="bi ${r.icon}"></i></div>
+                            <div>
+                                <div class="detail-label">${r.label}</div>
+                                <div class="detail-value">${r.raw ? r.value : escHtml(r.value)}</div>
+                            </div>
+                        </div>`;
+                        }).join('');
+
+                    $('#modal-body-content').html(html);
+                })
+                .fail(function () {
+                    $('#modal-body-content').html(
+                        '<div class="alert alert-danger m-3">Failed to load user details.</div>');
+                });
+        });
+
+        // ── Helpers
+        function escHtml(str) {
+            return $('<div>').text(str).html();
+        }
+
+        function getRoleBadgeClass(role) {
+            var map = {
+                1000: 'bg-danger',
+                1001: 'bg-indigo text-white',
+                1002: 'bg-teal  text-white',
+                1003: 'bg-blue  text-white',
+                1004: 'bg-green text-white'
+            };
+            return (map[role] || 'bg-secondary') + ' text-white';
+        }
+    });
+</script>
